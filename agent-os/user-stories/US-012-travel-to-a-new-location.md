@@ -1,15 +1,17 @@
 ---
 id: US-012
 title: Travel to a new race location
-status: draft
+status: verified
 priority: must
 source: spec:2026-11-10-0500-cars-locations-nitrous
 tags: [travel, career]
 sets: [demo, production]
 verify: [browser, unit]
 tests:
-  e2e: []
-  unit: []
+  e2e: [tests/e2e/stories/US-012.spec.ts]
+  unit: [src/rpg/actions.test.ts, src/save/store.test.ts, src/race/feel.test.ts, src/data/catalogue.test.ts]
+verified_level: demo
+last_verified: 2026-11-10
 ---
 
 As a player, I want to travel to new race locations as I prove myself, so that the career has somewhere to go.

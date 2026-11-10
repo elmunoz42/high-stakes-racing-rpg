@@ -119,6 +119,23 @@ invented brands.
 - Names and specs are used factually. No logos, badges, liveries or official
   imagery. Sprites are original pixel art that reads as the body style.
 
+## World and progression
+
+- Six locations in tiers: Harbour District, Pinewood, Dustbowl, Neon City,
+  Glacier Ridge, Grand Autodrome. A top-three finish at one opens the next.
+  Travel costs money; prize money and the rivals' cars step up with the tier.
+- The paddock travels: Mags, Teo, Dee Dee and Sterling are at every location
+  (trailer, truck, van, tent). Each away location adds one local character:
+  Birdie Lindqvist (Pinewood diner), Lupe Zamora (Dustbowl car dealer), Juno
+  Park (Neon City arcade and pirate radio), Olav "Grandpa Frost" Henriksen
+  (Glacier Ridge waffle hut), Dame Renata Voss (Autodrome clubhouse).
+- Faster cars (Mustang GT, Corvette, Viper RT/10) are bought from Lupe with a
+  trade-in: 70% of the current car's price plus half the list price of fitted
+  parts, which go with the old car.
+- Nitrous is an arcade boost: up to three shots, bought from Dee Dee at an
+  invented house price, fired with N for a few seconds of extra shove. Glacier
+  Ridge is icy: grip there is well below dry asphalt.
+
 ## Tone
 
 Warm, funny, a bit scruffy. Late-night car-meet energy rather than corporate

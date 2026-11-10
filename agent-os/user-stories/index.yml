@@ -93,7 +93,7 @@ US-011:
 US-012:
   file: US-012-travel-to-a-new-location.md
   title: Travel to a new race location
-  status: draft
+  status: verified
   tags: [travel, career]
   sets: [demo, production]
   source: spec:2026-11-10-0500-cars-locations-nitrous
@@ -101,7 +101,7 @@ US-012:
 US-013:
   file: US-013-trade-up-to-a-faster-car.md
   title: Trade up to a faster car
-  status: draft
+  status: verified
   tags: [dealer, economy, dialogue]
   sets: [demo, production]
   source: spec:2026-11-10-0500-cars-locations-nitrous
@@ -109,7 +109,7 @@ US-013:
 US-014:
   file: US-014-buy-and-use-nitrous.md
   title: Buy and use nitrous
-  status: draft
+  status: verified
   tags: [shop, race, nitrous]
   sets: [demo, production]
   source: spec:2026-11-10-0500-cars-locations-nitrous

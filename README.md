@@ -10,8 +10,9 @@ A browser game in two equal halves:
   get coached. What they say can change your career, but every change is
   validated by the game.
 
-Real cars, real parts, real prices: the three starter cars and fourteen
-aftermarket parts carry a source link and the date the price was checked.
+Real cars, real parts, real prices: six cars and eighteen aftermarket parts
+carry a source link and the date the price was checked. Six race locations
+open up as you finish on the podium.
 
 ## Run it
 
@@ -44,7 +45,7 @@ Open http://localhost:5173. The API runs on port 8787 and Vite proxies
 |---|---|
 | Town and interiors | ← → or A D to walk, E (or Enter, Space, ↑) to interact, Esc to leave a building |
 | Conversations | Type and press Enter, or click a suggested line. Esc to leave |
-| Race | ↑ or W accelerate, ↓ or S brake, ← → or A D steer, Space handbrake (slides the car) |
+| Race | ↑ or W accelerate, ↓ or S brake, ← → or A D steer, Space handbrake (slides the car), N or Shift nitrous |
 
 ## Develop
 

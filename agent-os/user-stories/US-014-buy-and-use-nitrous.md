@@ -1,15 +1,17 @@
 ---
 id: US-014
 title: Buy and use nitrous
-status: draft
+status: verified
 priority: must
 source: spec:2026-11-10-0500-cars-locations-nitrous
 tags: [shop, race, nitrous]
 sets: [demo, production]
 verify: [browser, unit]
 tests:
-  e2e: []
-  unit: []
+  e2e: [tests/e2e/stories/US-014.spec.ts]
+  unit: [src/rpg/actions.test.ts, src/race/feel.test.ts]
+verified_level: demo
+last_verified: 2026-11-10
 ---
 
 As a player, I want to buy nitrous shots in town and fire them in a race, so that I have a boost for the moment it matters.

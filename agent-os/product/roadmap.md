@@ -36,6 +36,14 @@ physics (grip limit, slides, FWD/RWD traits, handbrake, slipstream, gears),
 new canvas-drawn race and town art, effects, tachometer HUD, portraits.
 Stories US-010 and US-011.
 
+## Cars, locations and nitrous (done 2026-11-10): spec `2026-11-10-0500-cars-locations-nitrous`
+
+Three more sourced cars (1988 Mustang GT, 1990 Corvette, 1994 Viper RT/10)
+sold by a dealer with trade-in; six tiered locations with their own tracks,
+looks and a local character each, unlocked by podiums; nitrous shots bought
+at the parts counter; horizon flicker fixed. Stories US-012 to US-014.
+Pulls the world map, travel costs and tiered prizes forward from M3.
+
 ## M2: Garage and economy depth
 
 - Catalogue grows to about 10 cars and 80 parts, all sourced

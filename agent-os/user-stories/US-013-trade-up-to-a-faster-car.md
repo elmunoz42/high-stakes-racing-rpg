@@ -1,15 +1,17 @@
 ---
 id: US-013
 title: Trade up to a faster car
-status: draft
+status: verified
 priority: must
 source: spec:2026-11-10-0500-cars-locations-nitrous
 tags: [dealer, economy, dialogue]
 sets: [demo, production]
 verify: [browser, unit]
 tests:
-  e2e: []
-  unit: []
+  e2e: [tests/e2e/stories/US-013.spec.ts]
+  unit: [src/rpg/actions.test.ts, src/data/catalogue.test.ts]
+verified_level: demo
+last_verified: 2026-11-10
 ---
 
 As a player, I want to trade my car in for a faster one, so that I can compete at the tougher locations.
