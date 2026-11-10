@@ -113,3 +113,27 @@ US-014:
   tags: [shop, race, nitrous]
   sets: [demo, production]
   source: spec:2026-11-10-0500-cars-locations-nitrous
+
+US-015:
+  file: US-015-meet-the-racers-at-the-bar.md
+  title: Meet the racers at the bar
+  status: draft
+  tags: [bar, dialogue, racers]
+  sets: [demo, production]
+  source: spec:2026-11-10-0900-bars-duels-race-lines
+
+US-016:
+  file: US-016-night-duel-for-money.md
+  title: Race a rival one on one at night for money
+  status: draft
+  tags: [bar, duel, race, economy]
+  sets: [demo, production]
+  source: spec:2026-11-10-0900-bars-duels-race-lines
+
+US-017:
+  file: US-017-hear-the-racers-during-a-race.md
+  title: Hear the racers during a race
+  status: draft
+  tags: [race, racers]
+  sets: [demo, production]
+  source: spec:2026-11-10-0900-bars-duels-race-lines

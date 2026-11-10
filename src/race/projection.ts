@@ -210,6 +210,8 @@ export function buildDrawList(
   sim: RaceSim,
   cam: Camera = DEFAULT_CAMERA,
   haze: number = HAZE,
+  /** Brightness of the ground, 1 = day. Night duels pass less. */
+  light = 1,
 ): DrawList {
   const player = sim.player ?? sim.cars[0]!;
   const track = sim.track;
@@ -264,7 +266,7 @@ export function buildDrawList(
     // screen position instead made strips at hill crests flip colour.)
     const fog = Math.min(1, (n / (DRAW_SEGMENTS * FOG_FULL)) ** 1.5);
     const flat = Math.min(1, fog * 2.4);
-    const tint = (c: number) => mix(c, haze, fog);
+    const tint = (c: number) => mix(light < 1 ? mix(0x05060f, c, light) : c, haze, fog);
     const s = seg.stripe ? 0 : 1;
     const band = (pair: readonly number[]) => mix(pair[s]!, mix(pair[0]!, pair[1]!, 0.5), flat);
     const y1 = Math.round(p1.y);

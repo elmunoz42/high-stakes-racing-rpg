@@ -8,7 +8,7 @@ test.describe('US-007 Race against AI rivals', () => {
     await game.start('fresh-career', 'Town', undefined, '/?seed=42');
 
     // AC1: at the start gate, choose to race; countdown; me plus five rivals.
-    await game.setPlayerX(1230);
+    await game.setPlayerX(1470);
     await expect(page.getByTestId('interact-prompt')).toHaveText(
       'Press E to race the Harbour Loop',
     );

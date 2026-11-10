@@ -18,6 +18,13 @@ export const NITROUS_MAX_SHOTS = 3;
 export const TRADE_IN_CAR = 0.7;
 export const TRADE_IN_PARTS = 0.5;
 
+/** Night duels: smallest wager, and the cap at the first location (scaled by tier). */
+export const DUEL_MIN_USD = 100;
+export const DUEL_CAP_USD = 1_000;
+export const DUEL_LAPS = 2;
+
+export const duelCap = (prizeMult: number) => Math.round(DUEL_CAP_USD * prizeMult);
+
 /** Finishing this high or better at a location unlocks the next one. */
 export const UNLOCK_POSITION = 3;
 

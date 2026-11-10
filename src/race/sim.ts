@@ -100,6 +100,14 @@ export interface SimCar extends Entrant {
   autopilot: boolean;
 }
 
+/** Things that happen between the player and a rival, for speech bubbles. */
+export interface RaceEvent {
+  type: 'playerPasses' | 'passesPlayer' | 'bump';
+  /** The rival involved. */
+  carId: string;
+  time: number;
+}
+
 export interface RaceConfig {
   track: Track;
   laps: number;
@@ -119,6 +127,8 @@ export class RaceSim {
   private rng: Rng;
   private contacts = new Map<string, number>();
   private playerLedALap = false;
+  private events: RaceEvent[] = [];
+  private ahead = new Map<string, boolean>();
 
   constructor(cfg: RaceConfig) {
     this.track = cfg.track;
@@ -160,6 +170,7 @@ export class RaceSim {
         autopilot: !e.isPlayer,
       };
     });
+    this.syncOrder();
   }
 
   get player(): SimCar | undefined {
@@ -207,6 +218,7 @@ export class RaceSim {
       this.integrate(car, input);
     }
     this.resolveContacts();
+    this.notePasses();
     for (const car of this.cars) this.checkLaps(car);
   }
 
@@ -399,10 +411,44 @@ export class RaceSim {
         if (this.time - last > 1) {
           a.collisions += 1;
           b.collisions += 1;
+          if (a.isPlayer || b.isPlayer)
+            this.events.push({ type: 'bump', carId: a.isPlayer ? b.id : a.id, time: this.time });
         }
         this.contacts.set(key, this.time);
       }
     }
+  }
+
+  /** Notes who is ahead of the player right now, so later changes count as passes. */
+  syncOrder(): void {
+    const p = this.player;
+    this.ahead.clear();
+    if (p) for (const car of this.cars) if (car !== p) this.ahead.set(car.id, car.z > p.z);
+  }
+
+  /** Records when the player and a nearby rival swap places on the road. */
+  private notePasses(): void {
+    const p = this.player;
+    if (!p) return;
+    for (const car of this.cars) {
+      if (car === p || car.finished || p.finished) continue;
+      const ahead = car.z > p.z;
+      const was = this.ahead.get(car.id);
+      this.ahead.set(car.id, ahead);
+      if (was === undefined || was === ahead || Math.abs(car.z - p.z) > 30) continue;
+      this.events.push({
+        type: ahead ? 'passesPlayer' : 'playerPasses',
+        carId: car.id,
+        time: this.time,
+      });
+    }
+  }
+
+  /** Returns the events since the last call and clears them. */
+  drainEvents(): RaceEvent[] {
+    const out = this.events;
+    this.events = [];
+    return out;
   }
 
   private checkLaps(car: SimCar): void {

@@ -66,8 +66,8 @@ describe('characters and locations', async () => {
   it.each(CHARACTERS.map((c) => [c.id, c]))('%s persona card passes the schema', (_id, c) => {
     expect(() => PersonaSchema.parse(c)).not.toThrow();
   });
-  it('covers every role: the paddock four, a dealer and locals', () => {
-    expect(new Set(CHARACTERS.map((c) => c.role)).size).toBe(6);
+  it('covers every role: the paddock four, a dealer, locals and racers', () => {
+    expect(new Set(CHARACTERS.map((c) => c.role)).size).toBe(7);
   });
   it('every building character exists', () => {
     for (const l of LOCATIONS)
@@ -82,6 +82,19 @@ describe('characters and locations', async () => {
       for (const id of l.rivalCars) expect(CARS.some((c) => c.id === id)).toBe(true);
       expect(l.buildings.some((b) => b.kind === 'gate')).toBe(true);
       expect(l.buildings.some((b) => b.kind === 'travel')).toBe(true);
+    }
+  });
+  it('US-015 AC3: every location has a bar with all six racers, and every racer has a persona card', async () => {
+    const { RACERS } = await import('./rivals.ts');
+    for (const l of LOCATIONS) {
+      const bar = l.buildings.find((b) => b.kind === 'bar');
+      expect(bar, l.id).toBeTruthy();
+      expect(bar!.characterIds).toEqual(RACERS.map((r) => r.id));
+    }
+    for (const r of RACERS) {
+      const persona = CHARACTERS.find((c) => c.id === r.id);
+      expect(persona?.role, r.id).toBe('racer');
+      expect(persona?.name).toBe(r.name);
     }
   });
 });

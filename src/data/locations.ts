@@ -1,5 +1,6 @@
 /** Race locations. A location is one side-scrolling street and one track. */
-export type BuildingKind = 'garage' | 'shop' | 'lounge' | 'trailer' | 'gate' | 'travel' | 'local';
+export type BuildingKind =
+  'garage' | 'shop' | 'lounge' | 'trailer' | 'gate' | 'travel' | 'local' | 'bar';
 
 export interface Building {
   id: string;
@@ -8,6 +9,8 @@ export interface Building {
   x: number;
   name: string;
   characterId?: string;
+  /** A bar holds several people: the racers. */
+  characterIds?: string[];
   /** Texture key for the outside. */
   art: string;
   /** Texture key for the inside, when it has one. */
@@ -43,6 +46,29 @@ const STANG = 'mustang-gt-1988';
 const VETTE = 'corvette-c4-1990';
 const VIPER = 'viper-rt10-1994';
 
+const RACER_IDS = [
+  'kenji-morrow',
+  'priya-nandakumar',
+  'lou-ferreira',
+  'rosa-esposito',
+  'dmitri-volk',
+  'nyx-calloway',
+];
+
+const slug = (name: string) => name.toLowerCase().replace(/[^a-z]+/g, '-');
+
+/** Every city has a bar where the racers drink. */
+const bar = (x: number, name: string, wall: string, accent: string): Building => ({
+  id: 'bar',
+  kind: 'bar',
+  x,
+  name,
+  characterIds: RACER_IDS,
+  art: `bld-bar-${slug(name)}`,
+  room: `room-bar-${slug(name)}`,
+  sign: { text: name.toUpperCase(), wall, accent },
+});
+
 const travelSign = (x: number): Building => ({
   id: 'travel',
   kind: 'travel',
@@ -55,6 +81,7 @@ const travelSign = (x: number): Building => ({
 function paddock(
   local: Omit<Building, 'kind' | 'x' | 'art' | 'room'>,
   gateName: string,
+  theBar: [string, string, string],
 ): Building[] {
   return [
     travelSign(60),
@@ -101,7 +128,8 @@ function paddock(
       art: `bld-local-${local.id}`,
       room: `room-local-${local.id}`,
     },
-    { id: 'start-gate', kind: 'gate', x: 1400, name: `Start gate: ${gateName}`, art: 'bld-gate' },
+    bar(1420, ...theBar),
+    { id: 'start-gate', kind: 'gate', x: 1640, name: `Start gate: ${gateName}`, art: 'bld-gate' },
   ];
 }
 
@@ -110,7 +138,7 @@ export const HARBOUR_DISTRICT: Location = {
   name: 'Harbour District',
   tier: 1,
   blurb: 'A scruffy waterfront at dusk. Where everyone starts.',
-  width: 1320,
+  width: 1560,
   trackId: 'harbour-loop',
   look: 'dusk',
   travelCostUsd: 0,
@@ -155,7 +183,8 @@ export const HARBOUR_DISTRICT: Location = {
       art: 'bld-trailer',
       room: 'room-trailer',
     },
-    { id: 'start-gate', kind: 'gate', x: 1230, name: 'Start gate: Harbour Loop', art: 'bld-gate' },
+    bar(1250, 'The Rusty Anchor', '#5a3a2a', '#ffb347'),
+    { id: 'start-gate', kind: 'gate', x: 1470, name: 'Start gate: Harbour Loop', art: 'bld-gate' },
   ],
 };
 
@@ -166,7 +195,7 @@ export const LOCATIONS: Location[] = [
     name: 'Pinewood',
     tier: 2,
     blurb: 'A logging town under a mountain pass. Tight, steep and lined with trees.',
-    width: 1500,
+    width: 1740,
     trackId: 'pinewood-pass',
     look: 'forest',
     travelCostUsd: 150,
@@ -181,6 +210,7 @@ export const LOCATIONS: Location[] = [
         sign: { text: 'TIMBERLINE DINER', wall: '#7a4a34', accent: '#e8c15a' },
       },
       'Pinewood Pass',
+      ['The Sawdust Saloon', '#6a4a2a', '#e8c15a'],
     ),
   },
   {
@@ -188,7 +218,7 @@ export const LOCATIONS: Location[] = [
     name: 'Dustbowl',
     tier: 3,
     blurb: 'Desert highway and heat haze. Long straights where horsepower talks.',
-    width: 1500,
+    width: 1740,
     trackId: 'dustbowl-flats',
     look: 'desert',
     travelCostUsd: 300,
@@ -203,6 +233,7 @@ export const LOCATIONS: Location[] = [
         sign: { text: "ZAMORA'S USED PERFORMANCE", wall: '#c9a66b', accent: '#d7263d' },
       },
       'Dustbowl Flats',
+      ['Last Drop Cantina', '#b0623a', '#39e6c0'],
     ),
   },
   {
@@ -210,7 +241,7 @@ export const LOCATIONS: Location[] = [
     name: 'Neon City',
     tier: 4,
     blurb: 'Downtown after midnight. Right angles, an underpass and no run-off.',
-    width: 1500,
+    width: 1740,
     trackId: 'neon-city',
     look: 'night',
     travelCostUsd: 450,
@@ -225,6 +256,7 @@ export const LOCATIONS: Location[] = [
         sign: { text: 'PIXEL PALACE', wall: '#2a1f4a', accent: '#39e6ff' },
       },
       'Neon City Circuit',
+      ['Afterburner', '#1c1a3a', '#ff4fa3'],
     ),
   },
   {
@@ -232,7 +264,7 @@ export const LOCATIONS: Location[] = [
     name: 'Glacier Ridge',
     tier: 5,
     blurb: 'Snow, ice and a road that climbs into the clouds. Grip is a rumour.',
-    width: 1500,
+    width: 1740,
     trackId: 'glacier-ridge',
     look: 'snow',
     travelCostUsd: 600,
@@ -247,6 +279,7 @@ export const LOCATIONS: Location[] = [
         sign: { text: "FROST'S WAFFLE HUT", wall: '#6a3b2a', accent: '#f4f4f4' },
       },
       'Glacier Ridge',
+      ['The Thaw', '#3a4a6a', '#9fd0ff'],
     ),
   },
   {
@@ -254,7 +287,7 @@ export const LOCATIONS: Location[] = [
     name: 'Grand Autodrome',
     tier: 6,
     blurb: 'A real circuit with real grandstands. The season finale.',
-    width: 1500,
+    width: 1740,
     trackId: 'grand-autodrome',
     look: 'day',
     travelCostUsd: 800,
@@ -269,6 +302,7 @@ export const LOCATIONS: Location[] = [
         sign: { text: 'CHAMPIONS CLUBHOUSE', wall: '#23324a', accent: '#ffcc33' },
       },
       'Grand Autodrome',
+      ['Parc Ferme', '#2a2a33', '#d7263d'],
     ),
   },
 ];

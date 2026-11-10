@@ -3,6 +3,7 @@ import { type Body, CAR_H, CAR_W, SIDE_H, SIDE_W, drawCarRear, drawCarSide } fro
 import { drawPerson, type Look, PERSON_H, PERSON_W, type Style } from './people.ts';
 import type { Ctx } from './pixel.ts';
 import {
+  drawBarRoom,
   drawLocalBuilding,
   drawLocalRoom,
   drawTownMid,
@@ -86,9 +87,17 @@ export function generateLookTextures(scene: Phaser.Scene, id: LookId): void {
 }
 
 /** Outside and inside of a generated local business. */
-export function localTextures(scene: Phaser.Scene, art: string, room: string, sign: Sign): void {
+export function localTextures(
+  scene: Phaser.Scene,
+  art: string,
+  room: string,
+  sign: Sign,
+  isBar = false,
+): void {
   canvasTexture(scene, art, 190, 116, (c) => drawLocalBuilding(c, sign));
-  canvasTexture(scene, room, 384, 216, (c) => drawLocalRoom(c, sign));
+  canvasTexture(scene, room, 384, 216, (c) =>
+    isBar ? drawBarRoom(c, sign) : drawLocalRoom(c, sign),
+  );
 }
 
 export { CAR_H, CAR_W };

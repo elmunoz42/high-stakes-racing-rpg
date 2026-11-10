@@ -220,6 +220,25 @@ export function handleToolCall(
       };
     }
 
+    case 'propose_duel': {
+      const wager = Math.round(num('wager_usd'));
+      if (!Number.isFinite(wager)) return reject(state, name, 'No wager given.');
+      const action: GameAction = { type: 'challenge', rivalId: persona.id, wagerUsd: wager };
+      const r = dryRun(action);
+      if (!r.ok) return reject(state, name, r.error.message);
+      return {
+        events: [
+          { type: 'proposal', action, label: `Race ${persona.name} tonight for ${usd(wager)}` },
+        ],
+        output: {
+          accepted: true,
+          status: 'waiting for the player to confirm; the race starts when they do',
+          wager_usd: wager,
+        },
+        state,
+      };
+    }
+
     case 'adjust_relationship': {
       const delta = Math.round(num('delta'));
       if (!Number.isFinite(delta) || delta === 0) return reject(state, name, 'No change.');

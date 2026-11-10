@@ -67,4 +67,18 @@ describe('prompt builder (US-003 AC5)', () => {
         expect(params.required.sort()).toEqual(Object.keys(params.properties).sort());
       }
   });
+
+  it("US-015 AC4: a racer's context has the car they drive here and the duel record", () => {
+    const nyx = persona('nyx-calloway');
+    const at = {
+      ...state,
+      location: 'autodrome',
+      duels: { 'nyx-calloway': { wins: 2, losses: 1 } },
+    };
+    const text = buildContext(nyx, at, CATALOGUE);
+    expect(text).toContain('1994 Dodge Viper RT/10');
+    expect(text).toContain('the player has won 2 and lost 1');
+    expect(text).toContain('propose_duel');
+    expect(toolsFor(nyx).map((t) => t.name)).toContain('propose_duel');
+  });
 });

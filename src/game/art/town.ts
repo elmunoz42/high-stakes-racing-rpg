@@ -786,6 +786,54 @@ export function drawLocalRoom(c: Ctx, sign: Sign): void {
   glow(c, sign.accent, 195, 63, 60, 0.2);
 }
 
+/** Inside a bar: a long counter, bottles, stools, the bar's name in neon. */
+export function drawBarRoom(c: Ctx, sign: Sign): void {
+  room(c, shade(sign.wall, 0.55), '#1a1410', sign.accent);
+  // Back bar with bottles.
+  rect(c, '#2a1a12', 70, 60, 250, 62);
+  for (let r = 0; r < 2; r++) {
+    rect(c, '#4a2c1e', 74, 86 + r * 26, 242, 3);
+    for (let k = 0; k < 20; k++) {
+      const h = 10 + Math.floor(hash(r * 40 + k) * 9);
+      rect(
+        c,
+        ['#2e8b57', '#b0623a', '#e8c15a', '#9fd0ff', '#d7263d', '#7b2cff'][
+          Math.floor(hash(k * 3 + r) * 6)
+        ]!,
+        78 + k * 12,
+        86 + r * 26 - h,
+        5,
+        h,
+      );
+      rect(c, '#f4f4f4', 79 + k * 12, 86 + r * 26 - h, 3, 2, 0.6);
+    }
+  }
+  rect(c, '#101018', 110, 44, 170, 16);
+  text(c, sign.text, 195, 52, sign.accent, sign.text.length > 16 ? 9 : 11);
+  // Counter and stools.
+  rect(c, '#6b4028', 60, 128, 270, 6);
+  rect(c, '#4a2c1e', 64, 134, 262, 26);
+  rect(c, sign.accent, 64, 138, 262, 1);
+  for (let x = 84; x < 320; x += 40) {
+    rect(c, '#2a2c38', x + 4, 160, 2, 20);
+    rect(c, shade(sign.accent, 0.7), x, 156, 10, 4);
+  }
+  // Dartboard and a jukebox.
+  ellipse(c, '#15151b', 346, 78, 13, 13);
+  ellipse(c, '#d7263d', 346, 78, 9, 9);
+  ellipse(c, '#f4f4f4', 346, 78, 5, 5);
+  ellipse(c, '#2e8b57', 346, 78, 2, 2);
+  rect(c, '#3a2a4a', 338, 124, 34, 56);
+  rect(c, sign.accent, 342, 128, 26, 16);
+  rect(c, '#15151b', 342, 150, 26, 18);
+  for (const x of [120, 195, 270]) {
+    rect(c, '#2a2c38', x - 1, 0, 2, 22);
+    trap(c, '#3a2a20', 22, 30, x - 6, x + 6, x - 12, x + 12);
+  }
+  glow(c, sign.accent, 195, 52, 80, 0.3);
+  for (const x of [120, 195, 270]) glow(c, '#ffd27a', x, 34, 40, 0.3);
+}
+
 /** The band behind the street for locations away from the sea. */
 export function drawTownMid(c: Ctx, look: string): void {
   if (look === 'desert') {

@@ -8,7 +8,7 @@ import {
   partsFor,
 } from '../../src/data/catalogue.ts';
 import type { Part, Persona } from '../../src/data/schema.ts';
-import { currentPrice, discountFloorPrice } from '../../src/rpg/actions.ts';
+import { currentPrice, discountFloorPrice, maxWager } from '../../src/rpg/actions.ts';
 import { usd } from '../../src/rpg/economy.ts';
 import type { GameState } from '../../src/save/schema.ts';
 import type { ConversationItem, LlmProvider, RoundEvent, RoundRequest } from './types.ts';
@@ -368,7 +368,35 @@ function local(c: Ctx): Reply {
   return { text: persona.opinions[1] ?? persona.pitch };
 }
 
+function racerScript(c: Ctx): Reply {
+  const { msg, persona, state } = c;
+  if (msg === ARRIVAL_MESSAGE) return { text: persona.greeting };
+  if (INJECTION.test(msg)) return { text: persona.fallbackLine };
+  if (/race|duel|tonight|bet|wager|money|challenge/i.test(msg)) {
+    const asked = Number((msg.match(/\$?\s*(\d{3,5})/) ?? [])[1]);
+    const cap = maxWager(CATALOGUE, state);
+    if (cap < 100) return { text: 'Come back when you can cover a bet.' };
+    const wager = Math.max(100, Math.min(cap, Number.isFinite(asked) && asked > 0 ? asked : 250));
+    return {
+      text: `${persona.opinions[2] ?? 'Tonight, then.'}`,
+      calls: [{ name: 'propose_duel', args: { wager_usd: wager } }],
+    };
+  }
+  if (THANKS.test(msg) || /nice car|good race|respect/i.test(msg))
+    return {
+      text: persona.runningJokes[0]!,
+      calls: [{ name: 'adjust_relationship', args: { delta: 1, reason: 'friendly' } }],
+    };
+  return { text: persona.opinions[0]! };
+}
+
 const SCRIPTS: Record<string, (c: Ctx) => Reply> = {
+  'kenji-morrow': racerScript,
+  'priya-nandakumar': racerScript,
+  'lou-ferreira': racerScript,
+  'rosa-esposito': racerScript,
+  'dmitri-volk': racerScript,
+  'nyx-calloway': racerScript,
   'lupe-zamora': dealer,
   'birdie-lindqvist': local,
   'juno-park': local,
@@ -397,6 +425,10 @@ const REACTIONS: Record<string, { ok: string; no: string }> = {
   quote_part: { ok: '', no: '' },
   give_tip: { ok: '', no: '' },
   adjust_relationship: { ok: '', no: '' },
+  propose_duel: {
+    ok: 'Confirm it and meet me at the start line.',
+    no: 'Not that number. Try again.',
+  },
   sell_car: {
     ok: 'Keys are on the desk. Confirm, and she is yours.',
     no: 'Not yet, mijo. Come back when the numbers work.',

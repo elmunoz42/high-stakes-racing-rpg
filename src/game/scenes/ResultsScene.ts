@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { RIVALS } from '../../data/rivals.ts';
+import { findRacer, RIVALS } from '../../data/rivals.ts';
 import { findSponsor } from '../../data/catalogue.ts';
 import { findTrack } from '../../race/tracks.ts';
 import { usd } from '../../rpg/economy.ts';
@@ -13,7 +13,15 @@ export class ResultsScene extends Phaser.Scene {
     super('Results');
   }
 
-  create(): void {
+  create(
+    data: {
+      duel?: { rivalId: string; wagerUsd: number; won: boolean; timeMs: number; trackName: string };
+    } = {},
+  ): void {
+    if (data.duel) {
+      this.duelResult(data.duel);
+      return;
+    }
     this.add.image(0, 0, 'bg-sky').setOrigin(0, 0).setDisplaySize(384, 216).setAlpha(0.6);
     const state = store.require();
     const r = state.lastRace;
@@ -94,6 +102,66 @@ export class ResultsScene extends Phaser.Scene {
           h('strong', { class: 'money', 'data-testid': 'balance' }, usd(r.balanceAfter)),
         ),
         banter && h('p', { class: 'muted' }, banter),
+        h('footer', {}, back),
+      ),
+    );
+    back.focus();
+  }
+
+  private duelResult(d: {
+    rivalId: string;
+    wagerUsd: number;
+    won: boolean;
+    timeMs: number;
+    trackName: string;
+  }): void {
+    this.add.image(0, 0, 'bg-sky').setOrigin(0, 0).setDisplaySize(384, 216).setAlpha(0.25);
+    const state = store.require();
+    const racer = findRacer(d.rivalId);
+    const rec = state.duels[d.rivalId] ?? { wins: 0, losses: 0 };
+    const back = h(
+      'button',
+      { class: 'primary', onclick: () => goto('Interior', { buildingId: 'bar' }) },
+      'Back to the bar',
+    );
+    mount(
+      'results',
+      h(
+        'section',
+        {
+          class: 'results duel-result panel interactive',
+          role: 'dialog',
+          'aria-label': 'Duel result',
+        },
+        h(
+          'h1',
+          {},
+          d.won ? `You beat ${racer?.name ?? 'them'}!` : `${racer?.name ?? 'They'} beat you`,
+        ),
+        h(
+          'p',
+          { class: 'muted' },
+          `Night duel, ${d.trackName}, two laps. Your time ${formatTime(d.timeMs)}.`,
+        ),
+        h(
+          'div',
+          { class: 'earnings', 'aria-label': 'Wager' },
+          h('span', {}, d.won ? 'You win the wager' : 'You lose the wager'),
+          h(
+            'span',
+            {
+              class: d.won ? 'money' : '',
+              'data-testid': 'duel-money',
+              style: d.won ? '' : 'color:var(--bad)',
+            },
+            `${d.won ? '+' : '-'}${usd(d.wagerUsd)}`,
+          ),
+          h('strong', {}, 'New balance'),
+          h('strong', { class: 'money', 'data-testid': 'balance' }, usd(state.money)),
+          h('span', {}, `Record against ${racer?.short ?? 'them'}`),
+          h('span', { 'data-testid': 'duel-record' }, `${rec.wins} won, ${rec.losses} lost`),
+        ),
+        racer && h('p', { class: 'muted' }, d.won ? racer.banter.lostToYou : racer.banter.beatYou),
         h('footer', {}, back),
       ),
     );

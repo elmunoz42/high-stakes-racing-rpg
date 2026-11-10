@@ -153,6 +153,7 @@ export const TEST_CATALOGUE: Catalogue = {
       { discountFloor: 0.85 },
     ),
     persona('lot', 'dealer', ['sell_car', 'adjust_relationship']),
+    persona('ace', 'racer', ['propose_duel', 'adjust_relationship']),
     persona('rep', 'sponsor', ['offer_sponsorship', 'adjust_relationship'], { sponsorId: 'fizz' }),
   ],
 };

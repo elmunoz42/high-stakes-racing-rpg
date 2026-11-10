@@ -729,3 +729,44 @@ img.portrait {
   justify-content: space-between;
   align-items: center;
 }
+
+.race-line {
+  position: absolute;
+  top: 22%;
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: 70%;
+  background: var(--panel);
+  border: 3px solid var(--accent);
+  border-radius: 0.8em;
+  padding: 0.35em 0.9em;
+  display: flex;
+  gap: 0.6em;
+  align-items: baseline;
+  font-size: 1.05em;
+  box-shadow: 0 0.2em 0 #000a;
+  animation: pop 0.18s ease-out;
+}
+.race-line strong {
+  color: var(--accent);
+  white-space: nowrap;
+}
+@keyframes pop {
+  from {
+    transform: translateX(-50%) scale(0.6);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(-50%) scale(1);
+    opacity: 1;
+  }
+}
+.wagers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4em;
+  margin: 0.4em 0;
+}
+.duel-result h1 {
+  font-size: 1.8em;
+}

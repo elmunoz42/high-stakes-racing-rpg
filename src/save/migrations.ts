@@ -25,6 +25,8 @@ const MIGRATIONS: Record<number, Migration> = {
   }),
   // v2: travel between locations and nitrous shots.
   1: (v1) => ({ ...v1, version: 2, nitrous: 0, bestFinish: {} }),
+  // v3: night duel records.
+  2: (v2) => ({ ...v2, version: 3, duels: {} }),
 };
 
 export function migrate(raw: unknown): GameState {

@@ -12,6 +12,8 @@ import type { Part } from '../data/schema.ts';
 import { type GameState, type RaceRecord, SAVE_VERSION } from '../save/schema.ts';
 import {
   CAREER_FUND_USD,
+  DUEL_MIN_USD,
+  duelCap,
   NITROUS_MAX_SHOTS,
   NITROUS_SHOT_USD,
   TRADE_IN_CAR,
@@ -61,6 +63,7 @@ export function createCareer(
     location,
     nitrous: 0,
     bestFinish: {},
+    duels: {},
   };
 }
 
@@ -88,6 +91,30 @@ export function isUnlocked(cat: Catalogue, state: GameState, locationId: string)
   if (loc.tier <= 1) return true;
   const prev = cat.locations.find((l) => l.tier === loc.tier - 1);
   return !!prev && (state.bestFinish[prev.id] ?? 99) <= UNLOCK_POSITION;
+}
+
+/** The most a racer will wager at the player's current location. */
+export function maxWager(cat: Catalogue, state: GameState): number {
+  return Math.floor(
+    Math.min(state.money, duelCap(findLocationIn(cat, state.location)?.prizeMult ?? 1)),
+  );
+}
+
+function checkWager(
+  cat: Catalogue,
+  state: GameState,
+  rivalId: string,
+  wagerUsd: number,
+): ActionResult | null {
+  const who = findCharacter(cat, rivalId);
+  if (!who) return fail('unknown_character', `Unknown racer ${rivalId}.`);
+  if (who.role !== 'racer') return fail('not_allowed', `${who.name} does not race for money.`);
+  const cap = duelCap(findLocationIn(cat, state.location)?.prizeMult ?? 1);
+  if (wagerUsd < DUEL_MIN_USD || wagerUsd > cap)
+    return fail('wager_out_of_range', `Wagers here run from ${DUEL_MIN_USD} to ${cap}.`);
+  if (state.money < wagerUsd)
+    return fail('insufficient_funds', `Player has ${state.money}, cannot cover ${wagerUsd}.`);
+  return null;
 }
 
 export function owns(state: GameState, partId: string): boolean {
@@ -325,6 +352,25 @@ export function applyAction(state: GameState, action: GameAction, cat: Catalogue
         );
       s.money = cents(s.money - dest.travelCostUsd);
       s.location = dest.id;
+      return { ok: true, state: s };
+    }
+
+    case 'challenge': {
+      return checkWager(cat, s, action.rivalId, action.wagerUsd) ?? { ok: true, state: s };
+    }
+
+    case 'recordDuel': {
+      const bad = checkWager(cat, s, action.rivalId, action.wagerUsd);
+      if (bad) return bad;
+      const wager = Math.round(action.wagerUsd);
+      s.money = cents(s.money + (action.won ? wager : -wager));
+      const rec = s.duels[action.rivalId] ?? { wins: 0, losses: 0 };
+      s.duels[action.rivalId] = action.won
+        ? { ...rec, wins: rec.wins + 1 }
+        : { ...rec, losses: rec.losses + 1 };
+      // Racing someone for money earns a little respect either way.
+      const rel = s.relationships[action.rivalId] ?? 0;
+      s.relationships[action.rivalId] = Math.min(RELATIONSHIP_MAX, rel + 1);
       return { ok: true, state: s };
     }
   }

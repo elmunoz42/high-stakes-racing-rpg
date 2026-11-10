@@ -23,8 +23,8 @@ test.describe('US-002 Walk the town and enter buildings', () => {
         window.__game!.town as { buildings(): { kind: string; x: number; name: string }[] }
       ).buildings(),
     );
-    // (The street also has a travel board, covered by US-012.)
-    const places = kinds.filter((b) => b.kind !== 'travel');
+    // (The street also has a travel board and a bar, covered by US-012 and US-015.)
+    const places = kinds.filter((b) => b.kind !== 'travel' && b.kind !== 'bar');
     expect(places.map((b) => b.kind).sort()).toEqual([
       'garage',
       'gate',

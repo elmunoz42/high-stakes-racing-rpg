@@ -28,7 +28,7 @@ test.describe('US-012 Travel to a new race location', () => {
       .click();
     await expect(page.getByTestId('place')).toHaveText('Pinewood');
     await expect(page.getByTestId('money')).toHaveText('$8,850');
-    await game.setPlayerX(1400);
+    await game.setPlayerX(1640);
     await expect(page.getByTestId('interact-prompt')).toHaveText(
       'Press E to race the Pinewood Pass',
     );

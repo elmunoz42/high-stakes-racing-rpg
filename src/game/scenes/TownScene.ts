@@ -55,7 +55,8 @@ export class TownScene extends Phaser.Scene {
     generateTownTextures(this);
     generateLookTextures(this, look);
     personTextures(this, 'player', PLAYER_LOOK, 'player');
-    for (const b of loc.buildings) if (b.sign && b.room) localTextures(this, b.art, b.room, b.sign);
+    for (const b of loc.buildings)
+      if (b.sign && b.room) localTextures(this, b.art, b.room, b.sign, b.kind === 'bar');
 
     const W = loc.width;
     this.cameras.main.setBounds(0, 0, W, 216);

@@ -9,8 +9,9 @@ import {
   partName,
   partsFor,
 } from '../src/data/catalogue.ts';
-import { RIVALS } from '../src/data/rivals.ts';
+import { findRacer, RIVALS } from '../src/data/rivals.ts';
 import type { Persona, ToolName } from '../src/data/schema.ts';
+import { racerCarId } from '../src/race/field.ts';
 import { findTrack } from '../src/race/tracks.ts';
 import {
   currentPrice,
@@ -18,10 +19,17 @@ import {
   installedParts,
   labourQuote,
   owns,
+  maxWager,
   tradeInValue,
 } from '../src/rpg/actions.ts';
 import { carStats, msToKmh, performance } from '../src/rpg/carStats.ts';
-import { describeObjective, NITROUS_MAX_SHOTS, NITROUS_SHOT_USD, usd } from '../src/rpg/economy.ts';
+import {
+  describeObjective,
+  DUEL_MIN_USD,
+  NITROUS_MAX_SHOTS,
+  NITROUS_SHOT_USD,
+  usd,
+} from '../src/rpg/economy.ts';
 import type { GameState } from '../src/save/schema.ts';
 import type { ToolDef } from './providers/types.ts';
 
@@ -221,6 +229,38 @@ function roleContext(persona: Persona, state: GameState, cat: Catalogue): string
       }
       break;
     }
+    case 'racer': {
+      const here = findLocationIn(cat, state.location);
+      const myCar = findCar(cat, racerCarId(cat, here, persona.id));
+      const rec = state.duels[persona.id] ?? { wins: 0, losses: 0 };
+      const racer = findRacer(persona.id);
+      out.push('# Tonight at the bar');
+      out.push(
+        '- It is evening. You and the other racers are at the bar. The player has walked over to you.',
+      );
+      out.push(
+        `- Here you drive a ${myCar ? `${carName(myCar)} (${myCar.power_hp} hp, ${myCar.weight_kg} kg)` : 'your usual car'}.`,
+      );
+      if (racer?.duelOnly)
+        out.push('- You never enter the day race. You only race one on one, at night.');
+      else if (state.lastRace) {
+        const me = state.lastRace.order.find((o) => o.name === persona.name);
+        if (me)
+          out.push(
+            `- In the last race you finished P${me.position} and the player finished P${state.lastRace.position}.`,
+          );
+      }
+      out.push(
+        `- Night duels between you and the player so far: the player has won ${rec.wins} and lost ${rec.losses}.`,
+      );
+      const cap = maxWager(cat, state);
+      out.push(
+        cap >= DUEL_MIN_USD
+          ? `- A night duel is two laps of the ${findTrack(here?.trackId ?? 'harbour-loop').name}, just the two of you, winner takes the wager. Wagers can be from ${usd(DUEL_MIN_USD)} to ${usd(cap)} (the house limit here, and no more than the player has). To agree a race use propose_duel with the wager; the player confirms on their screen and the race starts.`
+          : '- The player cannot cover even the smallest wager tonight, so there is no racing for money. Say so in your own way.',
+      );
+      break;
+    }
     case 'dealer': {
       const mine = findCar(cat, state.carId);
       const trade = tradeInValue(cat, state);
@@ -395,6 +435,19 @@ const TOOL_DEFS: Record<ToolName, ToolDef> = {
       type: 'object',
       properties: { shots: { type: 'integer', minimum: 1, maximum: 3 } },
       required: ['shots'],
+      additionalProperties: false,
+    },
+  },
+  propose_duel: {
+    name: 'propose_duel',
+    description:
+      'Agree to race the player one on one tonight for a wager. They confirm on their screen and the race starts.',
+    parameters: {
+      type: 'object',
+      properties: {
+        wager_usd: { type: 'number', description: 'The wager in USD, within the limits given.' },
+      },
+      required: ['wager_usd'],
       additionalProperties: false,
     },
   },

@@ -37,6 +37,14 @@ export const GameAction = z.discriminatedUnion('type', [
   z.object({ type: z.literal('buyCar'), carId: z.string() }),
   z.object({ type: z.literal('buyNitrous'), shots: z.number().int().min(1).max(3) }),
   z.object({ type: z.literal('travel'), locationId: z.string() }),
+  // Checks a wager and changes nothing; an accepted challenge starts the duel.
+  z.object({ type: z.literal('challenge'), rivalId: z.string(), wagerUsd: z.number().positive() }),
+  z.object({
+    type: z.literal('recordDuel'),
+    rivalId: z.string(),
+    wagerUsd: z.number().positive(),
+    won: z.boolean(),
+  }),
 ]);
 export type GameAction = z.infer<typeof GameAction>;
 
@@ -46,6 +54,7 @@ export type ActionErrorCode =
   | 'unknown_location'
   | 'locked'
   | 'full'
+  | 'wager_out_of_range'
   | 'does_not_fit'
   | 'already_owned'
   | 'not_owned'

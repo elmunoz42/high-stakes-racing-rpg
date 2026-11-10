@@ -96,7 +96,7 @@ export const SponsorSchema = z.object({
 });
 export type Sponsor = z.infer<typeof SponsorSchema>;
 
-export const Role = z.enum(['coach', 'mechanic', 'parts', 'sponsor', 'dealer', 'local']);
+export const Role = z.enum(['coach', 'mechanic', 'parts', 'sponsor', 'dealer', 'local', 'racer']);
 export type Role = z.infer<typeof Role>;
 
 export const ToolName = z.enum([
@@ -109,6 +109,7 @@ export const ToolName = z.enum([
   'adjust_relationship',
   'sell_car',
   'sell_nitrous',
+  'propose_duel',
 ]);
 export type ToolName = z.infer<typeof ToolName>;
 

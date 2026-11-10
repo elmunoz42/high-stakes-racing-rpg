@@ -297,3 +297,38 @@ describe('travel (US-012 AC4)', () => {
     expect(s.bestFinish).toEqual({ home: 1, away: 2 });
   });
 });
+
+describe('night duels (US-016 AC4)', () => {
+  it('accepts a wager in range and changes nothing until the duel is run', () => {
+    const s = start();
+    const r = applyAction(s, { type: 'challenge', rivalId: 'ace', wagerUsd: 500 }, cat);
+    expect(r.ok && r.state).toEqual(s);
+  });
+  it("rejects wagers out of range, beyond the player's money, and non-racers", () => {
+    expect(code(start(), { type: 'challenge', rivalId: 'ace', wagerUsd: 50 })).toBe(
+      'wager_out_of_range',
+    );
+    expect(code(start(), { type: 'challenge', rivalId: 'ace', wagerUsd: 1001 })).toBe(
+      'wager_out_of_range',
+    );
+    expect(code(start(300), { type: 'challenge', rivalId: 'ace', wagerUsd: 500 })).toBe(
+      'insufficient_funds',
+    );
+    expect(code(start(), { type: 'challenge', rivalId: 'coach', wagerUsd: 500 })).toBe(
+      'not_allowed',
+    );
+    expect(code(start(), { type: 'challenge', rivalId: 'nobody', wagerUsd: 500 })).toBe(
+      'unknown_character',
+    );
+  });
+  it('pays the wager on a win, takes it on a loss, and keeps the record', () => {
+    const base = start().money;
+    let s = run(start(), { type: 'recordDuel', rivalId: 'ace', wagerUsd: 400, won: true });
+    expect(s.money).toBe(base + 400);
+    s = run(s, { type: 'recordDuel', rivalId: 'ace', wagerUsd: 250, won: false });
+    expect(s.money).toBe(base + 150);
+    expect(s.duels.ace).toEqual({ wins: 1, losses: 1 });
+    expect(s.relationships.ace).toBe(2);
+    expect(s.raceCount).toBe(0);
+  });
+});

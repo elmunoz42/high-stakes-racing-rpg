@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { ObjectiveType, Slot } from '../data/schema.ts';
 
-export const SAVE_VERSION = 2;
+export const SAVE_VERSION = 3;
 
 export const Objective = z.object({
   type: ObjectiveType,
@@ -81,5 +81,10 @@ export const GameState = z.object({
   nitrous: z.number().int().min(0).max(3),
   /** Best finishing position at each location raced so far. */
   bestFinish: z.record(z.string(), z.number().int().positive()),
+  /** Night duel record against each racer. */
+  duels: z.record(
+    z.string(),
+    z.object({ wins: z.number().int().nonnegative(), losses: z.number().int().nonnegative() }),
+  ),
 });
 export type GameState = z.infer<typeof GameState>;

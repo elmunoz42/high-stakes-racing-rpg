@@ -55,7 +55,7 @@ describe('save (US-009)', () => {
     expect(s).toMatchObject({ money: 4321, carId: 'alpha', inventory: ['pads-a'], installed: {} });
   });
 
-  it('migrates a version 1 save to version 2 with no nitrous and no travel progress (US-012 AC5)', () => {
+  it('migrates a version 1 save up to the current version with no nitrous and no travel progress (US-012 AC5)', () => {
     const v1 = {
       version: 1,
       seed: 1,
@@ -73,11 +73,37 @@ describe('save (US-009)', () => {
     };
     const s = migrate(v1);
     expect(s).toMatchObject({
-      version: 2,
+      version: SAVE_VERSION,
       nitrous: 0,
       bestFinish: {},
       money: 500,
       location: 'home',
+    });
+  });
+
+  it('migrates a version 2 save to version 3 with no duel records (US-016 AC5)', () => {
+    const v2 = {
+      version: 2,
+      seed: 1,
+      money: 500,
+      carId: 'alpha',
+      inventory: [],
+      installed: {},
+      sponsor: null,
+      offers: { discounts: {}, sponsor: null },
+      relationships: {},
+      memories: {},
+      lastRace: null,
+      raceCount: 0,
+      location: 'home',
+      nitrous: 2,
+      bestFinish: { home: 1 },
+    };
+    expect(migrate(v2)).toMatchObject({
+      version: 3,
+      duels: {},
+      nitrous: 2,
+      bestFinish: { home: 1 },
     });
   });
 

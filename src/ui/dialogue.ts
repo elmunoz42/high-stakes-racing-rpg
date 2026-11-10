@@ -18,10 +18,26 @@ import type { Part, Persona } from '../data/schema.ts';
 import { streamChat, summariseConversation } from '../dialogue/client.ts';
 import { registerHook } from '../game/testHooks.ts';
 import { formatTime } from './format.ts';
-import { currentPrice, installedParts, labourQuote, owns, tradeInValue } from '../rpg/actions.ts';
+import {
+  currentPrice,
+  installedParts,
+  labourQuote,
+  owns,
+  tradeInValue,
+  maxWager,
+} from '../rpg/actions.ts';
 import { findLocation } from '../data/locations.ts';
+import { goto } from '../game/flow.ts';
+import { racerCarId } from '../race/field.ts';
+import { findTrack } from '../race/tracks.ts';
 import { type CarStats, carStats, msToKmh, performance } from '../rpg/carStats.ts';
-import { describeObjective, NITROUS_MAX_SHOTS, NITROUS_SHOT_USD, usd } from '../rpg/economy.ts';
+import {
+  describeObjective,
+  NITROUS_MAX_SHOTS,
+  NITROUS_SHOT_USD,
+  usd,
+  DUEL_MIN_USD,
+} from '../rpg/economy.ts';
 import { store } from '../save/store.ts';
 import { clear, h, mount, toast } from './dom.ts';
 import { portraitUrl } from './portrait.ts';
@@ -277,6 +293,20 @@ class DialogueView {
     const state = store.require();
     const car = findCar(store.catalogue, state.carId)!;
     const before = carStats(car, installedParts(store.catalogue, state));
+    if (p.action.type === 'challenge') {
+      // An agreed duel starts straight away: out of the bar and onto the grid.
+      const { rivalId, wagerUsd } = p.action;
+      if (!store.validate(p.action).ok) {
+        this.pending = null;
+        this.addMessage('system', 'That wager is not possible right now.');
+        this.renderSide();
+        return;
+      }
+      this.pending = null;
+      this.close();
+      goto('Race', { duel: { rivalId, wagerUsd } });
+      return;
+    }
     const r = store.dispatch(p.action);
     this.pending = null;
     if (!r.ok) {
@@ -347,6 +377,9 @@ class DialogueView {
         break;
       case 'local':
         parts.push(this.localPanel());
+        break;
+      case 'racer':
+        parts.push(this.racerPanel());
         break;
     }
     this.side.replaceChildren(...parts.filter((x): x is HTMLElement => !!x));
@@ -682,6 +715,62 @@ class DialogueView {
     );
   }
 
+  /** A racer: their car here, your record against them, and a wager to race for. */
+  private racerPanel(): HTMLElement {
+    const state = store.require();
+    const cat = store.catalogue;
+    const loc = findLocation(state.location);
+    const car = findCar(cat, racerCarId(cat, loc, this.persona.id));
+    const rec = state.duels[this.persona.id] ?? { wins: 0, losses: 0 };
+    const cap = maxWager(cat, state);
+    const steps = [...new Set([DUEL_MIN_USD, 250, 500, 1000, 2500, cap])]
+      .filter((w) => w >= DUEL_MIN_USD && w <= cap)
+      .sort((a, b) => a - b);
+    return h(
+      'div',
+      {},
+      h('h3', {}, `Race ${this.persona.name}`),
+      h(
+        'p',
+        { 'data-testid': 'racer-car' },
+        `Drives a ${car ? `${carName(car)} (${car.power_hp} hp)` : 'mystery car'} here.`,
+      ),
+      h(
+        'p',
+        { class: 'muted', 'data-testid': 'duel-record' },
+        `Your night duels against them: ${rec.wins} won, ${rec.losses} lost.`,
+      ),
+      h('h3', {}, 'Challenge to a night race'),
+      h(
+        'p',
+        { class: 'muted', style: 'font-size:0.85em;margin:0' },
+        `Two laps of the ${findTrack(loc.trackId).name}, one on one, after dark. Winner takes the wager. You have ${usd(state.money)}.`,
+      ),
+      steps.length
+        ? h(
+            'div',
+            { class: 'wagers', role: 'group', 'aria-label': 'Wager' },
+            steps.map((w) =>
+              h(
+                'button',
+                {
+                  type: 'button',
+                  onclick: () => {
+                    this.pending = {
+                      action: { type: 'challenge', rivalId: this.persona.id, wagerUsd: w },
+                      label: `Race ${this.persona.name} tonight for ${usd(w)}`,
+                    };
+                    this.renderSide();
+                  },
+                },
+                usd(w),
+              ),
+            ),
+          )
+        : h('p', { class: 'muted' }, `You need at least ${usd(DUEL_MIN_USD)} to race for money.`),
+    );
+  }
+
   private localPanel(): HTMLElement {
     const state = store.require();
     const loc = findLocation(state.location);
@@ -746,6 +835,7 @@ function sideLabel(p: Persona): string {
     coach: 'Notes',
     dealer: 'Car lot',
     local: 'Local knowledge',
+    racer: 'Night duel',
   };
   return labels[p.role];
 }

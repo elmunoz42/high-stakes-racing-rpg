@@ -12,13 +12,14 @@ import {
   SCREEN_W,
   type SpriteDraw,
 } from '../../race/projection.ts';
-import { RaceSim, REDLINE_RPM, STEP, type DriverInput } from '../../race/sim.ts';
+import { findRacer } from '../../data/rivals.ts';
+import { RaceSim, REDLINE_RPM, STEP, type DriverInput, type RaceEvent } from '../../race/sim.ts';
 import { segmentAt } from '../../race/track.ts';
 import type { RaceResult } from '../../race/types.ts';
 import { installedParts } from '../../rpg/actions.ts';
 import { carStats, msToKmh } from '../../rpg/carStats.ts';
 import { store } from '../../save/store.ts';
-import { h, mount } from '../../ui/dom.ts';
+import { clear, h, mount } from '../../ui/dom.ts';
 import { formatTime } from '../../ui/format.ts';
 import { hexInt } from '../art/pixel.ts';
 import { type LookId, LOOKS } from '../art/race.ts';
@@ -62,6 +63,11 @@ export class RaceScene extends Phaser.Scene {
   private haze = 0;
   private skyAlpha = 1;
   private trackName = '';
+  private duel: { rivalId: string; wagerUsd: number } | null = null;
+  private light = 1;
+  private lineCount = new Map<string, number>();
+  private lastLine: { who: string; text: string } | null = null;
+  private bubbleUntil = 0;
   private mountains!: Phaser.GameObjects.TileSprite;
   private city!: Phaser.GameObjects.TileSprite;
   private pool: Phaser.GameObjects.Image[] = [];
@@ -97,7 +103,11 @@ export class RaceScene extends Phaser.Scene {
     super('Race');
   }
 
-  create(data: { seed?: number } = {}): void {
+  create(data: { seed?: number; duel?: { rivalId: string; wagerUsd: number } } = {}): void {
+    this.duel = data.duel ?? null;
+    this.lineCount = new Map();
+    this.lastLine = null;
+    this.bubbleUntil = 0;
     const state = store.require();
     const cat = store.catalogue;
     const car = findCar(cat, state.carId)!;
@@ -106,8 +116,11 @@ export class RaceScene extends Phaser.Scene {
     this.sim = createRace(cat, state.carId, stats, seed, {
       locationId: state.location,
       nitrous: state.nitrous,
+      duelWith: this.duel?.rivalId,
     });
-    const look: LookId = this.sim.track.def.look ?? 'dusk';
+    // Duels are run at night, whatever the location looks like by day.
+    const look: LookId = this.duel ? 'night' : (this.sim.track.def.look ?? 'dusk');
+    this.light = this.duel && this.sim.track.def.look !== 'night' ? 0.42 : 1;
     this.haze = hexInt(LOOKS[look].haze);
     this.skyAlpha = 1;
     this.trackName = this.sim.track.def.name;
@@ -181,6 +194,8 @@ export class RaceScene extends Phaser.Scene {
           nitroShots: p.nitroShots,
           boosting: p.nitroT > 0,
           trackId: this.sim.track.def.id,
+          duel: !!this.duel,
+          lastLine: this.lastLine,
         };
       },
     });
@@ -192,7 +207,11 @@ export class RaceScene extends Phaser.Scene {
     const speed = h('div', { class: 'kmh', 'aria-label': 'Speed' }, '0 km/h');
     const gear = h('div', { class: 'gear', 'aria-label': 'Gear' }, '1');
     const lap = h('span', { class: 'chip', 'aria-label': 'Lap' }, `Lap 1/${this.sim.laps}`);
-    const pos = h('span', { class: 'chip big', 'aria-label': 'Position' }, 'P5/6');
+    const pos = h(
+      'span',
+      { class: 'chip big', 'aria-label': 'Position' },
+      `P${this.sim.cars.length}/${this.sim.cars.length}`,
+    );
     const time = h('span', { class: 'chip', 'aria-label': 'Race time' }, '0:00.0');
     const count = h('div', { class: 'countdown', role: 'status' }, String(COUNTDOWN_SECONDS));
     const tow = h('div', { class: 'tow hidden', 'data-testid': 'slipstream' }, 'SLIPSTREAM');
@@ -270,6 +289,7 @@ export class RaceScene extends Phaser.Scene {
     while (this.accumulator >= STEP) {
       this.sim.step(input);
       this.accumulator -= STEP;
+      for (const ev of this.sim.drainEvents()) this.say(ev);
     }
 
     if (this.sim.playerFinished && this.finishedAt < 0) {
@@ -320,7 +340,7 @@ export class RaceScene extends Phaser.Scene {
       Math.round(Math.sin(this.clock * 47) * amp),
     );
 
-    const list = buildDrawList(this.sim, cam, this.haze);
+    const list = buildDrawList(this.sim, cam, this.haze, this.light);
 
     // In a tunnel the sky goes dark.
     const under = segmentAt(this.sim.track, p.z).theme === 'tunnel' ? 0.08 : 1;
@@ -358,6 +378,23 @@ export class RaceScene extends Phaser.Scene {
     this.playerSprite = list.sprites.at(-1) ?? null;
     this.emitEffects(dt, pct);
     this.drawEffects(dt, pct);
+    if (this.light < 1 && this.playerSprite) {
+      // Headlights: a soft cone on the road ahead of the car.
+      const s = this.playerSprite;
+      const g = this.fx;
+      const top = HORIZON_Y + 18;
+      g.fillStyle(0xfff2c0, 0.07);
+      for (const spread of [1, 0.6])
+        g.fillPoints(
+          [
+            { x: s.x - s.w * 0.3, y: s.y - s.h * 0.5 },
+            { x: s.x + s.w * 0.3, y: s.y - s.h * 0.5 },
+            { x: SCREEN_W / 2 + 70 * spread, y: top },
+            { x: SCREEN_W / 2 - 70 * spread, y: top },
+          ] as Phaser.Math.Vector2[],
+          true,
+        );
+    }
   }
 
   private drawSprite(i: number, s: SpriteDraw): void {
@@ -386,6 +423,9 @@ export class RaceScene extends Phaser.Scene {
       .setDepth(2 + s.depth / 100)
       .setFlipX(s.flip)
       .setAlpha(alpha);
+    // At night scenery sinks into the dark; cars keep a little more light.
+    if (this.light < 1) img.setTint(s.car ? 0xb8bcd8 : 0x6a7098);
+    else img.clearTint();
     // Snap the sprite's box to whole pixels as one rectangle. Rounding position
     // and size separately made edges shimmer back and forth as sprites grew.
     const left = Math.round(s.x - s.w / 2);
@@ -558,10 +598,55 @@ export class RaceScene extends Phaser.Scene {
     });
   }
 
+  /** A racer says one of their own lines when something happens between you. */
+  private say(ev: RaceEvent): void {
+    const racer = findRacer(ev.carId);
+    if (!racer || this.clock < this.bubbleUntil - 1.6) return;
+    const pool =
+      ev.type === 'bump'
+        ? racer.lines.bump
+        : ev.type === 'passesPlayer'
+          ? racer.lines.passesPlayer
+          : racer.lines.passedByPlayer;
+    const key = `${racer.id}:${ev.type}`;
+    const n = this.lineCount.get(key) ?? 0;
+    this.lineCount.set(key, n + 1);
+    const text = pool[n % pool.length];
+    if (!text) return;
+    this.lastLine = { who: racer.short, text };
+    this.bubbleUntil = this.clock + 2.8;
+    mount(
+      'race-line',
+      h(
+        'div',
+        {
+          class: 'race-line',
+          role: 'status',
+          'data-testid': 'race-line',
+          style: `border-color:${racer.color === '#1c1c24' ? '#8a8aa0' : racer.color}`,
+        },
+        h('strong', {}, racer.short),
+        h('span', {}, text),
+      ),
+    );
+    this.time.delayedCall(2800, () => {
+      if (this.clock >= this.bubbleUntil - 0.05) clear('race-line');
+    });
+  }
+
   private finish(result: RaceResult): void {
     if (this.done) return;
     this.done = true;
     this.cameras.main.setScroll(0, 0);
+    if (this.duel) {
+      const won = result.position === 1;
+      const r = store.dispatch({ type: 'recordDuel', ...this.duel, won });
+      if (!r.ok) console.error('[race] could not record duel', r.error);
+      goto('Results', {
+        duel: { ...this.duel, won, timeMs: result.timeMs, trackName: this.trackName },
+      });
+      return;
+    }
     const r = store.dispatch({ type: 'recordRace', result });
     if (!r.ok) console.error('[race] could not record result', r.error);
     goto('Results');

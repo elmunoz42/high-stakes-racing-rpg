@@ -90,4 +90,15 @@ describe('server action validator', () => {
     );
     expect(o.output.accepted).toBe(false);
   });
+
+  it('US-016 AC4: a duel wager is a proposal when in range and rejected when not', () => {
+    const ok = call('nyx-calloway', 'propose_duel', { wager_usd: 500 });
+    expect(ok.events[0]).toMatchObject({
+      type: 'proposal',
+      action: { type: 'challenge', rivalId: 'nyx-calloway', wagerUsd: 500 },
+    });
+    expect(ok.state.money).toBe(state.money);
+    expect(call('nyx-calloway', 'propose_duel', { wager_usd: 50_000 }).output.accepted).toBe(false);
+    expect(call('mags-okafor', 'propose_duel', { wager_usd: 500 }).output.accepted).toBe(false);
+  });
 });

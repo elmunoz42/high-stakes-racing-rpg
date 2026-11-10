@@ -237,3 +237,62 @@ describe('locations', () => {
     expect(pos(viper)).toBeLessThanOrEqual(3);
   });
 });
+
+describe('US-017 race events and lines', () => {
+  it('AC2: reports the player passing a rival, a rival passing the player, and a bump, once each', () => {
+    const s = sim(STRAIGHT, [entrant('p', true), entrant('r', false)]);
+    const [p, r] = s.cars as [(typeof s.cars)[0], (typeof s.cars)[0]];
+    p.x = -2;
+    r.x = 2;
+    r.lane = 2;
+    r.z = p.z + 10;
+    p.v = 40;
+    r.v = 20;
+    r.autopilot = false;
+    s.syncOrder();
+    const seen: string[] = [];
+    const tick = (seconds: number, input = { steer: 0, throttle: 1, brake: 0 }) =>
+      run(s, seconds, input, () =>
+        seen.push(...s.drainEvents().map((e) => `${e.type}:${e.carId}`)),
+      );
+    tick(1.5);
+    expect(seen).toEqual(['playerPasses:r']);
+    // Now the rival comes back past.
+    p.v = 5;
+    r.v = 45;
+    tick(3, { steer: 0, throttle: 0, brake: 1 });
+    expect(seen).toEqual(['playerPasses:r', 'passesPlayer:r']);
+    // And contact.
+    r.z = p.z;
+    r.x = p.x + 1;
+    tick(0.2);
+    expect(seen.filter((e) => e === 'bump:r')).toHaveLength(1);
+  });
+
+  it('AC3: every racer has at least ten lines across all three events, shared with nobody', async () => {
+    const { RACERS } = await import('../data/rivals.ts');
+    expect(RACERS).toHaveLength(6);
+    const all: string[] = [];
+    for (const r of RACERS) {
+      const lines = [...r.lines.passedByPlayer, ...r.lines.passesPlayer, ...r.lines.bump];
+      expect(lines.length, r.id).toBeGreaterThanOrEqual(10);
+      expect(
+        r.lines.passedByPlayer.length && r.lines.passesPlayer.length && r.lines.bump.length,
+      ).toBeGreaterThan(0);
+      all.push(...lines);
+    }
+    expect(new Set(all).size).toBe(all.length);
+  });
+
+  it('a duel is two cars over two laps, with the racer in the car they drive here', async () => {
+    const s = createRace(CATALOGUE, miata.id, baseStats(miata), 4, {
+      locationId: 'autodrome',
+      duelWith: 'nyx-calloway',
+    });
+    expect(s.cars.map((c) => c.id)).toEqual(['nyx-calloway', 'player']);
+    expect(s.laps).toBe(2);
+    expect(s.cars[0]!.carName).toContain('Viper');
+    s.setPlayerAutopilot(true);
+    expect(s.runToFinish(900).order).toHaveLength(2);
+  });
+});
