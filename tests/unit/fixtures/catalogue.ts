@@ -1,0 +1,111 @@
+import type { Catalogue } from '../../../src/data/catalogue.ts';
+import type { Car, Part, Persona } from '../../../src/data/schema.ts';
+
+/** Test-only catalogue. Not real data. */
+const car = (id: string, power_hp: number, weight_kg: number, price_usd = 9000): Car => ({
+  id,
+  make: 'Testa',
+  model: id,
+  generation: 'T1',
+  year: 1995,
+  trim: 'Base',
+  drivetrain: 'RWD',
+  engine: '1.8 I4',
+  power_hp,
+  torque_nm: 150,
+  weight_kg,
+  price_usd,
+  price_basis: 'used-market',
+  price_note: 'test',
+  source_url: 'https://example.com/car',
+  sources: [],
+  checked_on: '2026-01-01',
+  blurb: 'test',
+  game: { color: '#ff0000', body: 'coupe' },
+});
+
+const part = (
+  id: string,
+  category: Part['category'],
+  price: number,
+  tier: Part['tier'] = 'sport',
+  qty = 1,
+): Part => ({
+  id,
+  brand: 'Acme',
+  name: id,
+  part_number: id.toUpperCase(),
+  category,
+  fits: ['alpha'],
+  price_usd: price * qty,
+  unit_price_usd: price,
+  quantity: qty,
+  price_basis: 'msrp',
+  source_url: 'https://example.com/part',
+  checked_on: '2026-01-01',
+  blurb: 'test',
+  tier,
+});
+
+const persona = (
+  id: string,
+  role: Persona['role'],
+  tools: Persona['tools'],
+  extra: Partial<Persona> = {},
+): Persona => ({
+  id,
+  name: id,
+  role,
+  roleTitle: role,
+  age: 40,
+  from: 'Testville',
+  pitch: 'test',
+  portraitColor: '#888888',
+  voice: ['plain'],
+  neverSays: [],
+  wants: ['test'],
+  fears: [],
+  opinions: [],
+  secrets: [],
+  runningJokes: [],
+  aboutOthers: {},
+  leverage: [],
+  tools,
+  greeting: 'hi',
+  suggestions: ['a', 'b'],
+  fallbackLine: 'brb',
+  ...extra,
+});
+
+export const TEST_CATALOGUE: Catalogue = {
+  cars: [car('alpha', 130, 1000), car('beta', 200, 1000, 20000)],
+  parts: [
+    part('tyre-a', 'tyres', 150, 'sport', 4),
+    part('coil-a', 'suspension', 1000),
+    part('coil-b', 'suspension', 1200, 'track'),
+    part('pads-a', 'brakes', 100),
+    { ...part('pads-z', 'brakes', 100), fits: ['beta'] },
+  ],
+  sponsors: [
+    {
+      id: 'fizz',
+      name: 'FIZZ',
+      tagline: 't',
+      minPayoutUsd: 300,
+      maxPayoutUsd: 1200,
+      objectives: ['top3', 'clean'],
+      races: 2,
+    },
+  ],
+  characters: [
+    persona('coach', 'coach', ['give_tip', 'adjust_relationship']),
+    persona('mech', 'mechanic', ['install_part', 'give_tip', 'adjust_relationship']),
+    persona(
+      'seller',
+      'parts',
+      ['quote_part', 'offer_discount', 'sell_part', 'adjust_relationship'],
+      { discountFloor: 0.85 },
+    ),
+    persona('rep', 'sponsor', ['offer_sponsorship', 'adjust_relationship'], { sponsorId: 'fizz' }),
+  ],
+};
