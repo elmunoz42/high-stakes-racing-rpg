@@ -1,0 +1,48 @@
+{
+  "name": "racing-rpg",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "scripts": {
+    "dev": "concurrently -k -n api,web -c blue,green \"npm:dev:api\" \"npm:dev:web\"",
+    "dev:mock": "concurrently -k -n api,web -c blue,green \"npm:dev:api:mock\" \"npm:dev:web\"",
+    "dev:web": "vite --port 5173 --strictPort",
+    "dev:api": "tsx watch server/index.ts",
+    "dev:api:mock": "cross-env LLM_PROVIDER=mock tsx watch server/index.ts",
+    "build": "tsc --noEmit -p tsconfig.json && vite build",
+    "preview": "vite preview --port 5173",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test --grep @US",
+    "test:e2e:demo": "playwright test --grep @demo",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "check": "npm run typecheck && npm run lint && npm run test"
+  },
+  "dependencies": {
+    "@hono/node-server": "2.1.6",
+    "hono": "4.13.17",
+    "openai": "7.55.0",
+    "phaser": "4.2.1",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@eslint/js": "9.39.5",
+    "@playwright/test": "1.65.0",
+    "@types/node": "22.20.5",
+    "concurrently": "9.2.5",
+    "cross-env": "10.1.0",
+    "eslint": "9.39.5",
+    "globals": "17.14.0",
+    "prettier": "3.9.10",
+    "tsx": "4.23.15",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.72.2",
+    "vite": "6.4.6",
+    "vitest": "3.2.7"
+  }
+}

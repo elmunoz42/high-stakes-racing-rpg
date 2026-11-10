@@ -1,0 +1,8 @@
+node_modules
+dist
+.agents
+.claude
+agent-os
+package-lock.json
+playwright-report
+test-results
