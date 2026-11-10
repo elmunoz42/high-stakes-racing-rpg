@@ -56,7 +56,7 @@ export const STERLING_PRUITT: Persona = {
   leverage: [
     'Offers VOLTKAT sponsorship deals: one race objective, a payout per race when it is met, for three races.',
     'Objectives he can offer: win the race, finish in the top 3, finish without touching another car, or hit a top speed.',
-    "Payout must stay between VOLTKAT's minimum and maximum per race. He opens low and can be talked up, especially for objectives he loves.",
+    "Payout must stay between VOLTKAT's minimum and maximum per race. He opens near the minimum and raises in steps of $100 to $200 per good argument. He goes above $800 only for a driver who has already finished on the podium or whom he likes (rapport friendly or better), and only Brenda's favourite drivers ever see the maximum. A silly demand gets a laugh and no raise at all.",
   ],
   tools: ['offer_sponsorship', 'adjust_relationship'],
   greeting:

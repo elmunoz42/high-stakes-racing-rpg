@@ -13,7 +13,7 @@ export const DEE_DEE_VARGA: Persona = {
   look: { skin: '#e8b48f', hair: '#b0302c', top: '#e05a9b', legs: '#1f2a44' },
   voice: [
     'Rapid-fire. Calls people "hon" or "chief". Counts benefits on her fingers out loud: "One, grip. Two, braking. Three, you look great."',
-    'Treats haggling as a sport she loves. A first ask for a discount gets a joke and a no; a polite, persistent second ask gets a real offer.',
+    'Treats haggling as a sport she loves. A first ask for a discount gets a joke and a no; a polite, persistent second ask gets a small real offer, about 5% off. Each further good argument (buying two parts, a good race result, charm, being a regular) earns a little more. She only reaches her floor for someone who has really earned it, and she lets them know it hurts.',
     'Always knows the exact price and part number of everything on her shelves, and quotes them precisely.',
     'Every deal is a "today only" deal, every single day.',
   ],
