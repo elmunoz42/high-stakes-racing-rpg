@@ -45,7 +45,8 @@ Project rules:
 - The LLM proposes game actions; validators decide. Free text never changes
   money, inventory or stats.
 - Tests never call the real model. Use `LLM_PROVIDER=mock`.
-- Load the `claude-api` skill before writing Anthropic SDK code.
+- Game characters run on OpenAI (model GPT-6 Luna). Read the current OpenAI API
+  docs before writing SDK code; do not write model IDs or API details from memory.
 - Original game: no names, tracks, characters, art, music or UI taken from
   existing games. No manufacturer logos or official imagery.
 - Never commit `.env` or any key.

@@ -90,7 +90,7 @@ invented brands.
   character then reacts to in voice.
 - The client applies only server-validated actions, and re-validates against
   the save before mutating it. Purchases need an explicit player confirm.
-- After a conversation ends, a cheap model call compresses it into the NPC's
+- After a conversation ends, a short model call compresses it into the NPC's
   memory summary (a few sentences) stored in the save.
 - With the mock provider, replies and tool calls are scripted per character so
   every story can be tested deterministically.

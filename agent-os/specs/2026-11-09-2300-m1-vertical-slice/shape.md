@@ -12,9 +12,11 @@ Owner decisions (2026-11-09):
 
 - **Racing is retro pseudo-3D** (sprite-scaled road on a 2D canvas), not real
   3D.
-- **LLM hosting is local only for now.** The owner's Anthropic key sits in
+- **LLM hosting is local only for now.** The owner's OpenAI credential sits in
   `.env` behind a small local server. Public hosting is deferred to M5.
 - **Testing level is demo.**
+- **Character dialogue runs on OpenAI, model GPT-6 Luna**, using the owner's
+  OpenAI subscription.
 - Street cars, real cars, real parts at real prices.
 - RPG immersion carries equal weight to the racing.
 
@@ -33,6 +35,8 @@ Planning decisions (changeable, but change the product docs if you do):
 
 ## Open questions for the owner (none block M1)
 
+- Whether the OpenAI subscription covers API calls or a separate API key is
+  needed (to be confirmed from OpenAI's docs at Task 8).
 - The game's name.
 - Which three starter cars, once the candidates are sourced.
 - Whether real-world car and part names stay if the game is released

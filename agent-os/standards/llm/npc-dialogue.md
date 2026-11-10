@@ -1,11 +1,12 @@
 # NPC dialogue and LLM use
 
 - **The key stays on the server.** The browser only talks to `/api/*`. Never
-  log, bundle or commit `ANTHROPIC_API_KEY`. `.env` is gitignored.
-- **Load the `claude-api` skill before writing SDK code.** Take model IDs,
-  streaming, tool use and prompt caching details from there, not from memory.
-  Model IDs are read from env (`NPC_MODEL`, `NPC_MODEL_KEY_SCENES`).
-- **Provider interface.** `LlmProvider` has `anthropic` and `mock`
+  log, bundle or commit `OPENAI_API_KEY`. `.env` is gitignored.
+- **Characters run on OpenAI, model GPT-6 Luna.** Read the current OpenAI API
+  docs before writing SDK code. Take the exact model ID, streaming, tool
+  calling and prompt caching details from there, not from memory. The model ID
+  is read from env (`NPC_MODEL`).
+- **Provider interface.** `LlmProvider` has `openai` and `mock`
   implementations. Tests, CI and `npm run dev:mock` use `mock`. No automated
   test may call the real API.
 - **Persona cards are data** (`src/data/characters/`): identity, voice, wants,

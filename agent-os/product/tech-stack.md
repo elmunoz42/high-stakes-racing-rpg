@@ -1,7 +1,8 @@
 # Tech Stack
 
 Decisions confirmed with the owner on 2026-11-09:
-retro pseudo-3D racing, local-only LLM hosting for now, demo testing level.
+retro pseudo-3D racing, local-only LLM hosting for now, demo testing level,
+OpenAI GPT-6 Luna for character dialogue.
 
 ## Frontend (the game)
 
@@ -25,14 +26,20 @@ retro pseudo-3D racing, local-only LLM hosting for now, demo testing level.
 
 - **Node.js 22 + TypeScript**, a small **Hono** server (Express is acceptable if
   Hono causes friction). Port **8787**; Vite proxies `/api` to it in dev.
-- **Anthropic TypeScript SDK** for character dialogue, with streaming (SSE to
-  the browser) and tool use for game actions.
-- Model IDs come from env, never hardcoded in game logic:
-  `NPC_MODEL` (default `claude-haiku-5-5` for fast, cheap small talk) and
-  `NPC_MODEL_KEY_SCENES` (default `claude-sonnet-5-5` for negotiations and story
-  beats). Load the `claude-api` skill before writing any SDK code and confirm
-  current model IDs, pricing and prompt-caching usage there.
-- **Local only for now.** `ANTHROPIC_API_KEY` lives in `.env` (gitignored;
+- **OpenAI** for character dialogue (owner decision, 2026-11-09): the official
+  OpenAI TypeScript SDK, with streaming (SSE to the browser) and tool/function
+  calling for game actions.
+- **Model: GPT-6 Luna** for all character inference. The model ID comes from
+  env (`NPC_MODEL`), never hardcoded in game logic. Before writing SDK code,
+  read the current OpenAI API docs and confirm: the exact API model ID for
+  GPT-6 Luna, which API surface to use for streaming plus tool calls, and how
+  prompt caching works. Do not write any of these from memory.
+- **Credentials: to confirm with the owner at Task 8.** The owner intends to
+  use their OpenAI subscription. Check in the OpenAI docs whether that
+  subscription can authorise API calls from a local server; if API usage needs
+  a separate API key and billing, tell the owner before going further. Either
+  way the credential is read from env.
+- **Local only for now.** `OPENAI_API_KEY` lives in `.env` (gitignored;
   `.env.example` committed). The key never reaches the browser. Public hosting,
   auth and rate limiting are deferred to the release milestone.
 - **Mock LLM provider** (`LLM_PROVIDER=mock`) returning scripted, deterministic
@@ -71,7 +78,7 @@ src/
   data/        cars, parts, characters, locations, tracks + Zod schemas
   save/        save schema, migrations, storage
   ui/          HTML overlay components
-server/        Hono app, LLM providers (anthropic, mock), prompt builder, action validator
+server/        Hono app, LLM providers (openai, mock), prompt builder, action validator
 shared/        types shared by client and server (actions, persona, game snapshot)
 tests/e2e/stories/
 ```

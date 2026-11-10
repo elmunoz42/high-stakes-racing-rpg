@@ -24,8 +24,8 @@ This folder and stories US-001 to US-009 exist and are committed.
 - Scripts: `dev` (Vite + API with real provider), `dev:mock` (both with
   `LLM_PROVIDER=mock`), `build`, `test` (Vitest), `test:e2e`, `check`.
 - Vite proxies `/api` to `http://localhost:8787`.
-- `.env.example` with `ANTHROPIC_API_KEY=`, `LLM_PROVIDER=anthropic`,
-  `NPC_MODEL=`, `NPC_MODEL_KEY_SCENES=`.
+- `.env.example` with `OPENAI_API_KEY=`, `LLM_PROVIDER=openai`,
+  `NPC_MODEL=`.
 - Folder layout from `agent-os/product/tech-stack.md`.
 - Boot scene shows a title screen at 384x216 integer scaled, with an HTML
   overlay root.
@@ -86,8 +86,11 @@ This folder and stories US-001 to US-009 exist and are committed.
 
 ## Task 8: Dialogue backend
 
-- Load the `claude-api` skill first.
-- `LlmProvider` interface; `anthropic` provider with streaming and tools;
+- Read the current OpenAI API docs first and confirm the exact model ID for
+  GPT-6 Luna, the API surface for streaming with tool calls, and whether the
+  owner's OpenAI subscription can authorise API calls or a separate API key
+  with billing is needed. Report the answer to the owner before continuing.
+- `LlmProvider` interface; `openai` provider with streaming and tools;
   `mock` provider driven by per-character script files.
 - Persona cards for Mags Okafor, Teo Baptista, Dee Dee Varga and Sterling
   Pruitt in `src/data/characters/`, expanded from the game design doc into
