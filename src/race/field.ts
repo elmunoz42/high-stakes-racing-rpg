@@ -30,6 +30,7 @@ export function buildEntrants(
       pace: r.pace,
       color: shade(car.game.color, r.id),
       body: car.game.body,
+      drivetrain: car.drivetrain,
     };
   });
   const player: Entrant = {
@@ -41,6 +42,7 @@ export function buildEntrants(
     pace: 1,
     color: pc.game.color,
     body: pc.game.body,
+    drivetrain: pc.drivetrain,
   };
   ai.splice(PLAYER_GRID_SLOT, 0, player);
   return ai;

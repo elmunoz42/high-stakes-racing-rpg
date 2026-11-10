@@ -12,6 +12,8 @@ import type { RaceEntryResult, RaceResult } from './types.ts';
 export const STEP = 1 / 60;
 export const CAR_LENGTH = 4.2;
 export const CAR_WIDTH = 1.8;
+export const RUMBLE_WIDTH = 0.75; // m of kerb outside the road edge
+export const REDLINE_RPM = 7000;
 const MAX_LATERAL_SPEED = 7.5; // m/s of steering authority at speed
 const OFFROAD_MAX_SPEED = 17; // m/s
 const ROLLING_DRAG = 0.25; // m/s^2
@@ -19,11 +21,28 @@ const ENGINE_BRAKE = 1.6; // m/s^2 with throttle closed
 const LATERAL_LIMIT = ROAD_HALF_WIDTH + 4.5;
 const GRID_ROW_GAP = 9;
 const LOOKAHEAD = 140; // m
+/** Lateral response time, s: how long the car takes to answer the wheel. */
+const RESPONSE_GRIP = 0.1;
+const RESPONSE_SLIDE = 0.3;
+/** Speed scrubbed by a full slide, m/s^2. */
+const SLIDE_SCRUB = 3.2;
+const HANDBRAKE_DECEL = 2.5;
+/** Slipstream: reach behind a car, extra pull and extra top speed at full tow. */
+const DRAFT_RANGE = 32;
+const DRAFT_PULL = 0.7;
+const DRAFT_TOP = 0.05;
+/** Fraction of top speed at which each gear reaches the redline. */
+const GEAR_TOPS = [0.24, 0.42, 0.62, 0.82, 1.08] as const;
+const SHIFT_TIME = 0.16; // s of power cut on an upshift
+
+export type Surface = 'road' | 'rumble' | 'grass';
+export type Drivetrain = 'FWD' | 'RWD' | 'AWD';
 
 export interface DriverInput {
   steer: number; // -1 (left) .. 1 (right)
   throttle: number; // 0..1
   brake: number; // 0..1
+  handbrake?: boolean;
 }
 
 export const NO_INPUT: DriverInput = { steer: 0, throttle: 0, brake: 0 };
@@ -38,13 +57,26 @@ export interface Entrant {
   pace: number;
   color: string;
   body: 'roadster' | 'coupe' | 'hatch';
+  drivetrain?: Drivetrain;
 }
 
 export interface SimCar extends Entrant {
+  drivetrain: Drivetrain;
   z: number; // distance travelled, m (negative on the grid)
   x: number; // lateral offset from centre line, m
   v: number; // m/s
+  vx: number; // lateral velocity, m/s
+  /** 0 = tyres gripping, 1 = fully sliding. */
+  slide: number;
+  /** 0..1 strength of the slipstream from a car ahead. */
+  draft: number;
+  gear: number; // 1..5
+  rpm: number;
+  shiftT: number; // s of power cut left
+  braking: boolean;
+  surface: Surface;
   lane: number; // AI preferred line, m
+  /** Smoothed yaw for drawing: steering plus slide angle, about -1.5..1.5. */
   steerVisual: number;
   finished: boolean;
   finishTime: number;
@@ -87,7 +119,16 @@ export class RaceSim {
         ...e,
         z: -row * GRID_ROW_GAP - 2,
         x: side * 2.4,
+        drivetrain: e.drivetrain ?? 'RWD',
         v: 0,
+        vx: 0,
+        slide: 0,
+        draft: 0,
+        gear: 1,
+        rpm: 900,
+        shiftT: 0,
+        braking: false,
+        surface: 'road' as Surface,
         lane: side * (1.2 + this.rng() * 2),
         steerVisual: 0,
         finished: false,
@@ -150,40 +191,97 @@ export class RaceSim {
     for (const car of this.cars) this.checkLaps(car);
   }
 
+  /** Slipstream strength from the nearest car directly ahead. */
+  private updateDraft(car: SimCar): void {
+    let best = 0;
+    if (car.v > 20) {
+      for (const other of this.cars) {
+        if (other === car || other.v < 15) continue;
+        const dz = other.z - car.z;
+        if (dz <= CAR_LENGTH || dz >= DRAFT_RANGE || Math.abs(other.x - car.x) > 1.5) continue;
+        best = Math.max(best, 1 - (dz - CAR_LENGTH) / (DRAFT_RANGE - CAR_LENGTH));
+      }
+    }
+    car.draft += (best - car.draft) * 0.08;
+    if (car.draft < 0.01) car.draft = 0;
+  }
+
+  /** Automatic gearbox: picks the gear, cuts power briefly on upshifts, sets revs. */
+  private updateGearbox(car: SimCar): void {
+    const f = car.v / car.perf.topSpeed;
+    if (car.shiftT > 0) car.shiftT -= STEP;
+    if (car.gear < GEAR_TOPS.length && f > GEAR_TOPS[car.gear - 1]! * 0.97) {
+      car.gear += 1;
+      car.shiftT = SHIFT_TIME;
+    } else if (car.gear > 1 && f < GEAR_TOPS[car.gear - 2]! * 0.8) {
+      car.gear -= 1;
+    }
+    const rpm = 1100 + (f / GEAR_TOPS[car.gear - 1]!) * (REDLINE_RPM - 1100);
+    car.rpm = Math.max(900, Math.min(REDLINE_RPM + 200, rpm));
+  }
+
   /** Physics for one car, one step. */
   private integrate(car: SimCar, input: DriverInput): void {
     const seg = segmentAt(this.track, car.z);
     const { perf } = car;
-    const offroad = Math.abs(car.x) > ROAD_HALF_WIDTH;
+    const off = Math.abs(car.x) - ROAD_HALF_WIDTH;
+    const surface: Surface = off > RUMBLE_WIDTH ? 'grass' : off > -0.1 ? 'rumble' : 'road';
+    car.surface = surface;
 
-    // Longitudinal
-    const vmax = perf.topSpeed;
     const throttle = Math.max(0, Math.min(1, input.throttle));
     const brake = Math.max(0, Math.min(1, input.brake));
-    let a = throttle * perf.accel * Math.max(0, 1 - (car.v / vmax) ** 2);
-    if (offroad) a *= 0.5;
+    const steer = Math.max(-1, Math.min(1, input.steer));
+    const handbrake = !!input.handbrake && car.v > 6;
+    car.braking = brake > 0.1 || handbrake;
+
+    // Longitudinal: engine through the gearbox, drag, brakes, slope, slipstream.
+    this.updateDraft(car);
+    this.updateGearbox(car);
+    const vmax = perf.topSpeed * (1 + DRAFT_TOP * car.draft);
+    const power = car.shiftT > 0 ? 0 : throttle;
+    let a = power * (perf.accel * Math.max(0, 1 - (car.v / vmax) ** 2) + DRAFT_PULL * car.draft);
     let d = ROLLING_DRAG + brake * perf.brakeDecel + (throttle < 0.05 ? ENGINE_BRAKE : 0);
-    if (offroad && car.v > OFFROAD_MAX_SPEED) d += 7;
+    if (handbrake) d += HANDBRAKE_DECEL;
+    if (surface === 'grass') {
+      a *= 0.45;
+      d += car.v > OFFROAD_MAX_SPEED ? 7 : 0.8;
+    } else if (surface === 'rumble') d += 0.5;
     const slope = (seg.y2 - seg.y1) / SEGMENT_LENGTH;
     a -= 9.81 * slope * 0.6;
 
-    // Lateral: demanded cornering acceleration vs grip.
+    // Lateral: what the corner demands against what the tyres can give.
     const demand = car.v * car.v * Math.abs(seg.kappa);
-    const grip = perf.lateralGrip * (offroad ? 0.7 : 1);
-    const steerAuthority = MAX_LATERAL_SPEED * Math.min(1, car.v / 12);
-    let drift = (demand / grip) * steerAuthority * 0.75;
-    if (demand > grip) {
-      const over = demand - grip;
-      drift = steerAuthority * 0.75 + over * 1.3;
-      d += over * 0.35; // tyres scrub speed when sliding
-    }
-    car.v = Math.max(0, Math.min(vmax * 1.02, car.v + (a - d) * STEP));
+    let grip = perf.lateralGrip * (surface === 'grass' ? 0.6 : 1);
+    if (car.drivetrain === 'FWD' && throttle > 0.8) grip *= 0.96; // power understeer
+    if (brake > 0.8) grip *= 0.95; // braking and turning share the tyre
+    grip *= 1 - 0.22 * car.slide;
+    const authority = MAX_LATERAL_SPEED * Math.min(1, car.v / 12);
+    const over = Math.max(0, demand - grip);
+    const hold = Math.min(1, demand / grip);
+    const push = hold * authority * 0.75 + over * 1.3;
 
-    const steer = Math.max(-1, Math.min(1, input.steer));
-    car.x += (steer * steerAuthority - Math.sign(seg.kappa) * drift) * STEP;
-    car.steerVisual += (steer - car.steerVisual) * 0.25;
+    // Slide: understeer past the limit, power oversteer in rear-drive cars, handbrake.
+    let wantSlide = Math.min(1, over / 2.5);
+    const loaded = hold > 0.9 && Math.abs(steer) > 0.8 && car.v > 14;
+    if (car.drivetrain === 'RWD' && throttle > 0.7 && loaded) wantSlide = Math.max(wantSlide, 0.6);
+    if (handbrake) wantSlide = Math.max(wantSlide, Math.abs(steer) > 0.3 ? 1 : 0.35);
+    car.slide += (wantSlide - car.slide) * Math.min(1, (wantSlide > car.slide ? 6 : 1.8) * STEP);
+    if (car.slide < 0.005) car.slide = 0;
+    d += car.slide * SLIDE_SCRUB + over * 0.35;
+
+    // The car answers the wheel with a little lag; a sliding car answers slowly.
+    const targetVx = steer * authority * (1 + 0.2 * car.slide) - Math.sign(seg.kappa) * push;
+    const tau = RESPONSE_GRIP + (RESPONSE_SLIDE - RESPONSE_GRIP) * car.slide;
+    car.vx += (targetVx - car.vx) * (1 - Math.exp(-STEP / tau));
+
+    car.v = Math.max(0, Math.min(vmax * 1.02, car.v + (a - d) * STEP));
+    car.x += car.vx * STEP;
+    const slideDir = Math.abs(steer) > 0.1 ? Math.sign(steer) : -Math.sign(seg.kappa);
+    const yaw = steer * 0.55 + car.slide * slideDir * 0.9;
+    car.steerVisual += (yaw - car.steerVisual) * 0.18;
     if (Math.abs(car.x) > LATERAL_LIMIT) {
       car.x = Math.sign(car.x) * LATERAL_LIMIT;
+      car.vx = 0;
       car.v *= 0.985;
     }
     car.z += car.v * STEP;
@@ -217,7 +315,8 @@ export class RaceSim {
     for (const other of this.cars) {
       if (other === car) continue;
       const dz = other.z - car.z;
-      if (dz > 0 && dz < 22 && Math.abs(other.x - car.x) < 2.4 && other.v < car.v + 1) {
+      // Stay in the tow until close, then pull out to pass.
+      if (dz > 0 && dz < 13 && Math.abs(other.x - car.x) < 2.4 && other.v < car.v + 1) {
         lane = other.x > 0 ? other.x - 3.2 : other.x + 3.2;
         break;
       }
@@ -231,6 +330,7 @@ export class RaceSim {
     return { steer: Math.max(-1, Math.min(1, steer)), throttle, brake };
   }
 
+  /** Car-to-car contact: both cars feel it, and it is counted once per touch. */
   private resolveContacts(): void {
     for (let i = 0; i < this.cars.length; i++) {
       for (let j = i + 1; j < this.cars.length; j++) {
@@ -241,11 +341,21 @@ export class RaceSim {
         const dx = b.x - a.x;
         if (Math.abs(dz) > CAR_LENGTH || Math.abs(dx) > CAR_WIDTH) continue;
         const [rear, front] = dz > 0 ? [a, b] : [b, a];
-        rear.v = Math.min(rear.v, front.v) * 0.88;
+        if (rear.v > front.v) {
+          // Nose to tail: the car behind is checked, the car ahead gets a shove.
+          const avg = (rear.v + front.v) / 2;
+          rear.v = avg * 0.92;
+          front.v = Math.min(front.perf.topSpeed * 1.02, avg * 1.03);
+        } else {
+          a.v *= 0.985;
+          b.v *= 0.985;
+        }
         const push = (CAR_WIDTH - Math.abs(dx)) / 2 + 0.05;
         const dir = dx >= 0 ? 1 : -1;
         a.x -= dir * push;
         b.x += dir * push;
+        a.vx -= dir * 1.2;
+        b.vx += dir * 1.2;
         const key = `${a.id}|${b.id}`;
         const last = this.contacts.get(key) ?? -10;
         if (this.time - last > 1) {
