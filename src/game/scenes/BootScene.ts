@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { goto } from '../flow.ts';
-import { generateRaceTextures } from '../textures.ts';
+import { generateRaceTextures } from '../art/textures.ts';
 
 export class BootScene extends Phaser.Scene {
   constructor() {

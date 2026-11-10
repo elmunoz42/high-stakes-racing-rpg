@@ -49,6 +49,8 @@ export interface Segment {
   y1: number;
   y2: number;
   scenery: SceneryPlacement[];
+  /** Ground and roadside theme of the section this segment is in. */
+  theme: SceneryKind;
   /** Alternating stripe flag for rumble strips and grass. */
   stripe: boolean;
   isStartLine: boolean;
@@ -86,7 +88,8 @@ export function buildTrack(def: TrackDef): Track {
         kappa: k,
         y1,
         y2,
-        scenery: scenery(section.scenery ?? 'harbour', index),
+        scenery: scenery(section.scenery ?? 'harbour', index, section.curve),
+        theme: section.scenery ?? 'harbour',
         stripe: Math.floor(index / RUMBLE_SEGMENTS) % 2 === 0,
         isStartLine: index < 2,
       });
@@ -104,38 +107,69 @@ export function buildTrack(def: TrackDef): Track {
   return { def, segments, length: segments.length * SEGMENT_LENGTH };
 }
 
-/** Deterministic roadside dressing by scenery kind and segment index. */
-function scenery(kind: SceneryKind, i: number): SceneryPlacement[] {
+/** Deterministic roadside dressing by scenery kind, segment index and corner. */
+function scenery(kind: SceneryKind, i: number, curve: number): SceneryPlacement[] {
   const out: SceneryPlacement[] = [];
   const every = (n: number, offset = 0) => i % n === offset;
-  if (every(16)) {
-    out.push({ key: 'lamp', x: -8 }, { key: 'lamp', x: 8, flip: true });
+  const edge = ROAD_HALF_WIDTH;
+
+  // Start line furniture.
+  if (i === 1) out.push({ key: 'gantry', x: 0 });
+  if (i === 14 || i === 40) out.push({ key: 'grandstand', x: 19 });
+
+  // Tight corners get barriers and arrow boards on the outside.
+  if (Math.abs(curve) >= 9) {
+    const outside = curve > 0 ? -1 : 1;
+    if (every(2)) out.push({ key: 'barrier', x: outside * (edge + 2.4) });
+    if (every(8, 3))
+      out.push({ key: curve > 0 ? 'chevron-r' : 'chevron-l', x: outside * (edge + 4.2) });
   }
+
+  if (kind !== 'bridge' && every(16))
+    out.push({ key: 'lamp', x: -(edge + 1.6) }, { key: 'lamp', x: edge + 1.6, flip: true });
+
   switch (kind) {
     case 'harbour':
-      if (every(24, 8)) out.push({ key: 'palm', x: -11 });
-      if (every(24, 20)) out.push({ key: 'palm', x: 12 });
-      if (every(120, 60)) out.push({ key: 'billboard', x: 14 });
+      // Sea wall on the left, palms and billboards on the right.
+      if (every(4, 2)) out.push({ key: 'bollard', x: -(edge + 3.4) });
+      if (every(90, 30)) out.push({ key: 'sailboat', x: -34 });
+      if (every(90, 75)) out.push({ key: 'sailboat', x: -58, flip: true });
+      if (every(20, 8)) out.push({ key: 'palm', x: edge + 4.5 });
+      if (every(20, 18)) out.push({ key: 'bush', x: edge + 3 });
+      if (every(110, 50)) out.push({ key: 'billboard-voltkat', x: edge + 9 });
+      if (every(110, 105)) out.push({ key: 'billboard-varga', x: edge + 9 });
       break;
     case 'docks':
-      if (every(40, 10)) out.push({ key: 'warehouse', x: -20 });
-      if (every(60, 30)) out.push({ key: 'crane', x: 24 });
-      if (every(12, 4)) out.push({ key: 'bollard', x: 7.5 });
+      if (every(44, 10)) out.push({ key: 'warehouse', x: -(edge + 16) });
+      if (every(30, 4)) out.push({ key: 'containers', x: edge + 11 });
+      if (every(30, 19)) out.push({ key: 'containers', x: -(edge + 9), flip: true });
+      if (every(70, 30)) out.push({ key: 'crane', x: edge + 22 });
+      if (every(6, 2))
+        out.push({ key: 'bollard', x: edge + 1.2 }, { key: 'bollard', x: -(edge + 1.2) });
       break;
     case 'town':
-      if (every(28, 6)) out.push({ key: 'shopfront', x: -15 });
-      if (every(28, 20)) out.push({ key: 'shopfront', x: 15, flip: true });
+      if (every(22, 6)) out.push({ key: 'shops', x: -(edge + 10) });
+      if (every(22, 17)) out.push({ key: 'shops', x: edge + 10, flip: true });
+      if (every(44, 12)) out.push({ key: 'apartments', x: edge + 24 });
+      if (every(44, 34)) out.push({ key: 'apartments', x: -(edge + 24), flip: true });
+      if (every(120, 60)) out.push({ key: 'billboard-teo', x: edge + 9 });
       break;
     case 'cliff':
-      if (every(10, 3)) out.push({ key: 'rock', x: -10 });
-      if (every(18, 11)) out.push({ key: 'pine', x: 11 });
+      if (every(9, 3)) out.push({ key: 'rock', x: -(edge + 4) });
+      if (every(14, 8)) out.push({ key: 'pine', x: edge + 5 });
+      if (every(14, 1)) out.push({ key: 'pine', x: -(edge + 9) });
+      if (every(7, 5)) out.push({ key: 'bush', x: edge + 3 });
       break;
     case 'bridge':
-      if (every(6)) out.push({ key: 'girder', x: -7.5 }, { key: 'girder', x: 7.5, flip: true });
+      if (every(5))
+        out.push({ key: 'truss', x: -(edge + 1.4) }, { key: 'truss', x: edge + 1.4, flip: true });
+      if (every(40, 20)) out.push({ key: 'sailboat', x: 30 });
       break;
     case 'lighthouse':
-      if (every(200, 40)) out.push({ key: 'lighthouse', x: -26 });
-      if (every(10, 5)) out.push({ key: 'rock', x: 10 });
+      if (every(160, 40)) out.push({ key: 'lighthouse', x: -(edge + 20) });
+      if (every(10, 5)) out.push({ key: 'rock', x: edge + 4 });
+      if (every(8, 2)) out.push({ key: 'bush', x: -(edge + 3) });
+      if (every(26, 13)) out.push({ key: 'pine', x: edge + 10 });
       break;
   }
   return out;

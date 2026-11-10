@@ -430,6 +430,7 @@ input[type='text']:focus {
   right: 0.6em;
   display: flex;
   justify-content: space-between;
+  align-items: flex-start;
 }
 .race-hud .chip {
   background: var(--panel);
@@ -438,26 +439,148 @@ input[type='text']:focus {
   padding: 0.25em 0.6em;
   font-weight: 700;
 }
-.race-hud .speed {
+.race-hud .chip.big {
+  font-size: 1.5em;
+  color: var(--accent);
+  border-color: var(--accent);
+}
+.race-hud .progress {
   position: absolute;
-  bottom: 0.8em;
+  top: 3.4em;
+  left: 30%;
+  right: 30%;
+  height: 0.35em;
+  background: rgba(14, 16, 30, 0.75);
+  border: 1px solid var(--line);
+  border-radius: 1em;
+}
+.race-hud .progress i {
+  position: absolute;
+  top: 50%;
+  width: 0.6em;
+  height: 0.6em;
+  margin: -0.3em 0 0 -0.3em;
+  border-radius: 50%;
+  border: 1px solid #0b0d17;
+}
+.race-hud .progress i.me {
+  width: 0.9em;
+  height: 0.9em;
+  margin: -0.45em 0 0 -0.45em;
+  z-index: 1;
+  box-shadow: 0 0 0.4em var(--accent);
+}
+.race-hud .cluster {
+  position: absolute;
   right: 0.8em;
-  font-size: 1.6em;
+  bottom: 0.8em;
+  width: 7.5em;
+  height: 7.5em;
+  background: radial-gradient(
+    circle,
+    rgba(14, 16, 30, 0.92) 55%,
+    rgba(14, 16, 30, 0.6) 70%,
+    transparent 72%
+  );
+  border-radius: 50%;
+}
+.race-hud .tach {
+  position: absolute;
+  inset: 0;
+}
+.race-hud .tach svg {
+  width: 100%;
+  height: 100%;
+}
+.race-hud .tach path {
+  fill: none;
+  stroke-width: 7;
+  stroke-linecap: butt;
+}
+.race-hud .tach .track {
+  stroke: #3a3d63;
+}
+.race-hud .tach .red {
+  stroke: #d7263d;
+}
+.race-hud .tach .value {
+  stroke: var(--accent);
+  transition: stroke-dasharray 60ms linear;
+}
+.race-hud .tach .value.hot {
+  stroke: #ff5e7a;
+}
+.race-hud .gear {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 1.05em;
+  text-align: center;
+  font-size: 2.3em;
+  font-weight: 900;
+  color: var(--ink);
+}
+.race-hud .kmh {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 1.6em;
+  text-align: center;
   font-weight: 800;
-  background: var(--panel);
-  padding: 0.1em 0.5em;
+  font-size: 0.95em;
+  color: var(--accent);
+}
+.race-hud .tow {
+  position: absolute;
+  bottom: 9em;
+  right: 1.2em;
+  background: var(--accent);
+  color: #1b1300;
+  font-weight: 900;
+  padding: 0.15em 0.6em;
   border-radius: 4px;
-  border: 2px solid var(--line);
+  letter-spacing: 0.08em;
+  animation: blink 0.5s steps(2) infinite;
+}
+.race-hud .keys {
+  position: absolute;
+  left: 0.8em;
+  bottom: 0.8em;
+  font-size: 0.72em;
+  opacity: 0.75;
+  background: var(--panel);
+  padding: 0.2em 0.6em;
+  border-radius: 4px;
 }
 .countdown {
   position: absolute;
   top: 35%;
   left: 50%;
   transform: translate(-50%, -50%);
-  font-size: 4em;
+  font-size: 5em;
   font-weight: 900;
   color: var(--accent);
-  text-shadow: 3px 3px 0 #000;
+  text-shadow:
+    4px 4px 0 #000,
+    -1px -1px 0 #000;
+}
+.countdown.pulse {
+  animation: pulse 0.6s ease-out;
+}
+@keyframes pulse {
+  from {
+    transform: translate(-50%, -50%) scale(1.8);
+    opacity: 0.2;
+  }
+  to {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+}
+@keyframes blink {
+  50% {
+    opacity: 0.55;
+  }
 }
 
 /* Results */
