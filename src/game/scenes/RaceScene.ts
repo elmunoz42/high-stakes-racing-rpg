@@ -10,6 +10,7 @@ import { installedParts } from '../../rpg/actions.ts';
 import { carStats, msToKmh } from '../../rpg/carStats.ts';
 import { store } from '../../save/store.ts';
 import { h, mount } from '../../ui/dom.ts';
+import { formatTime } from '../../ui/format.ts';
 import { goto } from '../flow.ts';
 import { registerHook } from '../testHooks.ts';
 import { carTexture, CAR_TEX_H, CAR_TEX_W } from '../textures.ts';
@@ -241,13 +242,6 @@ export class RaceScene extends Phaser.Scene {
     if (!r.ok) console.error('[race] could not record result', r.error);
     goto('Results');
   }
-}
-
-export function formatTime(ms: number): string {
-  const total = Math.max(0, ms) / 1000;
-  const m = Math.floor(total / 60);
-  const s = total - m * 60;
-  return `${m}:${s.toFixed(1).padStart(4, '0')}`;
 }
 
 function seedFromUrl(): number | undefined {

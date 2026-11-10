@@ -59,7 +59,7 @@ describe('POST /api/chat (mock provider)', () => {
     expect(applied).toMatchObject({
       action: { type: 'offerDiscount', partId: 'blox-ss2-bxss-02905', priceUsd: 640.8 },
     });
-    expect(second.text).toContain('$640.8');
+    expect(second.text).toContain('$640.80');
   });
 
   it('the sponsor offers a deal inside the budget', async () => {

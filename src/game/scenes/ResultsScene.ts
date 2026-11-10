@@ -5,7 +5,7 @@ import { usd } from '../../rpg/economy.ts';
 import { store } from '../../save/store.ts';
 import { h, mount } from '../../ui/dom.ts';
 import { goto } from '../flow.ts';
-import { formatTime } from './RaceScene.ts';
+import { formatTime } from '../../ui/format.ts';
 
 export class ResultsScene extends Phaser.Scene {
   constructor() {

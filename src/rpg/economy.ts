@@ -71,5 +71,8 @@ export function describeObjective(objective: Objective): string {
   }
 }
 
-export const usd = (n: number) =>
-  `$${n.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
+/** USD with cents only when there are cents: $712, $640.80. */
+export const usd = (n: number) => {
+  const digits = Math.round(n * 100) % 100 === 0 ? 0 : 2;
+  return `$${n.toLocaleString('en-US', { minimumFractionDigits: digits, maximumFractionDigits: 2 })}`;
+};

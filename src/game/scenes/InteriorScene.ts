@@ -156,6 +156,8 @@ export class InteriorScene extends Phaser.Scene {
     openDialogue(this.characterId, () => {
       this.talking = false;
       this.walker.frozen = false;
+      // Keys pressed while typing must not trigger the room afterwards.
+      for (const k of [...this.interactKeys, this.escKey]) k.reset();
     });
   }
 

@@ -237,7 +237,7 @@ input[type='text']:focus {
 /* Dialogue */
 .dialogue {
   position: absolute;
-  inset: 4% 3%;
+  inset: 9% 2% 3%;
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 0.9fr);
   gap: 0.7em;
@@ -496,4 +496,22 @@ input[type='text']:focus {
   margin-top: auto;
   display: flex;
   justify-content: flex-end;
+}
+
+.msg.typing {
+  color: var(--muted);
+}
+.part.highlight {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent) inset;
+}
+.part a {
+  color: var(--muted);
+}
+.dialogue .role[data-testid='rapport'] {
+  display: block;
+  color: var(--accent);
+}
+.side ul li {
+  margin-bottom: 0.3em;
 }

@@ -5,6 +5,7 @@ import { performance } from '../../rpg/carStats.ts';
 import { baseStats, msToKmh } from '../../rpg/carStats.ts';
 import { CAREER_FUND_USD, usd } from '../../rpg/economy.ts';
 import { store } from '../../save/store.ts';
+import { resetConversations } from '../../ui/dialogue.ts';
 import { h, mount } from '../../ui/dom.ts';
 import { goto } from '../flow.ts';
 
@@ -67,6 +68,7 @@ export class CarPickScene extends Phaser.Scene {
     };
     buy.addEventListener('click', () => {
       if (!chosen) return;
+      resetConversations();
       store.newCareer(chosen.id, (Math.random() * 1e9) | 0);
       goto('Town');
     });
