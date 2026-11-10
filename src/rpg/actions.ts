@@ -225,6 +225,7 @@ export function applyAction(state: GameState, action: GameAction, cat: Catalogue
       const prize = prizeFor(r.position);
       let payout = 0;
       let met: boolean | null = null;
+      const sponsorId = s.sponsor?.sponsorId ?? null;
       if (s.sponsor && s.sponsor.racesLeft > 0) {
         met = objectiveMet(s.sponsor.objective, r);
         if (met) payout = s.sponsor.payoutUsd;
@@ -237,6 +238,7 @@ export function applyAction(state: GameState, action: GameAction, cat: Catalogue
         prizeUsd: prize,
         sponsorPayoutUsd: payout,
         objectiveMet: met,
+        sponsorId,
         balanceAfter: s.money,
       };
       s.lastRace = record;

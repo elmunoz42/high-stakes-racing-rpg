@@ -48,6 +48,7 @@ export const RaceRecord = RaceResult.extend({
   prizeUsd: z.number().nonnegative(),
   sponsorPayoutUsd: z.number().nonnegative(),
   objectiveMet: z.boolean().nullable(),
+  sponsorId: z.string().nullable().default(null),
   balanceAfter: z.number(),
 });
 export type RaceRecord = z.infer<typeof RaceRecord>;

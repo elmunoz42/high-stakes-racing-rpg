@@ -1,18 +1,24 @@
 import Phaser from 'phaser';
+import { initFlow } from './game/flow.ts';
+import { BootScene } from './game/scenes/BootScene.ts';
+import { RaceScene } from './game/scenes/RaceScene.ts';
+import { ResultsScene } from './game/scenes/ResultsScene.ts';
 import { TitleScene } from './game/scenes/TitleScene.ts';
-
-export const GAME_WIDTH = 384;
-export const GAME_HEIGHT = 216;
+import { installTestHooks } from './game/testHooks.ts';
+import { SCREEN_H, SCREEN_W } from './race/projection.ts';
 
 const game = new Phaser.Game({
   type: Phaser.AUTO,
   parent: 'game',
-  width: GAME_WIDTH,
-  height: GAME_HEIGHT,
+  width: SCREEN_W,
+  height: SCREEN_H,
   pixelArt: true,
   backgroundColor: '#0b0d17',
   scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
-  scene: [TitleScene],
+  scene: [BootScene, TitleScene, RaceScene, ResultsScene],
 });
+
+initFlow(game);
+installTestHooks();
 
 export default game;
