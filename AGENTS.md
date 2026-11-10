@@ -36,14 +36,15 @@ Read in this order before doing anything:
 2. `agent-os/standards/` (four short files, indexed in `index.yml`)
 3. The current spec: `agent-os/specs/2026-11-09-2300-m1-vertical-slice/plan.md`
 
-Current state: M1 vertical slice done on branch `m1-vertical-slice` (stories
-US-001 to US-009 verified at demo level). Next: M2 (garage and economy
+Current state: M1 vertical slice plus the race feel and visual pass are done
+(stories US-001 to US-011 verified at demo level; latest work is on branch
+`race-feel-visual-pass`). All art is generated in code under `src/game/art/`. Next: M2 (garage and economy
 depth); shape it with the shape-spec skill first.
 
 Running things: `npm run dev` (real characters, needs `OPENAI_API_KEY` in
 `.env`), `npm run dev:mock` (scripted characters), `npm run check`,
-`npm run test:e2e` (uses the mock; add `PW_CHANNEL=chrome` if Playwright's
-Chromium is not installed). `npx tsx scripts/talk.ts <character-id> "line"`
+`npm run test:e2e` (starts its own mock servers on ports 5273/8887; add
+`PW_CHANNEL=chrome` if Playwright's Chromium is not installed). `npx tsx scripts/talk.ts <character-id> "line"`
 talks to a character through the real engine from the terminal.
 
 Project rules:

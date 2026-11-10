@@ -181,7 +181,7 @@ export class RaceScene extends Phaser.Scene {
     );
     const progress = h(
       'div',
-      { class: 'progress', role: 'img', 'aria-label': 'Lap progress' },
+      { class: 'progress', role: 'img', 'aria-label': 'Field map' },
       markers,
     );
     mount(

@@ -24,7 +24,10 @@ town and time on track should be roughly equal.
 
 - Sprite-scaled pseudo-3D road: curves, hills, roadside scenery, traffic of AI
   rivals. Fixed timestep simulation (60 Hz), seeded RNG, pure TypeScript.
-- Controls: steer, throttle, brake, (M2) handbrake/drift. Keyboard first.
+- Controls: steer, throttle, brake, handbrake (Space) for slides. Keyboard first.
+- Handling: the car answers the wheel with a little lag; past the grip limit it
+  pushes wide and scrubs speed; rear-drive cars can power-slide, front-drive
+  cars push on the throttle; a tow behind another car adds speed.
 - Car stats that parts change and the race reads:
   `power_hp`, `weight_kg`, `grip`, `braking`, `aero`, `gearing`, `reliability`.
   Derived: acceleration, top speed, cornering limit, braking distance.

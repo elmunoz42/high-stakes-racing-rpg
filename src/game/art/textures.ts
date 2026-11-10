@@ -1,6 +1,8 @@
 import type Phaser from 'phaser';
 import { type Body, CAR_H, CAR_W, SIDE_H, SIDE_W, drawCarRear, drawCarSide } from './cars.ts';
+import { drawPerson, type Look, PERSON_H, PERSON_W, type Style } from './people.ts';
 import type { Ctx } from './pixel.ts';
+import { INTERIORS, TOWN } from './town.ts';
 import { BACKDROPS, SCENERY } from './race.ts';
 
 /** Creates a canvas texture once; later calls with the same key are free. */
@@ -49,6 +51,18 @@ export function carSideTexture(scene: Phaser.Scene, body: Body, color: string): 
 export function generateRaceTextures(scene: Phaser.Scene): void {
   for (const [key, [w, h, draw]] of Object.entries({ ...SCENERY, ...BACKDROPS }))
     canvasTexture(scene, key, w, h, draw);
+}
+
+export function generateTownTextures(scene: Phaser.Scene): void {
+  for (const [key, [w, h, draw]] of Object.entries({ ...TOWN, ...INTERIORS }))
+    canvasTexture(scene, key, w, h, draw);
+}
+
+/** Five frames per person: `${key}-0` standing, `${key}-1..4` walking. */
+export function personTextures(scene: Phaser.Scene, key: string, look: Look, style: Style): string {
+  for (let f = 0; f < 5; f++)
+    canvasTexture(scene, `${key}-${f}`, PERSON_W, PERSON_H, (c) => drawPerson(c, look, style, f));
+  return key;
 }
 
 export { CAR_H, CAR_W };

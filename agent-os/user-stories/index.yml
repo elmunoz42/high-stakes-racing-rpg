@@ -77,7 +77,7 @@ US-009:
 US-010:
   file: US-010-feel-the-cars-limits.md
   title: Feel the car's limits
-  status: draft
+  status: verified
   tags: [race, physics]
   sets: [demo, production]
   source: spec:2026-11-10-0030-race-feel-and-visual-pass
@@ -85,7 +85,7 @@ US-010:
 US-011:
   file: US-011-read-the-race-from-the-hud.md
   title: Read the race from the HUD
-  status: draft
+  status: verified
   tags: [race, hud]
   sets: [demo, production]
   source: spec:2026-11-10-0030-race-feel-and-visual-pass

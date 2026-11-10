@@ -23,6 +23,7 @@ import { type CarStats, carStats, msToKmh, performance } from '../rpg/carStats.t
 import { describeObjective, usd } from '../rpg/economy.ts';
 import { store } from '../save/store.ts';
 import { clear, h, mount, toast } from './dom.ts';
+import { portraitUrl } from './portrait.ts';
 
 /**
  * The dialogue overlay: portrait, streamed replies, free text and suggested
@@ -97,10 +98,6 @@ class DialogueView {
       p.suggestions.map((s) => h('button', { type: 'button', onclick: () => void this.say(s) }, s)),
     );
     this.side = h('aside', { class: 'side panel', 'aria-label': sideLabel(p) });
-    const initials = p.name
-      .split(' ')
-      .map((w) => w[0])
-      .join('');
     mount(
       'dialogue',
       h(
@@ -117,11 +114,11 @@ class DialogueView {
           h(
             'header',
             {},
-            h(
-              'div',
-              { class: 'portrait', style: `background:${p.portraitColor}`, 'aria-hidden': 'true' },
-              initials,
-            ),
+            h('img', {
+              class: 'portrait',
+              alt: `Portrait of ${p.name}`,
+              src: portraitUrl(p.id, p.look, p.role, p.portraitColor),
+            }),
             h(
               'div',
               {},

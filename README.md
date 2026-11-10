@@ -44,13 +44,13 @@ Open http://localhost:5173. The API runs on port 8787 and Vite proxies
 |---|---|
 | Town and interiors | ← → or A D to walk, E (or Enter, Space, ↑) to interact, Esc to leave a building |
 | Conversations | Type and press Enter, or click a suggested line. Esc to leave |
-| Race | ↑ or W accelerate, ↓ S or Space brake, ← → or A D steer |
+| Race | ↑ or W accelerate, ↓ or S brake, ← → or A D steer, Space handbrake (slides the car) |
 
 ## Develop
 
 ```bash
 npm run check          # typecheck, lint, unit tests
-npm run test:e2e       # Playwright story tests (starts the mock servers)
+npm run test:e2e       # Playwright story tests (own mock servers on ports 5273/8887)
 npx tsx scripts/talk.ts dee-dee-varga "Can you do me a better price?"   # talk to a character from the terminal
 ```
 

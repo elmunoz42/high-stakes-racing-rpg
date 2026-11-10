@@ -7,6 +7,8 @@ import { CAREER_FUND_USD, usd } from '../../rpg/economy.ts';
 import { store } from '../../save/store.ts';
 import { resetConversations } from '../../ui/dialogue.ts';
 import { h, mount } from '../../ui/dom.ts';
+import { drawCarSide, SIDE_H, SIDE_W } from '../art/cars.ts';
+import { makeCanvas } from '../art/pixel.ts';
 import { goto } from '../flow.ts';
 
 export class CarPickScene extends Phaser.Scene {
@@ -15,7 +17,7 @@ export class CarPickScene extends Phaser.Scene {
   }
 
   create(): void {
-    this.add.image(0, 0, 'sky').setOrigin(0, 0).setDisplaySize(384, 216);
+    this.add.image(0, 0, 'bg-sky').setOrigin(0, 0).setDisplaySize(384, 216);
     const cars = store.catalogue.cars;
     let chosen: Car | null = null;
     const buy = h('button', { class: 'primary', disabled: true }, 'Choose a car');
@@ -34,6 +36,7 @@ export class CarPickScene extends Phaser.Scene {
           'data-car-id': car.id,
           onclick: () => select(car, card),
         },
+        h('img', { class: 'car-art', alt: '', src: carSideUrl(car.game.body, car.game.color) }),
         h('h2', {}, carName(car)),
         h('div', { class: 'muted' }, `${car.generation} · ${car.trim} · ${car.drivetrain}`),
         h(
@@ -88,4 +91,10 @@ export class CarPickScene extends Phaser.Scene {
     );
     cards[0]?.focus();
   }
+}
+
+function carSideUrl(body: Car['game']['body'], color: string): string {
+  const { canvas, ctx } = makeCanvas(SIDE_W, SIDE_H);
+  drawCarSide(ctx, body, color);
+  return canvas.toDataURL();
 }

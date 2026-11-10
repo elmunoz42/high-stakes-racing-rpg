@@ -1,15 +1,17 @@
 ---
 id: US-010
 title: Feel the car's limits
-status: draft
+status: verified
 priority: must
 source: spec:2026-11-10-0030-race-feel-and-visual-pass
 tags: [race, physics]
 sets: [demo, production]
 verify: [browser, unit]
 tests:
-  e2e: []
-  unit: []
+  e2e: [tests/e2e/stories/US-010.spec.ts]
+  unit: [src/race/feel.test.ts]
+verified_level: demo
+last_verified: 2026-11-10
 ---
 
 As a player, I want the car to have weight and a grip limit I can feel, so that driving well is a skill and upgrades matter.

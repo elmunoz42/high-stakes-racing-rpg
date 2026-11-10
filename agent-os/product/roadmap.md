@@ -29,6 +29,13 @@ One location, one race, the full loop end to end with placeholder art.
 - One pseudo-3D race (3 laps, 5 AI rivals) where car stats matter
 - Results, prize money, sponsor payout, save and resume
 
+## Race feel and visual pass (done 2026-11-10): spec `2026-11-10-0030-race-feel-and-visual-pass`
+
+Pulled forward from M2 and M4 after the owner's first play. Weightier
+physics (grip limit, slides, FWD/RWD traits, handbrake, slipstream, gears),
+new canvas-drawn race and town art, effects, tachometer HUD, portraits.
+Stories US-010 and US-011.
+
 ## M2: Garage and economy depth
 
 - Catalogue grows to about 10 cars and 80 parts, all sourced
@@ -37,7 +44,8 @@ One location, one race, the full loop end to end with placeholder art.
 - Tuning (tyre pressure, gearing, ride height) through conversation with the
   mechanic
 - Multiple sponsors with competing objectives and contract terms
-- Race handling pass: drifting, slipstream, tyre grip model, damage
+- Race handling: damage and tyre wear (drifting, slipstream and the grip model
+  shipped in the race feel pass)
 
 ## M3: Career and world
 

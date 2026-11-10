@@ -9,7 +9,7 @@ sets: [demo, production]
 verify: [browser, unit]
 tests:
   e2e: [tests/e2e/stories/US-007.spec.ts]
-  unit: [src/race/sim.test.ts, src/race/projection.test.ts]
+  unit: [src/race/sim.test.ts, src/race/projection.test.ts, src/race/feel.test.ts]
 verified_level: demo
 last_verified: 2026-11-10
 ---

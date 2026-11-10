@@ -13,7 +13,7 @@ test.describe('US-003 Talk to a character in free text', () => {
     await game.press('e');
     const d = game.dialogue();
     await expect(d.getByRole('heading', { name: 'Mags Okafor' })).toBeVisible();
-    await expect(d.getByText('MO', { exact: true })).toBeVisible();
+    await expect(d.getByRole('img', { name: 'Portrait of Mags Okafor' })).toBeVisible();
     await expect(d.getByRole('log').locator('[data-who=npc]').first()).toContainText('Rookie');
     await game.shot('US-003-AC1');
 

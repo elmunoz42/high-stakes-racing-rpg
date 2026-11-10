@@ -13,7 +13,7 @@ export class ResultsScene extends Phaser.Scene {
   }
 
   create(): void {
-    this.add.image(0, 0, 'sky').setOrigin(0, 0).setDisplaySize(384, 216).setAlpha(0.6);
+    this.add.image(0, 0, 'bg-sky').setOrigin(0, 0).setDisplaySize(384, 216).setAlpha(0.6);
     const state = store.require();
     const r = state.lastRace;
     if (!r) {
