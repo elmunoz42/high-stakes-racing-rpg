@@ -46,6 +46,7 @@ export function fastForward(sim: RaceSim, finishPosition: number): RaceResult {
     collisions: 0,
     ledALap: pos === 1,
     topSpeedKmh: Math.round(msToKmh(player.perf.topSpeed * 0.97)),
+    nitrousUsed: player.nitroUsed,
     order,
   };
 }

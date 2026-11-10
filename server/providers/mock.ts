@@ -91,6 +91,11 @@ function deeDee(c: Ctx): Reply {
     return {
       text: "Ha! Hon, I've heard that one from better liars. Torque the duck says no. Prices are prices.",
     };
+  if (/nitrous|nitro|n2o|boost|bottle/i.test(msg))
+    return {
+      text: 'Nitrous! One, speed. Two, more speed. Three, do not tell Teo. House price, no haggling.',
+      calls: [{ name: 'sell_nitrous', args: { shots: 1 } }],
+    };
   if (HAGGLE.test(msg)) {
     const haggles = c.playerMessages.filter((m) => HAGGLE.test(m)).length;
     const target = mentionedPart(state, c.transcript) ?? shelf[0];
@@ -311,7 +316,64 @@ function mags(c: Ctx): Reply {
   return { text: 'Focus, Rookie. Track, tin or opposition. Pick one.' };
 }
 
+function dealer(c: Ctx): Reply {
+  const { state, msg, persona } = c;
+  const lot = CATALOGUE.cars.filter((x) => x.id !== state.carId);
+  if (msg === ARRIVAL_MESSAGE) return { text: persona.greeting };
+  if (INJECTION.test(msg))
+    return { text: 'Free? Mijo, even the tumbleweeds here pay rent. The price is the price.' };
+  const named = lot.find((x) => msg.toLowerCase().includes(x.model.toLowerCase().split(' ')[0]!));
+  if (named || /buy|i'?ll take|sell me|trade/i.test(msg)) {
+    const car = named ?? lot[0]!;
+    return {
+      text: `The ${carName(car)}. She drinks, she bites, and you will love her.`,
+      calls: [{ name: 'sell_car', args: { car_id: car.id } }],
+    };
+  }
+  if (/worth|trade-in|my car/i.test(msg))
+    return {
+      text: `For the ${car(state)}? Seventy percent of the book, plus half of whatever is bolted to it. I do not round in my favour.`,
+    };
+  if (/lot|have|which|recommend|should/i.test(msg))
+    return {
+      text: `On the lot: ${lot
+        .filter((x) => !x.starter)
+        .map((x) => `the ${carName(x)} at ${usd(x.price_usd)}`)
+        .join(
+          ', ',
+        )}. The Mustang is the first step, the Corvette is the smart one, the Viper is a decision.`,
+    };
+  return { text: 'The car picks you, mijo. Walk the lot. Tell me which one looks back.' };
+}
+
+function local(c: Ctx): Reply {
+  const { msg, persona } = c;
+  if (msg === ARRIVAL_MESSAGE) return { text: persona.greeting };
+  if (INJECTION.test(msg)) return { text: persona.fallbackLine };
+  if (/drive|win|track|tip|faster|corner|ice|pass|autodrome|how do i/i.test(msg))
+    return {
+      text: persona.opinions[0]!,
+      calls: [
+        {
+          name: 'give_tip',
+          args: { topic: persona.roleTitle.split(',')[0], tip: persona.opinions[0] },
+        },
+      ],
+    };
+  if (THANKS.test(msg) || /please|yes/i.test(msg))
+    return {
+      text: persona.runningJokes[0]!,
+      calls: [{ name: 'adjust_relationship', args: { delta: 1, reason: 'friendly' } }],
+    };
+  return { text: persona.opinions[1] ?? persona.pitch };
+}
+
 const SCRIPTS: Record<string, (c: Ctx) => Reply> = {
+  'lupe-zamora': dealer,
+  'birdie-lindqvist': local,
+  'juno-park': local,
+  'olav-frost': local,
+  'renata-voss': local,
   'dee-dee-varga': deeDee,
   'teo-baptista': teo,
   'sterling-pruitt': sterling,
@@ -335,6 +397,14 @@ const REACTIONS: Record<string, { ok: string; no: string }> = {
   quote_part: { ok: '', no: '' },
   give_tip: { ok: '', no: '' },
   adjust_relationship: { ok: '', no: '' },
+  sell_car: {
+    ok: 'Keys are on the desk. Confirm, and she is yours.',
+    no: 'Not yet, mijo. Come back when the numbers work.',
+  },
+  sell_nitrous: {
+    ok: 'Blue bottle, on the counter. Confirm and I will hook it up.',
+    no: "Can't do that one, chief.",
+  },
 };
 
 function chunk(text: string): string[] {

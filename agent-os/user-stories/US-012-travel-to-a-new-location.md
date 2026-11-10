@@ -24,4 +24,5 @@ As a player, I want to travel to new race locations as I prove myself, so that t
 
 ## Test data
 
-- Fixture: tests/fixtures/saves/has-money.json (version 1, exercises the migration)
+- Fixture: tests/fixtures/saves/podium-at-harbour.json (a podium at the first location)
+- The version 1 fixtures exercise the migration in every other story test

@@ -356,7 +356,7 @@ export const TOWN: Record<string, Art> = {
       for (let x = 0; x < 150; x += 10)
         for (let y = 0; y < 2; y++)
           rect(c, (x / 10 + y) % 2 ? '#f2f2f2' : '#1b1b24', x, y * 5, 10, 5);
-      text(c, 'HARBOUR LOOP', 75, 20, '#ffcc33', 11);
+      text(c, 'RACE START', 75, 20, '#ffcc33', 11);
       for (let i = 0; i < 5; i++) {
         rect(c, '#101018', 44 + i * 13, 32, 9, 7);
         rect(c, '#d7263d', 46 + i * 13, 33, 5, 5);
@@ -616,3 +616,292 @@ export const INTERIORS: Record<string, Art> = {
     },
   ],
 };
+
+// ---------- Travelling paddock venues and the travel board ----------
+export const PADDOCK: Record<string, Art> = {
+  'bld-travel': [
+    44,
+    84,
+    (c) => {
+      rect(c, '#3a3d4a', 20, 30, 4, 54);
+      rect(c, '#1f6a40', 0, 0, 44, 32);
+      rect(c, '#f4f4f4', 1, 1, 42, 30);
+      rect(c, '#1f6a40', 3, 3, 38, 26);
+      text(c, 'TRAVEL', 22, 10, '#ffffff', 8);
+      trap(c, '#ffffff', 16, 26, 8, 30, 8, 30);
+      trap(c, '#ffffff', 14, 21, 30, 30, 30, 38);
+      trap(c, '#ffffff', 21, 28, 30, 38, 30, 30);
+      outline(c, 44, 84);
+    },
+  ],
+  'bld-truck': [
+    200,
+    104,
+    (c) => {
+      rect(c, '#2f5d8a', 0, 0, 200, 9);
+      for (let x = 0; x < 200; x += 16) rect(c, '#f4f4f4', x, 0, 8, 9);
+      rect(c, '#2a2c38', 4, 9, 2, 80);
+      rect(c, '#2a2c38', 194, 9, 2, 80);
+      rect(c, '#3d7ab0', 12, 16, 176, 68);
+      rect(c, '#9fd0ff', 12, 16, 176, 2);
+      rect(c, '#2a5a86', 12, 76, 176, 8);
+      text(c, "TEO'S TRAVELLING GARAGE", 100, 28, '#ffffff', 10);
+      rect(c, '#14161d', 70, 38, 60, 46);
+      for (let y = 38; y < 54; y += 4) rect(c, '#b4b9c2', 70, y, 60, 3);
+      rect(c, '#ffe2a0', 22, 44, 34, 20);
+      line(c, '#6b4a2a', 28, 48, 34, 60);
+      rect(c, '#6b4a2a', 42, 48, 2, 12);
+      rect(c, '#d7263d', 144, 60, 30, 24);
+      rect(c, '#a01a2c', 144, 68, 30, 1);
+      for (const x of [40, 160]) {
+        ellipse(c, '#15151b', x, 92, 10, 10);
+        ellipse(c, '#8d939d', x, 92, 4, 4);
+      }
+      rect(c, '#6e6c68', 64, 84, 72, 4);
+      outline(c, 200, 104);
+      glow(c, WARM, 100, 66, 34, 0.25);
+      glow(c, WARM, 39, 54, 20, 0.3);
+    },
+  ],
+  'bld-van': [
+    170,
+    96,
+    (c) => {
+      rect(c, '#e05a9b', 0, 0, 170, 9);
+      for (let x = 0; x < 170; x += 14) rect(c, '#f4f4f4', x, 0, 7, 9);
+      rect(c, '#f4f0e6', 10, 18, 150, 58);
+      rect(c, '#e05a9b', 10, 18, 150, 14);
+      rect(c, '#c9c2b0', 10, 70, 150, 6);
+      text(c, 'VARGA PARTS VAN', 85, 25, '#ffffff', 10);
+      rect(c, '#3a2a20', 22, 38, 44, 26);
+      rect(c, '#ffe7b0', 24, 40, 40, 22);
+      ellipse(c, '#1a1a22', 36, 51, 8, 8);
+      ellipse(c, '#c9ccd6', 36, 51, 5, 5);
+      rect(c, '#d7263d', 48, 44, 12, 6);
+      rect(c, '#4a2c1e', 72, 34, 26, 42);
+      rect(c, '#101018', 76, 40, 18, 8);
+      text(c, 'OPEN', 85, 44, '#ff5e7a', 6);
+      rect(c, '#9fc4e8', 118, 36, 34, 18);
+      for (const x of [36, 136]) {
+        ellipse(c, '#15151b', x, 84, 10, 10);
+        ellipse(c, '#8d939d', x, 84, 4, 4);
+      }
+      outline(c, 170, 96);
+      glow(c, WARM, 44, 51, 26, 0.3);
+      glow(c, '#ff5e7a', 85, 44, 12, 0.5);
+    },
+  ],
+  'bld-tent': [
+    180,
+    104,
+    (c) => {
+      trap(c, '#7b2cff', 0, 34, 70, 110, 4, 176);
+      for (let k = 0; k < 6; k++)
+        trap(
+          c,
+          k % 2 ? '#9b5de5' : '#7b2cff',
+          0,
+          34,
+          70 + k * 6.6,
+          77 + k * 6.6,
+          4 + k * 29,
+          33 + k * 29,
+        );
+      rect(c, '#c6ff2e', 4, 34, 172, 3);
+      rect(c, '#241c3a', 8, 37, 164, 67);
+      rect(c, '#2e2448', 8, 37, 164, 2);
+      text(c, 'VOLTKAT', 90, 50, '#c6ff2e', 14);
+      rect(c, '#0e0b18', 76, 60, 28, 44);
+      rect(c, '#ffcc33', 98, 84, 2, 6);
+      for (const x of [20, 118]) {
+        rect(c, '#6a3fb8', x, 62, 42, 26);
+        rect(c, '#c6ff2e', x + 4, 66, 8, 12);
+        rect(c, '#ffd27a', x + 18, 74, 16, 3);
+      }
+      rect(c, '#2a2c38', 88, 0, 2, 8);
+      trap(c, '#c6ff2e', 0, 6, 90, 104, 90, 90);
+      outline(c, 180, 104);
+      glow(c, '#c6ff2e', 90, 50, 60, 0.25);
+      glow(c, '#9b5de5', 41, 75, 28, 0.35);
+      glow(c, '#9b5de5', 139, 75, 28, 0.35);
+    },
+  ],
+};
+
+export interface Sign {
+  text: string;
+  wall: string;
+  accent: string;
+}
+
+/** A local business, generated from its sign: shopfront with a lit window and a centre door. */
+export function drawLocalBuilding(c: Ctx, sign: Sign): void {
+  bricks(c, 0, 22, 190, 94, sign.wall);
+  rect(c, shade(sign.wall, 0.45), 0, 0, 190, 24);
+  rect(c, sign.accent, 0, 22, 190, 3);
+  text(c, sign.text, 95, 12, sign.accent, sign.text.length > 20 ? 8 : 11);
+  for (let x = 0; x < 190; x += 14)
+    trap(c, x % 28 ? shade(sign.accent, 0.8) : '#f4f4f4', 30, 40, x, x + 14, x, x + 14);
+  for (const x of [12, 122]) {
+    rect(c, '#2a1f18', x, 50, 56, 40);
+    rect(c, '#ffe7b0', x + 2, 52, 52, 36);
+    rect(c, shade(sign.accent, 0.9), x + 8, 60, 14, 10);
+    rect(c, '#3a2a20', x + 28, 66, 18, 22);
+  }
+  rect(c, shade(sign.wall, 0.5), 80, 48, 30, 68);
+  rect(c, '#9fc4e8', 84, 52, 22, 30);
+  rect(c, '#ffcc33', 104, 86, 2, 4);
+  wallLamp(c, 74, 40);
+  wallLamp(c, 116, 40);
+  outline(c, 190, 116);
+  glow(c, WARM, 40, 70, 34, 0.3);
+  glow(c, WARM, 150, 70, 34, 0.3);
+  glow(c, WARM, 95, 44, 30, 0.3);
+}
+
+/** Inside a local business: counter, shelves and its sign on the wall. */
+export function drawLocalRoom(c: Ctx, sign: Sign): void {
+  room(c, shade(sign.wall, 0.8), shade(sign.wall, 0.35), sign.accent);
+  rect(c, shade(sign.wall, 0.4), 120, 52, 150, 22);
+  text(c, sign.text, 195, 63, sign.accent, sign.text.length > 20 ? 8 : 11);
+  for (let r = 0; r < 2; r++) {
+    rect(c, '#3b2a1e', 60, 104 + r * 28, 130, 4);
+    for (let k = 0; k < 8; k++)
+      rect(
+        c,
+        [sign.accent, '#f4f4f4', '#d7263d', '#2a6fb0'][Math.floor(hash(r * 9 + k) * 4)]!,
+        64 + k * 16,
+        104 + r * 28 - 12 - Math.floor(hash(k + r) * 8),
+        12,
+        12 + Math.floor(hash(k + r) * 8),
+      );
+  }
+  rect(c, '#7a4a2a', 292, 146, 92, 34);
+  rect(c, '#935c36', 288, 142, 96, 5);
+  rect(c, sign.accent, 304, 128, 14, 14);
+  rect(c, '#f4f4f4', 330, 134, 10, 8);
+  rect(c, '#2a2c38', 350, 124, 22, 18);
+  ceilingLight(c, 150);
+  ceilingLight(c, 310);
+  glow(c, sign.accent, 195, 63, 60, 0.2);
+}
+
+/** The band behind the street for locations away from the sea. */
+export function drawTownMid(c: Ctx, look: string): void {
+  if (look === 'desert') {
+    bands(
+      c,
+      0,
+      0,
+      128,
+      64,
+      [
+        [0, '#e8c88c'],
+        [1, '#c99a5a'],
+      ],
+      10,
+    );
+    for (let k = 0; k < 14; k++)
+      rect(
+        c,
+        '#b88a4e',
+        Math.floor(hash(k * 3) * 120),
+        6 + Math.floor(hash(k * 5) * 54),
+        10,
+        1,
+        0.7,
+      );
+    rect(c, '#2f8a4a', 20, 18, 3, 12);
+    rect(c, '#2f8a4a', 17, 22, 3, 2);
+    rect(c, '#2f8a4a', 90, 30, 3, 10);
+    rect(c, '#2f8a4a', 93, 33, 3, 2);
+  } else if (look === 'snow') {
+    bands(
+      c,
+      0,
+      0,
+      128,
+      64,
+      [
+        [0, '#f4f8fc'],
+        [1, '#cfdbe8'],
+      ],
+      8,
+    );
+    for (let k = 0; k < 10; k++)
+      ellipse(
+        c,
+        '#ffffff',
+        Math.floor(hash(k * 3) * 128),
+        10 + Math.floor(hash(k * 7) * 50),
+        12,
+        2,
+        0.8,
+      );
+    for (const x of [14, 70, 104]) {
+      trap(c, '#1c4a36', 6, 30, x, x, x - 8, x + 8);
+      trap(c, '#f4f8fc', 6, 16, x, x, x - 3, x + 3);
+    }
+  } else if (look === 'night') {
+    rect(c, '#0e1024', 0, 0, 128, 64);
+    for (let k = 0; k < 8; k++) {
+      const x = k * 16,
+        h = 20 + Math.floor(hash(k * 3) * 40);
+      rect(c, '#1a1c38', x, 64 - h, 15, h);
+      for (let wy = 64 - h + 3; wy < 62; wy += 5)
+        for (let wx = x + 2; wx < x + 13; wx += 4)
+          if (hash(wx * 7 + wy) > 0.55)
+            rect(
+              c,
+              ['#ffd27a', '#39e6ff', '#ff4fa3'][Math.floor(hash(wx + wy) * 3)]!,
+              wx,
+              wy,
+              2,
+              3,
+            );
+    }
+  } else if (look === 'day') {
+    bands(
+      c,
+      0,
+      0,
+      128,
+      64,
+      [
+        [0, '#4a9a4a'],
+        [1, '#2f7a34'],
+      ],
+      8,
+    );
+    rect(c, '#3d4250', 0, 0, 128, 22);
+    for (let x = 2; x < 126; x += 3)
+      for (let r = 0; r < 3; r++)
+        if (hash(x * 3 + r) > 0.3)
+          rect(
+            c,
+            ['#ffcc33', '#e05a9b', '#5aa9e6', '#f2f2f2'][Math.floor(hash(x + r * 9) * 4)]!,
+            x,
+            4 + r * 6,
+            2,
+            3,
+          );
+    for (let x = 0; x < 128; x += 16) rect(c, x % 32 ? '#f2f2f2' : '#d7263d', x, 22, 16, 4);
+  } else {
+    bands(
+      c,
+      0,
+      0,
+      128,
+      64,
+      [
+        [0, '#2f6b3a'],
+        [1, '#234f2c'],
+      ],
+      8,
+    );
+    for (let k = 0; k < 9; k++) {
+      const x = 6 + k * 14 + Math.floor(hash(k) * 6);
+      trap(c, k % 2 ? '#1c5636' : '#27704a', 0, 30, x, x, x - 9, x + 9);
+    }
+  }
+}

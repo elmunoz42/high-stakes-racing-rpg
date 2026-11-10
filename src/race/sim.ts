@@ -34,6 +34,10 @@ const DRAFT_TOP = 0.05;
 /** Fraction of top speed at which each gear reaches the redline. */
 const GEAR_TOPS = [0.24, 0.42, 0.62, 0.82, 1.08] as const;
 const SHIFT_TIME = 0.16; // s of power cut on an upshift
+/** Nitrous: how long a shot lasts, the extra shove and the extra top speed. */
+export const NITRO_TIME = 3.2;
+const NITRO_ACCEL = 3.4;
+const NITRO_TOP = 0.13;
 
 export type Surface = 'road' | 'rumble' | 'grass';
 export type Drivetrain = 'FWD' | 'RWD' | 'AWD';
@@ -43,6 +47,8 @@ export interface DriverInput {
   throttle: number; // 0..1
   brake: number; // 0..1
   handbrake?: boolean;
+  /** Fire a nitrous shot (acts on the press, not the hold). */
+  nitro?: boolean;
 }
 
 export const NO_INPUT: DriverInput = { steer: 0, throttle: 0, brake: 0 };
@@ -58,6 +64,8 @@ export interface Entrant {
   color: string;
   body: 'roadster' | 'coupe' | 'hatch';
   drivetrain?: Drivetrain;
+  /** Nitrous shots carried at the start. */
+  nitrous?: number;
 }
 
 export interface SimCar extends Entrant {
@@ -73,6 +81,10 @@ export interface SimCar extends Entrant {
   gear: number; // 1..5
   rpm: number;
   shiftT: number; // s of power cut left
+  nitroShots: number;
+  nitroT: number; // s of boost left
+  nitroUsed: number;
+  nitroHeld: boolean;
   braking: boolean;
   surface: Surface;
   lane: number; // AI preferred line, m
@@ -102,6 +114,8 @@ export class RaceSim {
   readonly raceDistance: number;
   time = 0;
   started = false;
+  /** Surface grip multiplier for the whole track (1 = dry asphalt). */
+  readonly surfaceGrip: number;
   private rng: Rng;
   private contacts = new Map<string, number>();
   private playerLedALap = false;
@@ -109,6 +123,7 @@ export class RaceSim {
   constructor(cfg: RaceConfig) {
     this.track = cfg.track;
     this.laps = cfg.laps;
+    this.surfaceGrip = cfg.track.def.grip ?? 1;
     this.rng = createRng(cfg.seed);
     this.raceDistance = cfg.laps * cfg.track.length;
     // Grid: two cars per row, player placed as given in entrants order.
@@ -127,6 +142,10 @@ export class RaceSim {
         gear: 1,
         rpm: 900,
         shiftT: 0,
+        nitroShots: e.nitrous ?? 0,
+        nitroT: 0,
+        nitroUsed: 0,
+        nitroHeld: false,
         braking: false,
         surface: 'road' as Surface,
         lane: side * (1.2 + this.rng() * 2),
@@ -237,10 +256,23 @@ export class RaceSim {
     // Longitudinal: engine through the gearbox, drag, brakes, slope, slipstream.
     this.updateDraft(car);
     this.updateGearbox(car);
-    const vmax = perf.topSpeed * (1 + DRAFT_TOP * car.draft);
+    // Nitrous: one shot per press, a few seconds of shove.
+    if (input.nitro && !car.nitroHeld && car.nitroShots > 0 && car.nitroT <= 0 && car.v > 3) {
+      car.nitroShots -= 1;
+      car.nitroUsed += 1;
+      car.nitroT = NITRO_TIME;
+    }
+    car.nitroHeld = !!input.nitro;
+    const boosting = car.nitroT > 0;
+    if (boosting) car.nitroT -= STEP;
+    const vmax = perf.topSpeed * (1 + DRAFT_TOP * car.draft + (boosting ? NITRO_TOP : 0));
     const power = car.shiftT > 0 ? 0 : throttle;
     let a = power * (perf.accel * Math.max(0, 1 - (car.v / vmax) ** 2) + DRAFT_PULL * car.draft);
-    let d = ROLLING_DRAG + brake * perf.brakeDecel + (throttle < 0.05 ? ENGINE_BRAKE : 0);
+    if (boosting) a += NITRO_ACCEL * Math.max(0.25, 1 - (car.v / vmax) ** 2);
+    let d =
+      ROLLING_DRAG +
+      brake * perf.brakeDecel * this.surfaceGrip +
+      (throttle < 0.05 ? ENGINE_BRAKE : 0);
     if (handbrake) d += HANDBRAKE_DECEL;
     if (surface === 'grass') {
       a *= 0.45;
@@ -251,7 +283,7 @@ export class RaceSim {
 
     // Lateral: what the corner demands against what the tyres can give.
     const demand = car.v * car.v * Math.abs(seg.kappa);
-    let grip = perf.lateralGrip * (surface === 'grass' ? 0.6 : 1);
+    let grip = perf.lateralGrip * this.surfaceGrip * (surface === 'grass' ? 0.6 : 1);
     if (car.drivetrain === 'FWD' && throttle > 0.8) grip *= 0.96; // power understeer
     if (brake > 0.8) grip *= 0.95; // braking and turning share the tyre
     grip *= 1 - 0.22 * car.slide;
@@ -291,13 +323,18 @@ export class RaceSim {
   /** AI driver: brake for what is coming, hold a line, make the odd mistake. */
   drive(car: SimCar): DriverInput {
     const { perf } = car;
-    const grip = perf.lateralGrip * 0.97;
+    const grip = perf.lateralGrip * this.surfaceGrip * 0.97;
     let target = perf.topSpeed;
-    for (let s = 0; s <= LOOKAHEAD; s += SEGMENT_LENGTH * 2) {
+    // Look as far ahead as it would take to stop: fast cars need a long view.
+    const reach = Math.max(
+      LOOKAHEAD,
+      (car.v * car.v) / (2 * perf.brakeDecel * this.surfaceGrip * 0.8) + 40,
+    );
+    for (let s = 0; s <= reach; s += SEGMENT_LENGTH * 2) {
       const k = Math.abs(segmentAt(this.track, car.z + s).kappa);
       if (k < 1e-5) continue;
       const vc = Math.sqrt(grip / k);
-      const allowed = Math.sqrt(vc * vc + 2 * perf.brakeDecel * 0.8 * s);
+      const allowed = Math.sqrt(vc * vc + 2 * perf.brakeDecel * this.surfaceGrip * 0.8 * s);
       target = Math.min(target, allowed);
     }
     target *= car.pace;
@@ -324,7 +361,8 @@ export class RaceSim {
     lane = Math.max(-ROAD_HALF_WIDTH + 1.2, Math.min(ROAD_HALF_WIDTH - 1.2, lane));
     const authority = MAX_LATERAL_SPEED * Math.min(1, car.v / 12) || 1;
     const demand = car.v * car.v * Math.abs(seg.kappa);
-    const drift = Math.min(1, demand / (perf.lateralGrip || 1)) * authority * 0.75;
+    const drift =
+      Math.min(1, demand / (perf.lateralGrip * this.surfaceGrip || 1)) * authority * 0.75;
     const wantVx = (lane - car.x) * 1.4;
     const steer = (wantVx + Math.sign(seg.kappa) * drift) / authority;
     return { steer: Math.max(-1, Math.min(1, steer)), throttle, brake };
@@ -410,6 +448,7 @@ export class RaceSim {
       collisions: player?.collisions ?? 0,
       ledALap: this.playerLedALap,
       topSpeedKmh: Math.round(msToKmh(player?.topSpeed ?? 0)),
+      nitrousUsed: player?.nitroUsed ?? 0,
       order,
     };
   }

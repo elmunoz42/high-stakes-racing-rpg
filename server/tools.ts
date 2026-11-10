@@ -1,9 +1,9 @@
 import type { GameAction } from '../shared/actions.ts';
 import type { ChatEvent } from '../shared/dialogue.ts';
-import { type Catalogue, findPart, partName } from '../src/data/catalogue.ts';
+import { type Catalogue, carName, findCar, findPart, partName } from '../src/data/catalogue.ts';
 import { ObjectiveType, type Persona, ToolName } from '../src/data/schema.ts';
-import { applyAction, currentPrice, labourQuote } from '../src/rpg/actions.ts';
-import { describeObjective, usd } from '../src/rpg/economy.ts';
+import { applyAction, currentPrice, labourQuote, tradeInValue } from '../src/rpg/actions.ts';
+import { describeObjective, NITROUS_SHOT_USD, usd } from '../src/rpg/economy.ts';
 import type { GameState } from '../src/save/schema.ts';
 
 /**
@@ -174,6 +174,49 @@ export function handleToolCall(
           status: 'deal card shown to the player; they accept or decline on screen',
         },
         state: r.state,
+      };
+    }
+
+    case 'sell_car': {
+      const car = findCar(cat, str('car_id'));
+      if (!car) return reject(state, name, 'That car is not on the lot.');
+      const action: GameAction = { type: 'buyCar', carId: car.id };
+      const r = dryRun(action);
+      if (!r.ok) return reject(state, name, r.error.message);
+      const cost = car.price_usd - tradeInValue(cat, state);
+      return {
+        events: [
+          {
+            type: 'proposal',
+            action,
+            label: `Trade up to the ${carName(car)} for ${usd(cost)} after trade-in`,
+          },
+        ],
+        output: { accepted: true, status: 'waiting for the player to confirm', pay_usd: cost },
+        state,
+      };
+    }
+
+    case 'sell_nitrous': {
+      const shots = Math.round(num('shots'));
+      if (!Number.isFinite(shots)) return reject(state, name, 'How many shots?');
+      const action: GameAction = { type: 'buyNitrous', shots };
+      const r = dryRun(action);
+      if (!r.ok) return reject(state, name, r.error.message);
+      return {
+        events: [
+          {
+            type: 'proposal',
+            action,
+            label: `Buy ${shots} nitrous ${shots === 1 ? 'shot' : 'shots'} for ${usd(shots * NITROUS_SHOT_USD)}`,
+          },
+        ],
+        output: {
+          accepted: true,
+          status: 'waiting for the player to confirm',
+          price_usd: shots * NITROUS_SHOT_USD,
+        },
+        state,
       };
     }
 

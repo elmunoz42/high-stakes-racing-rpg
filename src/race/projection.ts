@@ -65,6 +65,17 @@ export const SPRITE_METERS: Record<string, { w: number; h: number }> = {
   barrier: { w: 5.2, h: 1.1 },
   'chevron-l': { w: 2, h: 3 },
   'chevron-r': { w: 2, h: 3 },
+  cabin: { w: 9, h: 6.5 },
+  cactus: { w: 2.2, h: 4.4 },
+  mesa: { w: 46, h: 20 },
+  'gas-station': { w: 16, h: 7 },
+  tower: { w: 13, h: 34 },
+  neon: { w: 4.5, h: 7 },
+  'tunnel-arch': { w: 19, h: 8.2 },
+  'pine-snow': { w: 3.8, h: 8.8 },
+  snowbank: { w: 5.2, h: 1.4 },
+  flag: { w: 2.2, h: 7 },
+  'pit-building': { w: 30, h: 9 },
   car: { w: 1.8 * CAR_SPRITE_SCALE, h: 1.35 * CAR_SPRITE_SCALE },
 };
 
@@ -144,6 +155,22 @@ export const GROUND: Record<SceneryKind, Ground> = {
     verge: { color: [0x8a8c96, 0x7f818b], width: 0.22, sides: 'both' },
   },
   lighthouse: { left: [0x5a8e4a, 0x528544], right: [0x5a8e4a, 0x528544], road: ROAD },
+  forest: { left: [0x2f6b3a, 0x296134], right: [0x2f6b3a, 0x296134], road: ROAD },
+  desert: { left: [0xd9b677, 0xcfab6c], right: [0xd9b677, 0xcfab6c], road: [0x5e5a58, 0x575351] },
+  city: {
+    left: [0x2b2d3a, 0x262834],
+    right: [0x2b2d3a, 0x262834],
+    road: [0x35363f, 0x303139],
+    verge: { color: [0x4a4c5a, 0x444653], width: 0.3, sides: 'both' },
+  },
+  tunnel: { left: [0x1c1d26, 0x191a22], right: [0x1c1d26, 0x191a22], road: [0x2e2f37, 0x292a31] },
+  snow: { left: [0xe8eef4, 0xdde5ee], right: [0xe8eef4, 0xdde5ee], road: [0x7d8590, 0x747c87] },
+  circuit: {
+    left: [0x3f8a3f, 0x387f38],
+    right: [0x3f8a3f, 0x387f38],
+    road: [0x4a4b54, 0x44454e],
+    verge: { color: [0xb9a67c, 0xb09d73], width: 0.6, sides: 'both' },
+  },
 };
 
 const RUMBLE = [0xd7263d, 0xf2f2f2];

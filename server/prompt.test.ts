@@ -35,6 +35,7 @@ describe('prompt builder (US-003 AC5)', () => {
       'adjust_relationship',
       'offer_discount',
       'quote_part',
+      'sell_nitrous',
       'sell_part',
     ]);
     expect(names('sterling-pruitt')).toEqual(['adjust_relationship', 'offer_sponsorship']);

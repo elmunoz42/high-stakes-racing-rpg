@@ -1,0 +1,32 @@
+{
+  "version": 2,
+  "seed": 42,
+  "money": 9000,
+  "carId": "mx5-na-1994",
+  "inventory": [],
+  "installed": {},
+  "sponsor": null,
+  "offers": {
+    "discounts": {},
+    "sponsor": null
+  },
+  "relationships": {
+    "mags-okafor": 0,
+    "teo-baptista": 0,
+    "dee-dee-varga": 0,
+    "sterling-pruitt": 0,
+    "birdie-lindqvist": 0,
+    "lupe-zamora": 0,
+    "juno-park": 0,
+    "olav-frost": 0,
+    "renata-voss": 0
+  },
+  "memories": {},
+  "lastRace": null,
+  "raceCount": 1,
+  "location": "harbour-district",
+  "nitrous": 0,
+  "bestFinish": {
+    "harbour-district": 2
+  }
+}

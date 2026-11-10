@@ -225,3 +225,75 @@ describe('purity', () => {
     expect(s).toEqual(copy);
   });
 });
+
+describe('buyCar (US-013 AC3)', () => {
+  it('trades the old car in, with fitted parts, and resets what is fitted', () => {
+    let s = run(
+      { ...start(), money: 5000 },
+      { type: 'buyPart', partId: 'pads-a', priceUsd: 100 },
+      { type: 'installPart', partId: 'pads-a' },
+    );
+    const before = s.money;
+    s = run(s, { type: 'buyCar', carId: 'gamma' });
+    // alpha is 9000: trade-in 6300 + half of the 100 pads = 6350; gamma is 11000.
+    expect(s.money).toBe(before - (11000 - 6350));
+    expect(s.carId).toBe('gamma');
+    expect(s.installed).toEqual({});
+  });
+  it('rejects cars the player cannot afford, unknown cars and the car already owned', () => {
+    expect(code(start(100), { type: 'buyCar', carId: 'beta' })).toBe('insufficient_funds');
+    expect(code(start(), { type: 'buyCar', carId: 'ghost' })).toBe('unknown_car');
+    expect(code(start(), { type: 'buyCar', carId: 'alpha' })).toBe('already_owned');
+  });
+});
+
+describe('nitrous (US-014)', () => {
+  it('sells shots up to three and charges the house price', async () => {
+    const { NITROUS_SHOT_USD } = await import('./economy.ts');
+    const s = run(start(), { type: 'buyNitrous', shots: 2 });
+    expect(s.nitrous).toBe(2);
+    expect(s.money).toBe(CAREER_FUND_USD - 9000 - 2 * NITROUS_SHOT_USD);
+    expect(code(s, { type: 'buyNitrous', shots: 2 })).toBe('full');
+    expect(code(start(10), { type: 'buyNitrous', shots: 1 })).toBe('insufficient_funds');
+  });
+  it('removes the shots used in a race', () => {
+    const s = run(
+      start(),
+      { type: 'buyNitrous', shots: 3 },
+      { type: 'recordRace', result: result(4, { nitrousUsed: 2 }) },
+    );
+    expect(s.nitrous).toBe(1);
+  });
+});
+
+describe('travel (US-012 AC4)', () => {
+  it('keeps the next location locked until a podium at the one before', () => {
+    expect(code(start(), { type: 'travel', locationId: 'away' })).toBe('locked');
+    let s = run(start(), { type: 'recordRace', result: result(4) });
+    expect(code(s, { type: 'travel', locationId: 'away' })).toBe('locked');
+    s = run(s, { type: 'recordRace', result: result(3) });
+    const before = s.money;
+    s = run(s, { type: 'travel', locationId: 'away' });
+    expect(s.location).toBe('away');
+    expect(s.money).toBe(before - 200);
+    expect(code(s, { type: 'travel', locationId: 'far' })).toBe('locked');
+  });
+  it('rejects unknown places, the current place and trips the player cannot afford', () => {
+    const podium = run(start(), { type: 'recordRace', result: result(1) });
+    expect(code(podium, { type: 'travel', locationId: 'nowhere' })).toBe('unknown_location');
+    expect(code(podium, { type: 'travel', locationId: 'home' })).toBe('invalid');
+    expect(code({ ...podium, money: 50 }, { type: 'travel', locationId: 'away' })).toBe(
+      'insufficient_funds',
+    );
+  });
+  it('pays bigger prizes at higher tiers', () => {
+    let s = run(
+      start(),
+      { type: 'recordRace', result: result(1) },
+      { type: 'travel', locationId: 'away' },
+    );
+    s = run(s, { type: 'recordRace', result: result(2) });
+    expect(s.lastRace?.prizeUsd).toBe(prizeFor(2) * 2);
+    expect(s.bestFinish).toEqual({ home: 1, away: 2 });
+  });
+});

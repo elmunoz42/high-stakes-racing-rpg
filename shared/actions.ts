@@ -34,11 +34,18 @@ export const GameAction = z.discriminatedUnion('type', [
     summary: z.string().max(1200),
   }),
   z.object({ type: z.literal('recordRace'), result: RaceResult }),
+  z.object({ type: z.literal('buyCar'), carId: z.string() }),
+  z.object({ type: z.literal('buyNitrous'), shots: z.number().int().min(1).max(3) }),
+  z.object({ type: z.literal('travel'), locationId: z.string() }),
 ]);
 export type GameAction = z.infer<typeof GameAction>;
 
 export type ActionErrorCode =
   | 'unknown_part'
+  | 'unknown_car'
+  | 'unknown_location'
+  | 'locked'
+  | 'full'
   | 'does_not_fit'
   | 'already_owned'
   | 'not_owned'

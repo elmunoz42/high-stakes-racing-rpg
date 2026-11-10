@@ -18,9 +18,10 @@ import type { Part, Persona } from '../data/schema.ts';
 import { streamChat, summariseConversation } from '../dialogue/client.ts';
 import { registerHook } from '../game/testHooks.ts';
 import { formatTime } from './format.ts';
-import { currentPrice, installedParts, labourQuote, owns } from '../rpg/actions.ts';
+import { currentPrice, installedParts, labourQuote, owns, tradeInValue } from '../rpg/actions.ts';
+import { findLocation } from '../data/locations.ts';
 import { type CarStats, carStats, msToKmh, performance } from '../rpg/carStats.ts';
-import { describeObjective, usd } from '../rpg/economy.ts';
+import { describeObjective, NITROUS_MAX_SHOTS, NITROUS_SHOT_USD, usd } from '../rpg/economy.ts';
 import { store } from '../save/store.ts';
 import { clear, h, mount, toast } from './dom.ts';
 import { portraitUrl } from './portrait.ts';
@@ -341,6 +342,12 @@ class DialogueView {
       case 'coach':
         parts.push(this.coachPanel());
         break;
+      case 'dealer':
+        parts.push(this.lotPanel());
+        break;
+      case 'local':
+        parts.push(this.localPanel());
+        break;
     }
     this.side.replaceChildren(...parts.filter((x): x is HTMLElement => !!x));
     const hl = this.highlight && this.side.querySelector(`[data-part-id="${this.highlight}"]`);
@@ -407,6 +414,7 @@ class DialogueView {
         `You have ${usd(state.money)}. Ask Dee Dee for a better price.`,
       ),
       h('div', { class: 'part-list', 'aria-label': 'Catalogue' }, rows),
+      this.nitrousRow(),
     );
   }
 
@@ -564,6 +572,141 @@ class DialogueView {
     } else this.addMessage('system', r.error.message);
   }
 
+  /** Nitrous shots at the counter: a house price, three at most. */
+  private nitrousRow(): HTMLElement {
+    const state = store.require();
+    const full = state.nitrous >= NITROUS_MAX_SHOTS;
+    const poor = state.money < NITROUS_SHOT_USD;
+    return h(
+      'div',
+      {
+        class: 'part',
+        role: 'group',
+        'aria-label': 'Nitrous',
+        style: 'margin-top:0.5em;border-color:#3a7bff',
+      },
+      h('span', { class: 'name' }, 'Nitrous shot (house blend)'),
+      h('span', { class: 'price' }, usd(NITROUS_SHOT_USD)),
+      h(
+        'span',
+        { class: 'meta' },
+        'In the car: ',
+        h('strong', { 'data-testid': 'nitrous-count' }, `${state.nitrous} of ${NITROUS_MAX_SHOTS}`),
+        '. A few seconds of boost on the N key. Shop price, not a catalogue part.',
+      ),
+      h(
+        'span',
+        { class: 'actions' },
+        h(
+          'button',
+          {
+            type: 'button',
+            class: 'primary',
+            disabled: full || poor,
+            onclick: () => {
+              this.pending = {
+                action: { type: 'buyNitrous', shots: 1 },
+                label: `Buy 1 nitrous shot for ${usd(NITROUS_SHOT_USD)}`,
+              };
+              this.renderSide();
+            },
+          },
+          full ? 'Full' : poor ? 'Too pricey' : 'Buy a shot',
+        ),
+      ),
+    );
+  }
+
+  /** The dealer's lot: every other car, with the trade-in worked out. */
+  private lotPanel(): HTMLElement {
+    const state = store.require();
+    const cat = store.catalogue;
+    const mine = findCar(cat, state.carId)!;
+    const trade = tradeInValue(cat, state);
+    const rows = cat.cars
+      .filter((c) => c.id !== state.carId)
+      .map((car) => {
+        const pay = car.price_usd - trade;
+        return h(
+          'div',
+          { class: 'part', role: 'group', 'aria-label': carName(car), 'data-car-id': car.id },
+          h('span', { class: 'name' }, carName(car)),
+          h('span', { class: 'price' }, usd(car.price_usd)),
+          h(
+            'span',
+            { class: 'meta' },
+            `${car.power_hp} hp · ${car.weight_kg.toLocaleString('en-US')} kg · ${car.drivetrain} · ${car.engine} · price checked ${car.checked_on} · `,
+            h(
+              'a',
+              { href: car.source_url, target: '_blank', rel: 'noopener noreferrer' },
+              'source',
+            ),
+          ),
+          h(
+            'span',
+            { class: 'meta', 'data-testid': 'you-pay' },
+            `You pay ${usd(pay)} after trade-in`,
+          ),
+          h(
+            'span',
+            { class: 'actions' },
+            h(
+              'button',
+              {
+                type: 'button',
+                class: 'primary',
+                disabled: state.money < pay,
+                onclick: () => {
+                  this.pending = {
+                    action: { type: 'buyCar', carId: car.id },
+                    label: `Trade up to the ${carName(car)} for ${usd(pay)} after trade-in`,
+                  };
+                  this.renderSide();
+                },
+              },
+              state.money < pay ? 'Cannot afford' : 'Buy',
+            ),
+          ),
+        );
+      });
+    return h(
+      'div',
+      {},
+      h('h3', {}, 'On the lot'),
+      h(
+        'p',
+        { class: 'muted', style: 'margin:0 0 0.5em;font-size:0.8em', 'data-testid': 'trade-in' },
+        `Trade-in on your ${carName(mine)}: ${usd(trade)}. Fitted parts go with it. You have ${usd(state.money)}.`,
+      ),
+      h('div', { class: 'part-list', 'aria-label': 'Cars for sale' }, rows),
+    );
+  }
+
+  private localPanel(): HTMLElement {
+    const state = store.require();
+    const loc = findLocation(state.location);
+    const best = state.bestFinish[loc.id];
+    return h(
+      'div',
+      {},
+      h('h3', {}, loc.name),
+      h('p', {}, loc.blurb),
+      h(
+        'p',
+        { class: 'muted' },
+        best ? `Your best finish here: P${best}.` : 'You have not raced here yet.',
+      ),
+      h('h3', {}, 'Local knowledge'),
+      this.tips.length
+        ? h(
+            'ul',
+            { style: 'margin:0;padding-left:1.1em;font-size:0.85em' },
+            this.tips.map((t) => h('li', {}, t.tip)),
+          )
+        : h('p', { class: 'muted' }, 'Ask about the track.'),
+    );
+  }
+
   private coachPanel(): HTMLElement {
     const state = store.require();
     const cat = store.catalogue;
@@ -596,7 +739,15 @@ class DialogueView {
 }
 
 function sideLabel(p: Persona): string {
-  return { parts: 'Shop', mechanic: 'Garage', sponsor: 'Sponsorship', coach: 'Notes' }[p.role];
+  const labels: Record<Persona['role'], string> = {
+    parts: 'Shop',
+    mechanic: 'Garage',
+    sponsor: 'Sponsorship',
+    coach: 'Notes',
+    dealer: 'Car lot',
+    local: 'Local knowledge',
+  };
+  return labels[p.role];
 }
 
 function rapportLabel(n: number): string {

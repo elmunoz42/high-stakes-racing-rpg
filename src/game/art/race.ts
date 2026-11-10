@@ -350,7 +350,7 @@ export const SCENERY: Record<string, Art> = {
       for (let x = 0; x < 176; x += 8)
         for (let y = 0; y < 2; y++)
           rect(c, (x / 8 + y) % 2 ? '#f2f2f2' : '#1b1b24', x, y * 4, 8, 4);
-      text(c, 'HARBOUR LOOP', 88, 16, '#ffcc33', 11);
+      text(c, 'START  /  FINISH', 88, 16, '#ffcc33', 10);
       for (let i = 0; i < 5; i++) {
         rect(c, '#101018', 60 + i * 12, 25, 8, 6);
         rect(c, '#39d353', 62 + i * 12, 26, 4, 4);
@@ -496,6 +496,346 @@ export const BACKDROPS: Record<string, Art> = {
     16,
     (c) => {
       glow(c, '#f2f2f2', 8, 8, 8, 0.9);
+    },
+  ],
+};
+
+// ---------- Looks: sky, haze and backdrop per track ----------
+export type LookId = 'dusk' | 'forest' | 'desert' | 'night' | 'snow' | 'day';
+
+export interface Look {
+  sky: [number, string][];
+  /** Colour distant ground fades to. */
+  haze: string;
+  body: 'sun' | 'moon';
+  mountains: [string, string];
+  city: boolean;
+  clouds: [string, string, string] | null;
+  stars: boolean;
+}
+
+export const LOOKS: Record<LookId, Look> = {
+  dusk: {
+    sky: SKY_STOPS,
+    haze: HAZE,
+    body: 'sun',
+    mountains: ['#5a3a7e', '#7a4a8a'],
+    city: true,
+    clouds: ['#e88aa0', '#f6b6a6', '#8a4f8e'],
+    stars: false,
+  },
+  forest: {
+    sky: [
+      [0, '#2a66b8'],
+      [0.6, '#7fb4e8'],
+      [1, '#cfe6f4'],
+    ],
+    haze: '#bfd8e2',
+    body: 'sun',
+    mountains: ['#2a5a3a', '#3f7a52'],
+    city: false,
+    clouds: ['#ffffff', '#ffffff', '#c8d8e8'],
+    stars: false,
+  },
+  desert: {
+    sky: [
+      [0, '#2674c4'],
+      [0.55, '#8cc4ec'],
+      [1, '#f6e4b8'],
+    ],
+    haze: '#f0d8aa',
+    body: 'sun',
+    mountains: ['#b0623a', '#cf8452'],
+    city: false,
+    clouds: null,
+    stars: false,
+  },
+  night: {
+    sky: [
+      [0, '#04051a'],
+      [0.6, '#10143e'],
+      [1, '#2c2262'],
+    ],
+    haze: '#1c1e40',
+    body: 'moon',
+    mountains: ['#12142e', '#1c1e40'],
+    city: true,
+    clouds: null,
+    stars: true,
+  },
+  snow: {
+    sky: [
+      [0, '#7389a2'],
+      [0.6, '#b4c4d4'],
+      [1, '#e8eef4'],
+    ],
+    haze: '#dfe8f0',
+    body: 'sun',
+    mountains: ['#b9c8d8', '#ffffff'],
+    city: false,
+    clouds: ['#ffffff', '#f2f6fa', '#c2ccd8'],
+    stars: false,
+  },
+  day: {
+    sky: [
+      [0, '#1c62c4'],
+      [0.6, '#6fb0ee'],
+      [1, '#d8ecfa'],
+    ],
+    haze: '#cfe4f4',
+    body: 'sun',
+    mountains: ['#5a7a9a', '#7a9aba'],
+    city: false,
+    clouds: ['#ffffff', '#ffffff', '#b8cce0'],
+    stars: false,
+  },
+};
+
+/** Per-look backdrop layers: [key suffix, w, h, draw]. */
+export function lookArt(id: LookId): Record<string, Art> {
+  const L = LOOKS[id];
+  return {
+    [`bg-sky-${id}`]: [
+      384,
+      100,
+      (c) => {
+        bands(c, 0, 0, 384, 100, L.sky, 30);
+        if (L.stars)
+          for (let k = 0; k < 90; k++)
+            rect(
+              c,
+              '#ffffff',
+              Math.floor(hash(k * 3) * 384),
+              Math.floor(hash(k * 7 + 1) * 80),
+              1,
+              1,
+              0.4 + hash(k) * 0.6,
+            );
+      },
+    ],
+    [`bg-body-${id}`]: [
+      96,
+      96,
+      (c) => {
+        if (L.body === 'moon') {
+          glow(c, '#cfd8ff', 48, 48, 40, 0.35);
+          ellipse(c, '#e8ecff', 48, 48, 13, 13);
+          ellipse(c, '#c4cbe8', 44, 45, 3, 3);
+          ellipse(c, '#c4cbe8', 53, 52, 2, 2);
+        } else {
+          const warm = id === 'dusk';
+          glow(c, warm ? '#ffe9a0' : '#ffffff', 48, 48, 48, warm ? 0.55 : 0.4);
+          ellipse(c, warm ? '#fff2c0' : '#fffbe0', 48, 48, warm ? 18 : 12, warm ? 18 : 12);
+        }
+      },
+    ],
+    [`bg-clouds-${id}`]: [
+      512,
+      46,
+      (c) => {
+        if (!L.clouds) return;
+        for (let k = 0; k < 9; k++) {
+          const x = Math.floor(hash(k * 3 + 1) * 480);
+          const y = 6 + Math.floor(hash(k * 5 + 2) * 26);
+          const w = 40 + Math.floor(hash(k * 7 + 3) * 60);
+          rect(c, L.clouds[0], x, y + 3, w, 3, 0.85);
+          rect(c, L.clouds[1], x + 6, y + 1, w - 14, 2, 0.9);
+          rect(c, L.clouds[2], x + 4, y + 6, w - 10, 2, 0.6);
+        }
+      },
+    ],
+    [`bg-mountains-${id}`]: [
+      512,
+      44,
+      (c) => {
+        for (let x = 0; x < 512; x++) {
+          const t = (x / 512) * Math.PI;
+          const h =
+            id === 'desert'
+              ? 8 + (Math.sin(t * 6) > 0.3 ? 16 + 4 * Math.sin(t * 22) : 3 * Math.sin(t * 40))
+              : 14 + 10 * Math.sin(t * 4) + 7 * Math.sin(t * 14 + 1) + 3 * Math.sin(t * 38);
+          rect(c, L.mountains[0], x, 44 - h, 1, h);
+          rect(c, L.mountains[1], x, 44 - h, 1, id === 'snow' ? Math.max(2, h * 0.4) : 2);
+        }
+        rect(c, L.haze, 0, 38, 512, 6, 0.4);
+      },
+    ],
+  };
+}
+
+const lit = (
+  c: Ctx,
+  x: number,
+  y: number,
+  cols: number,
+  rows: number,
+  seed: number,
+  colors: string[],
+) => {
+  for (let r = 0; r < rows; r++)
+    for (let k = 0; k < cols; k++) {
+      const h = hash(seed + r * 31 + k * 7);
+      rect(
+        c,
+        h > 0.5 ? colors[Math.floor(h * 97) % colors.length]! : '#1a1c30',
+        x + k * 8,
+        y + r * 9,
+        5,
+        6,
+      );
+    }
+};
+
+/** Scenery for the five away tracks. */
+export const SCENERY_AWAY: Record<string, Art> = {
+  cabin: [
+    72,
+    52,
+    (c) => {
+      rect(c, '#6a4630', 6, 22, 60, 30);
+      for (let y = 26; y < 52; y += 5) rect(c, '#553624', 6, y, 60, 1);
+      trap(c, '#3a2a22', 4, 23, 34, 38, 0, 72);
+      rect(c, '#ffd27a', 14, 32, 12, 10);
+      rect(c, '#3a2418', 40, 30, 12, 22);
+      rect(c, '#7a7068', 50, 2, 8, 14);
+      outline(c, 72, 52);
+      glow(c, '#ffd27a', 20, 37, 12, 0.4);
+    },
+  ],
+  cactus: [
+    22,
+    44,
+    (c) => {
+      rect(c, '#2f8a4a', 8, 4, 6, 40);
+      rect(c, '#3fa35c', 9, 4, 2, 40);
+      rect(c, '#2f8a4a', 1, 16, 4, 12);
+      rect(c, '#2f8a4a', 1, 26, 8, 4);
+      rect(c, '#2f8a4a', 17, 10, 4, 14);
+      rect(c, '#2f8a4a', 13, 22, 8, 4);
+      outline(c, 22, 44);
+    },
+  ],
+  mesa: [
+    184,
+    80,
+    (c) => {
+      trap(c, '#b0623a', 14, 80, 30, 150, 4, 180);
+      rect(c, '#c87a4a', 30, 10, 120, 5);
+      for (let y = 24; y < 80; y += 9) rect(c, '#96502e', 6, y, 172, 2, 0.6);
+      for (let x = 20; x < 170; x += 14) rect(c, '#96502e', x, 16, 2, 60, 0.35);
+    },
+  ],
+  'gas-station': [
+    128,
+    56,
+    (c) => {
+      rect(c, '#e8e4d8', 0, 4, 128, 8);
+      rect(c, '#d7263d', 0, 10, 128, 3);
+      rect(c, '#9a968a', 8, 12, 4, 44);
+      rect(c, '#9a968a', 116, 12, 4, 44);
+      rect(c, '#d9ccb2', 30, 26, 68, 30);
+      rect(c, '#9fc4e8', 36, 32, 24, 14);
+      rect(c, '#4a2c1e', 70, 32, 12, 24);
+      text(c, 'LAST GAS', 64, 8, '#2b2b33', 7);
+      for (const x of [16, 104]) {
+        rect(c, '#d7263d', x, 38, 8, 18);
+        rect(c, '#f4f4f4', x + 1, 40, 6, 5);
+      }
+      outline(c, 128, 56);
+    },
+  ],
+  tower: [
+    78,
+    204,
+    (c) => {
+      rect(c, '#1e2038', 0, 0, 78, 204);
+      rect(c, '#2a2c4a', 0, 0, 78, 3);
+      rect(c, '#15162a', 72, 0, 6, 204);
+      lit(c, 5, 8, 8, 20, 11, ['#ffd27a', '#39e6ff', '#ff4fa3', '#ffd27a']);
+      rect(c, '#ff4fa3', 0, 190, 78, 2);
+      rect(c, '#39e6ff', 0, 194, 78, 2);
+      glow(c, '#ff4fa3', 39, 190, 40, 0.25);
+    },
+  ],
+  neon: [
+    27,
+    42,
+    (c) => {
+      rect(c, '#2a2c38', 12, 20, 3, 22);
+      rect(c, '#101018', 0, 0, 27, 21);
+      rect(c, '#39e6ff', 2, 2, 23, 17);
+      rect(c, '#101018', 4, 4, 19, 13);
+      text(c, 'GO', 13, 11, '#ff4fa3', 10);
+      outline(c, 27, 42);
+      glow(c, '#39e6ff', 13, 10, 20, 0.5);
+    },
+  ],
+  'tunnel-arch': [
+    190,
+    82,
+    (c) => {
+      rect(c, '#15161d', 0, 0, 190, 14);
+      rect(c, '#15161d', 0, 0, 16, 82);
+      rect(c, '#15161d', 174, 0, 16, 82);
+      rect(c, '#2a2c38', 16, 14, 158, 3);
+      for (const x of [44, 95, 146]) {
+        rect(c, '#fff3c4', x - 5, 15, 10, 2);
+        glow(c, '#ffe08a', x, 18, 14, 0.5);
+      }
+      rect(c, '#f2c230', 0, 60, 16, 4);
+      rect(c, '#f2c230', 174, 60, 16, 4);
+    },
+  ],
+  'pine-snow': [
+    36,
+    84,
+    (c) => {
+      rect(c, '#4a3424', 16, 66, 4, 18);
+      const layers: [number, number, number][] = [
+        [2, 30, 12],
+        [18, 50, 15],
+        [36, 70, 18],
+      ];
+      for (const [y0, y1, half] of layers) {
+        trap(c, '#1c4a36', y0, y1, 18, 18, 18 - half, 18 + half);
+        trap(c, '#f4f8fc', y0, y0 + (y1 - y0) * 0.45, 18, 18, 18 - half * 0.45, 18 + half * 0.45);
+      }
+      outline(c, 36, 84);
+    },
+  ],
+  snowbank: [
+    32,
+    9,
+    (c) => {
+      ellipse(c, '#f4f8fc', 16, 8, 16, 7);
+      ellipse(c, '#d5dfe9', 20, 9, 11, 4);
+    },
+  ],
+  flag: [
+    14,
+    44,
+    (c) => {
+      rect(c, '#55596a', 1, 0, 2, 44);
+      for (let y = 0; y < 3; y++)
+        for (let x = 0; x < 3; x++)
+          rect(c, (x + y) % 2 ? '#f2f2f2' : '#16161c', 3 + x * 3, 2 + y * 3, 3, 3);
+      outline(c, 14, 44);
+    },
+  ],
+  'pit-building': [
+    180,
+    54,
+    (c) => {
+      rect(c, '#d8dce4', 0, 6, 180, 48);
+      rect(c, '#23324a', 0, 0, 180, 8);
+      rect(c, '#ffcc33', 0, 8, 180, 2);
+      for (let k = 0; k < 6; k++) {
+        rect(c, '#2a2c38', 6 + k * 29, 26, 24, 28);
+        rect(c, '#3b4656', 8 + k * 29, 28, 20, 8);
+        text(c, String(k + 1), 18 + k * 29, 20, '#23324a', 7);
+      }
+      rect(c, '#9fc4e8', 0, 12, 180, 5);
+      outline(c, 180, 54);
     },
   ],
 };

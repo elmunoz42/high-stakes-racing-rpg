@@ -31,6 +31,7 @@ export const CARS: Car[] = [
     checked_on: '2026-11-09',
     blurb:
       'Light, honest, rear-drive. Not much power, so you carry speed through corners or you go nowhere. Leaves the most money in the bank.',
+    starter: true,
     game: { color: '#d4202c', body: 'roadster' },
   },
   {
@@ -63,6 +64,7 @@ export const CARS: Car[] = [
     checked_on: '2026-11-09',
     blurb:
       'The original hot hatch recipe: a torquey sixteen-valve four pulling the front wheels. Forgiving, quick out of slow corners.',
+    starter: true,
     game: { color: '#e8e4d8', body: 'hatch' },
   },
   {
@@ -91,6 +93,94 @@ export const CARS: Car[] = [
     checked_on: '2026-11-09',
     blurb:
       'The most power of the three and rear-drive to go with it. Heavier, and it will eat most of your budget before you buy a single part.',
+    starter: true,
     game: { color: '#2f6fd6', body: 'coupe' },
+  },
+  // ---------- Bought from the dealer, not starter cars ----------
+  {
+    id: 'mustang-gt-1988',
+    make: 'Ford',
+    model: 'Mustang GT',
+    generation: 'Fox body',
+    year: 1988,
+    trim: 'GT 5.0 hatchback',
+    drivetrain: 'RWD',
+    engine: '5.0 L (302) HO V8',
+    power_hp: 225,
+    torque_nm: 410,
+    weight_kg: 1_448,
+    price_usd: 21_371,
+    price_basis: 'used-market',
+    price_note: 'CLASSIC.COM Market Benchmark for the 1988 Mustang GT',
+    source_url: 'https://en.wikipedia.org/wiki/Ford_Mustang_(third_generation)',
+    sources: [
+      {
+        what: 'curb weight (1988 GT hatchback, 3,192 lb)',
+        url: 'https://www.cjponyparts.com/resources/mustang-curb-weights',
+      },
+      {
+        what: 'price',
+        url: 'https://www.classic.com/m/ford/mustang/3rd-gen/1987-1993/gt/year-1988',
+      },
+      { what: 'stock tyre size 225/60R15', url: 'https://tiresize.com/tires/Ford/Mustang/1988/' },
+    ],
+    checked_on: '2026-11-10',
+    blurb:
+      'Five litres of torque in a light, simple shell. Quick in a straight line, lively everywhere else.',
+    starter: false,
+    game: { color: '#1f3f8f', body: 'coupe' },
+  },
+  {
+    id: 'corvette-c4-1990',
+    make: 'Chevrolet',
+    model: 'Corvette',
+    generation: 'C4',
+    year: 1990,
+    trim: 'Base coupe (L98)',
+    drivetrain: 'RWD',
+    engine: '5.7 L L98 V8',
+    power_hp: 245,
+    torque_nm: 468,
+    weight_kg: 1_469,
+    price_usd: 18_500,
+    price_basis: 'used-market',
+    price_note:
+      'DriveIndex median sale across C4 Corvette models (base coupes range $11,303 to $23,095)',
+    source_url: 'https://en.wikipedia.org/wiki/Chevrolet_Corvette_(C4)',
+    sources: [
+      { what: 'price', url: 'https://driveindex.com/cars/chevrolet/corvette/c4' },
+      {
+        what: 'stock tyre size 275/40R17',
+        url: 'https://tiresize.com/tires/Chevrolet/Corvette/1990/',
+      },
+    ],
+    checked_on: '2026-11-10',
+    blurb:
+      'Low, wide and on huge tyres. More power than the Mustang and far more grip to use it with.',
+    starter: false,
+    game: { color: '#f2c230', body: 'coupe' },
+  },
+  {
+    id: 'viper-rt10-1994',
+    make: 'Dodge',
+    model: 'Viper RT/10',
+    generation: 'SR I',
+    year: 1994,
+    trim: 'RT/10 roadster',
+    drivetrain: 'RWD',
+    engine: '8.0 L V10',
+    power_hp: 400,
+    torque_nm: 630,
+    weight_kg: 1_490,
+    price_usd: 49_278,
+    price_basis: 'used-market',
+    price_note: 'CLASSIC.COM Market Benchmark for the 1994 Viper (1st gen)',
+    source_url: 'https://en.wikipedia.org/wiki/Dodge_Viper_(SR_I)',
+    sources: [{ what: 'price', url: 'https://www.classic.com/m/dodge/viper/1st-gen/year-1994' }],
+    checked_on: '2026-11-10',
+    blurb:
+      'Ten cylinders, four hundred horsepower, no driver aids and no roof. The end boss of street cars.',
+    starter: false,
+    game: { color: '#0f6b4a', body: 'roadster' },
   },
 ];

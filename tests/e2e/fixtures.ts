@@ -40,6 +40,13 @@ export class GameDriver {
     );
   }
 
+  async goto(scene: string, params?: object): Promise<void> {
+    await this.page.evaluate(
+      ([sc, p]) => window.__game!.goto(sc as never, p as object | undefined),
+      [scene, params] as const,
+    );
+  }
+
   state<T = Record<string, unknown>>(): Promise<T> {
     return this.page.evaluate(() => window.__game!.state() as never);
   }

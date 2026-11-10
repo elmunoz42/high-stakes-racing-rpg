@@ -15,4 +15,5 @@ export interface RaceResult {
   ledALap: boolean;
   topSpeedKmh: number;
   order: RaceEntryResult[];
+  nitrousUsed?: number;
 }

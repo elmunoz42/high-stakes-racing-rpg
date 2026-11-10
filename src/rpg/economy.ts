@@ -10,11 +10,22 @@ import type { RaceResult } from '../race/types.ts';
 /** Total career fund. The starter car is bought out of it; the rest is cash. */
 export const CAREER_FUND_USD = 18_500;
 
-/** Prize money by finishing position (index 0 = 1st). */
+/** Nitrous: an invented house price per shot at the parts counter. */
+export const NITROUS_SHOT_USD = 180;
+export const NITROUS_MAX_SHOTS = 3;
+
+/** Trade-in: share of the old car's price, and of the list price of its fitted parts. */
+export const TRADE_IN_CAR = 0.7;
+export const TRADE_IN_PARTS = 0.5;
+
+/** Finishing this high or better at a location unlocks the next one. */
+export const UNLOCK_POSITION = 3;
+
+/** Prize money by finishing position (index 0 = 1st), before the location multiplier. */
 export const PRIZES_USD = [2_400, 1_500, 1_000, 650, 400, 250] as const;
 
-export function prizeFor(position: number): number {
-  return PRIZES_USD[position - 1] ?? 0;
+export function prizeFor(position: number, multiplier = 1): number {
+  return Math.round((PRIZES_USD[position - 1] ?? 0) * multiplier);
 }
 
 /** Teo's labour, flat per slot. Invented shop rates. */

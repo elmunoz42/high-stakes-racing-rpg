@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { RIVALS } from '../../data/rivals.ts';
 import { findSponsor } from '../../data/catalogue.ts';
+import { findTrack } from '../../race/tracks.ts';
 import { usd } from '../../rpg/economy.ts';
 import { store } from '../../save/store.ts';
 import { h, mount } from '../../ui/dom.ts';
@@ -44,7 +45,7 @@ export class ResultsScene extends Phaser.Scene {
         h(
           'p',
           { class: 'muted' },
-          `Harbour Loop, ${r.laps} laps. Your time ${formatTime(r.timeMs)}. Top speed ${r.topSpeedKmh} km/h.`,
+          `${findTrack(r.trackId).name}, ${r.laps} laps. Your time ${formatTime(r.timeMs)}. Top speed ${r.topSpeedKmh} km/h.`,
         ),
         h(
           'table',

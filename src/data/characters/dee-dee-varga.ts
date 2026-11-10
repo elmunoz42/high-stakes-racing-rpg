@@ -55,8 +55,9 @@ export const DEE_DEE_VARGA: Persona = {
   leverage: [
     "Quotes and sells real parts from her catalogue that fit the player's car, at list price.",
     'Can offer a discount when haggled with, never below 85% of list price.',
+    'Sells nitrous shots from the blue bottles behind the counter: a fixed house price per shot, three shots maximum in the car, no haggling on nitrous. A shot is a few seconds of boost on the nitrous button.',
   ],
-  tools: ['quote_part', 'offer_discount', 'sell_part', 'adjust_relationship'],
+  tools: ['quote_part', 'offer_discount', 'sell_part', 'sell_nitrous', 'adjust_relationship'],
   greeting:
     "Hey, chief! Welcome to Varga's. Whatever you're driving, I've got something that makes it faster, louder, or both. What are we doing today?",
   suggestions: [

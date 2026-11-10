@@ -23,14 +23,16 @@ test.describe('US-002 Walk the town and enter buildings', () => {
         window.__game!.town as { buildings(): { kind: string; x: number; name: string }[] }
       ).buildings(),
     );
-    expect(kinds.map((b) => b.kind).sort()).toEqual([
+    // (The street also has a travel board, covered by US-012.)
+    const places = kinds.filter((b) => b.kind !== 'travel');
+    expect(places.map((b) => b.kind).sort()).toEqual([
       'garage',
       'gate',
       'lounge',
       'shop',
       'trailer',
     ]);
-    for (const b of kinds.filter((k) => k.kind !== 'garage')) {
+    for (const b of places.filter((k) => k.kind !== 'garage')) {
       await game.setPlayerX(b.x);
       await expect(page.getByTestId('interact-prompt')).toContainText(
         b.kind === 'gate' ? 'race the Harbour Loop' : b.name,

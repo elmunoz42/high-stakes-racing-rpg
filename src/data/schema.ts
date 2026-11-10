@@ -42,6 +42,8 @@ export const CarSchema = z
     sources: z.array(Source).default([]),
     checked_on: isoDate,
     blurb: z.string().min(1),
+    /** Offered when starting a career. Other cars are bought from the dealer. */
+    starter: z.boolean(),
     game: z.object({
       /** Sprite body colour, hex. */
       color: z.string().regex(/^#[0-9a-f]{6}$/i),
@@ -94,7 +96,7 @@ export const SponsorSchema = z.object({
 });
 export type Sponsor = z.infer<typeof SponsorSchema>;
 
-export const Role = z.enum(['coach', 'mechanic', 'parts', 'sponsor']);
+export const Role = z.enum(['coach', 'mechanic', 'parts', 'sponsor', 'dealer', 'local']);
 export type Role = z.infer<typeof Role>;
 
 export const ToolName = z.enum([
@@ -105,6 +107,8 @@ export const ToolName = z.enum([
   'install_part',
   'offer_sponsorship',
   'adjust_relationship',
+  'sell_car',
+  'sell_nitrous',
 ]);
 export type ToolName = z.infer<typeof ToolName>;
 

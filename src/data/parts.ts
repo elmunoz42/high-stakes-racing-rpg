@@ -269,4 +269,82 @@ export const PARTS: Part[] = [
       'German-engineered coilovers made specifically for the 16V Mk2. Firm, precise, well damped.',
     tier: 'sport',
   },
+
+  // ---------- 1990 Chevrolet Corvette (275/40R17) ----------
+  {
+    id: 'general-gmax-rs-275-40r17',
+    brand: 'General',
+    name: 'G-MAX RS 275/40ZR17 98W (set of 4)',
+    part_number: '74WR7GMRS',
+    category: 'tyres',
+    fits: ['corvette-c4-1990'],
+    unit_price_usd: 194.99,
+    quantity: 4,
+    price_usd: 779.96,
+    price_basis: 'retailer',
+    retailer: 'Tire Rack',
+    source_url:
+      'https://www.tirerack.com/tires/tires.jsp?tireMake=General&tireModel=G-MAX+RS&partnum=74WR7GMRS',
+    checked_on: '2026-11-10',
+    blurb: 'Ultra-high-performance summer tyre in the wide stock Corvette size.',
+    tier: 'sport',
+  },
+  {
+    id: 'hawk-hpplus-hb111n-610',
+    brand: 'Hawk Performance',
+    name: 'HP+ Sport Front Brake Pads',
+    part_number: 'HB111N.610',
+    category: 'brakes',
+    fits: ['corvette-c4-1990'],
+    unit_price_usd: 245.69,
+    quantity: 1,
+    price_usd: 245.69,
+    price_basis: 'retailer',
+    retailer: 'Nippon Power',
+    source_url:
+      'https://nipponpower.com/products/hawk-94-04-mustang-cobra-88-95-corvette-5-7l-88-92-camaro-w-hvy-duty-brakes-front-hp',
+    checked_on: '2026-11-10',
+    blurb: 'An autocross and track-day pad: serious bite, some noise and dust.',
+    tier: 'sport',
+  },
+
+  // ---------- 1988 Ford Mustang GT (225/60R15) ----------
+  {
+    id: 'bfg-radial-ta-225-60r15',
+    brand: 'BFGoodrich',
+    name: 'Radial T/A P225/60R15 95S (set of 4)',
+    part_number: '26SR5RADTARWL2V3',
+    category: 'tyres',
+    fits: ['mustang-gt-1988'],
+    unit_price_usd: 219.99,
+    quantity: 4,
+    price_usd: 879.96,
+    price_basis: 'retailer',
+    retailer: 'Tire Rack',
+    source_url:
+      'https://www.tirerack.com/tires/tires.jsp?tireMake=BFGoodrich&tireModel=Radial+T%2FA&partnum=26SR5RADTARWL2V3',
+    checked_on: '2026-11-10',
+    blurb: 'The classic raised-white-letter muscle car tyre. Fresh rubber more than outright grip.',
+    tier: 'street',
+  },
+
+  // ---------- 1994 Dodge Viper RT/10 ----------
+  {
+    id: 'hawk-hps-hb194f-665',
+    brand: 'Hawk Performance',
+    name: 'HPS Street Front Brake Pads',
+    part_number: 'HB194F.665',
+    category: 'brakes',
+    fits: ['viper-rt10-1994'],
+    unit_price_usd: 177.29,
+    quantity: 1,
+    price_usd: 177.29,
+    price_basis: 'retailer',
+    retailer: 'Nippon Power',
+    source_url:
+      'https://nipponpower.com/products/hawk-92-00-dodge-viper-00-mustang-cobra-svt-hps-street-front-brake-pads',
+    checked_on: '2026-11-10',
+    blurb: 'You will want all the brakes you can get.',
+    tier: 'street',
+  },
 ];

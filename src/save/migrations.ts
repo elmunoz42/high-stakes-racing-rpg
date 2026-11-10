@@ -23,6 +23,8 @@ const MIGRATIONS: Record<number, Migration> = {
     raceCount: 0,
     location: 'harbour-district',
   }),
+  // v2: travel between locations and nitrous shots.
+  1: (v1) => ({ ...v1, version: 2, nitrous: 0, bestFinish: {} }),
 };
 
 export function migrate(raw: unknown): GameState {

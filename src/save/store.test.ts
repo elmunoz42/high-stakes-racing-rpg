@@ -55,6 +55,32 @@ describe('save (US-009)', () => {
     expect(s).toMatchObject({ money: 4321, carId: 'alpha', inventory: ['pads-a'], installed: {} });
   });
 
+  it('migrates a version 1 save to version 2 with no nitrous and no travel progress (US-012 AC5)', () => {
+    const v1 = {
+      version: 1,
+      seed: 1,
+      money: 500,
+      carId: 'alpha',
+      inventory: [],
+      installed: {},
+      sponsor: null,
+      offers: { discounts: {}, sponsor: null },
+      relationships: {},
+      memories: {},
+      lastRace: null,
+      raceCount: 0,
+      location: 'home',
+    };
+    const s = migrate(v1);
+    expect(s).toMatchObject({
+      version: 2,
+      nitrous: 0,
+      bestFinish: {},
+      money: 500,
+      location: 'home',
+    });
+  });
+
   it('refuses saves from a newer game', () => {
     expect(() => migrate({ version: SAVE_VERSION + 1 })).toThrow();
   });

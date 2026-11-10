@@ -7,6 +7,11 @@ import { h, mount } from './dom.ts';
 export function mountTownHud(place: string): () => void {
   const money = h('span', { class: 'chip money', 'data-testid': 'money', 'aria-label': 'Money' });
   const car = h('span', { class: 'chip', 'data-testid': 'my-car', 'aria-label': 'Your car' });
+  const nitro = h('span', {
+    class: 'chip',
+    'data-testid': 'my-nitrous',
+    'aria-label': 'Nitrous shots',
+  });
   const sponsor = h('span', {
     class: 'chip',
     'data-testid': 'my-sponsor',
@@ -17,6 +22,7 @@ export function mountTownHud(place: string): () => void {
     if (!s) return;
     const c = findCar(store.catalogue, s.carId);
     money.textContent = usd(s.money);
+    nitro.textContent = `N₂O ${s.nitrous}/3`;
     car.textContent = c ? carName(c) : s.carId;
     const sp = s.sponsor ? findSponsor(store.catalogue, s.sponsor.sponsorId) : null;
     sponsor.textContent = sp ? `${sp.name} (${s.sponsor!.racesLeft} races left)` : 'No sponsor';
@@ -28,7 +34,7 @@ export function mountTownHud(place: string): () => void {
       'div',
       { class: 'hud' },
       h('span', { class: 'chip', 'data-testid': 'place' }, place),
-      h('span', { style: 'display:flex;gap:0.5em' }, car, sponsor, money),
+      h('span', { style: 'display:flex;gap:0.5em' }, car, sponsor, nitro, money),
     ),
     h(
       'div',

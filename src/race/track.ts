@@ -31,12 +31,30 @@ export interface TrackSection {
   name?: string;
 }
 
-export type SceneryKind = 'harbour' | 'docks' | 'town' | 'cliff' | 'bridge' | 'lighthouse';
+export type SceneryKind =
+  | 'harbour'
+  | 'docks'
+  | 'town'
+  | 'cliff'
+  | 'bridge'
+  | 'lighthouse'
+  | 'forest'
+  | 'desert'
+  | 'city'
+  | 'tunnel'
+  | 'snow'
+  | 'circuit';
+
+/** Sky, haze and backdrop for a track. */
+export type LookId = 'dusk' | 'forest' | 'desert' | 'night' | 'snow' | 'day';
 
 export interface TrackDef {
   id: string;
   name: string;
   laps: number;
+  look?: LookId;
+  /** Surface grip multiplier (1 = dry asphalt). */
+  grip?: number;
   sections: TrackSection[];
 }
 
@@ -125,7 +143,7 @@ function scenery(kind: SceneryKind, i: number, curve: number): SceneryPlacement[
       out.push({ key: curve > 0 ? 'chevron-r' : 'chevron-l', x: outside * (edge + 4.2) });
   }
 
-  if (kind !== 'bridge' && every(16))
+  if (kind !== 'bridge' && kind !== 'tunnel' && every(16))
     out.push({ key: 'lamp', x: -(edge + 1.6) }, { key: 'lamp', x: edge + 1.6, flip: true });
 
   switch (kind) {
@@ -165,6 +183,48 @@ function scenery(kind: SceneryKind, i: number, curve: number): SceneryPlacement[
         out.push({ key: 'truss', x: -(edge + 1.4) }, { key: 'truss', x: edge + 1.4, flip: true });
       if (every(40, 20)) out.push({ key: 'sailboat', x: 30 });
       break;
+    case 'forest':
+      if (every(7, 2)) out.push({ key: 'pine', x: -(edge + 4 + (i % 3) * 3) });
+      if (every(7, 5)) out.push({ key: 'pine', x: edge + 4 + (i % 4) * 3 });
+      if (every(11, 3)) out.push({ key: 'bush', x: edge + 2.6 });
+      if (every(23, 9)) out.push({ key: 'rock', x: -(edge + 3) });
+      if (every(120, 60)) out.push({ key: 'cabin', x: edge + 13 });
+      break;
+    case 'desert':
+      if (every(13, 4)) out.push({ key: 'cactus', x: -(edge + 4 + (i % 5) * 2) });
+      if (every(17, 9)) out.push({ key: 'cactus', x: edge + 5 + (i % 4) * 3 });
+      if (every(29, 12)) out.push({ key: 'rock', x: edge + 3.5 });
+      if (every(90, 20)) out.push({ key: 'mesa', x: -(edge + 40) });
+      if (every(90, 65)) out.push({ key: 'mesa', x: edge + 46, flip: true });
+      if (every(150, 80)) out.push({ key: 'billboard-voltkat', x: edge + 9 });
+      if (every(260, 130)) out.push({ key: 'gas-station', x: -(edge + 14) });
+      break;
+    case 'city':
+      if (every(18, 4)) out.push({ key: 'tower', x: -(edge + 12) });
+      if (every(18, 13)) out.push({ key: 'tower', x: edge + 12, flip: true });
+      if (every(36, 22)) out.push({ key: 'neon', x: edge + 5 });
+      if (every(36, 8)) out.push({ key: 'neon', x: -(edge + 5), flip: true });
+      if (every(4))
+        out.push({ key: 'barrier', x: -(edge + 2.2) }, { key: 'barrier', x: edge + 2.2 });
+      break;
+    case 'tunnel':
+      if (every(4)) out.push({ key: 'tunnel-arch', x: 0 });
+      break;
+    case 'snow':
+      if (every(8, 2)) out.push({ key: 'pine-snow', x: -(edge + 5 + (i % 3) * 3) });
+      if (every(8, 6)) out.push({ key: 'pine-snow', x: edge + 5 + (i % 4) * 3 });
+      if (every(3))
+        out.push({ key: 'snowbank', x: -(edge + 2) }, { key: 'snowbank', x: edge + 2, flip: true });
+      if (every(140, 70)) out.push({ key: 'cabin', x: -(edge + 13) });
+      break;
+    case 'circuit':
+      if (every(3)) out.push({ key: 'barrier', x: -(edge + 6) }, { key: 'barrier', x: edge + 6 });
+      if (every(46, 20)) out.push({ key: 'grandstand', x: -(edge + 20) });
+      if (every(70, 50)) out.push({ key: 'billboard-voltkat', x: edge + 12 });
+      if (every(70, 15)) out.push({ key: 'billboard-varga', x: edge + 12 });
+      if (every(30, 10)) out.push({ key: 'flag', x: edge + 8 });
+      if (every(200, 4)) out.push({ key: 'pit-building', x: edge + 22 });
+      break;
     case 'lighthouse':
       if (every(160, 40)) out.push({ key: 'lighthouse', x: -(edge + 20) });
       if (every(10, 5)) out.push({ key: 'rock', x: edge + 4 });
@@ -198,6 +258,7 @@ export const HARBOUR_LOOP: TrackDef = {
   id: 'harbour-loop',
   name: 'Harbour Loop',
   laps: 3,
+  look: 'dusk',
   sections: [
     { name: 'Waterfront', length: 300, curve: 0, hill: 0, scenery: 'harbour' },
     { name: 'Ferry Sweep', length: 220, curve: 3, hill: 0, scenery: 'harbour' },

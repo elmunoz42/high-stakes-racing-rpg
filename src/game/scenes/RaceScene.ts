@@ -19,7 +19,16 @@ import { carStats, msToKmh } from '../../rpg/carStats.ts';
 import { store } from '../../save/store.ts';
 import { h, mount } from '../../ui/dom.ts';
 import { formatTime } from '../../ui/format.ts';
-import { carRearTexture, CAR_H, CAR_W, generateRaceTextures, steerFrame } from '../art/textures.ts';
+import { hexInt } from '../art/pixel.ts';
+import { type LookId, LOOKS } from '../art/race.ts';
+import {
+  carRearTexture,
+  CAR_H,
+  CAR_W,
+  generateLookTextures,
+  generateRaceTextures,
+  steerFrame,
+} from '../art/textures.ts';
 import { goto } from '../flow.ts';
 import { registerHook } from '../testHooks.ts';
 
@@ -48,6 +57,10 @@ export class RaceScene extends Phaser.Scene {
   private fx!: Phaser.GameObjects.Graphics;
   private sun!: Phaser.GameObjects.Image;
   private clouds!: Phaser.GameObjects.TileSprite;
+  private sky!: Phaser.GameObjects.Image;
+  private haze = 0;
+  private skyAlpha = 1;
+  private trackName = '';
   private mountains!: Phaser.GameObjects.TileSprite;
   private city!: Phaser.GameObjects.TileSprite;
   private pool: Phaser.GameObjects.Image[] = [];
@@ -57,7 +70,7 @@ export class RaceScene extends Phaser.Scene {
   private finishedAt = -1;
   private done = false;
   private keys!: Record<
-    'up' | 'down' | 'left' | 'right' | 'w' | 'a' | 's' | 'd' | 'space',
+    'up' | 'down' | 'left' | 'right' | 'w' | 'a' | 's' | 'd' | 'space' | 'n' | 'shift',
     Phaser.Input.Keyboard.Key
   >;
   private steer = 0;
@@ -75,6 +88,7 @@ export class RaceScene extends Phaser.Scene {
     gear: HTMLElement;
     arc: SVGPathElement;
     tow: HTMLElement;
+    nitro: HTMLElement;
     markers: HTMLElement[];
   };
 
@@ -88,7 +102,14 @@ export class RaceScene extends Phaser.Scene {
     const car = findCar(cat, state.carId)!;
     const stats = carStats(car, installedParts(cat, state));
     const seed = data.seed ?? seedFromUrl() ?? state.seed * 1000 + state.raceCount;
-    this.sim = createRace(cat, state.carId, stats, seed);
+    this.sim = createRace(cat, state.carId, stats, seed, {
+      locationId: state.location,
+      nitrous: state.nitrous,
+    });
+    const look: LookId = this.sim.track.def.look ?? 'dusk';
+    this.haze = hexInt(LOOKS[look].haze);
+    this.skyAlpha = 1;
+    this.trackName = this.sim.track.def.name;
     this.accumulator = 0;
     this.countdown = COUNTDOWN_SECONDS;
     this.finishedAt = -1;
@@ -101,17 +122,21 @@ export class RaceScene extends Phaser.Scene {
     this.pool = [];
     this.particles = [];
     generateRaceTextures(this);
+    generateLookTextures(this, look);
 
-    this.add
-      .image(0, 0, 'bg-sky')
+    this.sky = this.add
+      .image(0, 0, `bg-sky-${look}`)
       .setOrigin(0, 0)
       .setDisplaySize(SCREEN_W, HORIZON_Y + 8);
-    this.sun = this.add.image(250, HORIZON_Y - 22, 'bg-sun');
-    this.clouds = this.add.tileSprite(0, 14, SCREEN_W, 46, 'bg-clouds').setOrigin(0, 0);
+    this.sun = this.add.image(250, HORIZON_Y - (look === 'dusk' ? 22 : 56), `bg-body-${look}`);
+    this.clouds = this.add.tileSprite(0, 14, SCREEN_W, 46, `bg-clouds-${look}`).setOrigin(0, 0);
     this.mountains = this.add
-      .tileSprite(0, HORIZON_Y - 40, SCREEN_W, 44, 'bg-mountains')
+      .tileSprite(0, HORIZON_Y - 40, SCREEN_W, 44, `bg-mountains-${look}`)
       .setOrigin(0, 0);
-    this.city = this.add.tileSprite(0, HORIZON_Y - 41, SCREEN_W, 46, 'bg-city').setOrigin(0, 0);
+    this.city = this.add
+      .tileSprite(0, HORIZON_Y - 41, SCREEN_W, 46, 'bg-city')
+      .setOrigin(0, 0)
+      .setVisible(LOOKS[look].city);
     this.road = this.add.graphics().setDepth(1);
     this.fx = this.add.graphics().setDepth(900);
 
@@ -127,6 +152,8 @@ export class RaceScene extends Phaser.Scene {
       s: kb.addKey(K.S),
       d: kb.addKey(K.D),
       space: kb.addKey(K.SPACE),
+      n: kb.addKey(K.N),
+      shift: kb.addKey(K.SHIFT),
     };
 
     this.buildHud();
@@ -150,6 +177,9 @@ export class RaceScene extends Phaser.Scene {
           slide: p.slide,
           draft: p.draft,
           smoke: this.particles.filter((q) => q.kind === 'smoke').length,
+          nitroShots: p.nitroShots,
+          boosting: p.nitroT > 0,
+          trackId: this.sim.track.def.id,
         };
       },
     });
@@ -165,6 +195,7 @@ export class RaceScene extends Phaser.Scene {
     const time = h('span', { class: 'chip', 'aria-label': 'Race time' }, '0:00.0');
     const count = h('div', { class: 'countdown', role: 'status' }, String(COUNTDOWN_SECONDS));
     const tow = h('div', { class: 'tow hidden', 'data-testid': 'slipstream' }, 'SLIPSTREAM');
+    const nitro = h('div', { class: 'nitro', 'aria-label': 'Nitrous shots' }, '0');
     const tach = h('div', { class: 'tach', 'aria-hidden': 'true' });
     tach.innerHTML = `<svg viewBox="0 0 100 100">
       <path d="M 20.3 79.7 A 42 42 0 1 1 79.7 79.7" class="track"/>
@@ -192,12 +223,14 @@ export class RaceScene extends Phaser.Scene {
         h('div', { class: 'top' }, lap, time, pos),
         progress,
         h('div', { class: 'cluster' }, tach, gear, speed),
+        h('div', { class: 'nitro-box' }, h('span', {}, 'NITROUS'), nitro),
         tow,
-        h('div', { class: 'keys' }, '↑ gas · ↓ brake · ← → steer · Space handbrake'),
+        h('div', { class: 'keys' }, '↑ gas · ↓ brake · ← → steer · Space handbrake · N nitrous'),
         count,
       ),
     );
     this.hud = {
+      nitro,
       speed,
       lap,
       pos,
@@ -266,6 +299,7 @@ export class RaceScene extends Phaser.Scene {
       throttle: k.up.isDown || k.w.isDown ? 1 : 0,
       brake: k.down.isDown || k.s.isDown ? 1 : 0,
       handbrake: k.space.isDown,
+      nitro: k.n.isDown || k.shift.isDown,
     };
   }
 
@@ -275,7 +309,7 @@ export class RaceScene extends Phaser.Scene {
 
     // Camera: wider and lower at speed; rattles on kerbs and grass.
     const cam = {
-      depth: CAMERA_DEPTH * (1 - 0.1 * pct * pct),
+      depth: CAMERA_DEPTH * (1 - 0.1 * pct * pct - (p.nitroT > 0 ? 0.07 : 0)),
       height: CAMERA_HEIGHT * (1 - 0.05 * pct),
     };
     const rough = p.surface === 'grass' ? 1.6 : p.surface === 'rumble' ? 0.8 : p.slide * 0.5;
@@ -285,7 +319,13 @@ export class RaceScene extends Phaser.Scene {
       Math.round(Math.sin(this.clock * 47) * amp),
     );
 
-    const list = buildDrawList(this.sim, cam);
+    const list = buildDrawList(this.sim, cam, this.haze);
+
+    // In a tunnel the sky goes dark.
+    const under = segmentAt(this.sim.track, p.z).theme === 'tunnel' ? 0.08 : 1;
+    this.skyAlpha += (under - this.skyAlpha) * Math.min(1, dt * 6);
+    for (const o of [this.sky, this.sun, this.clouds, this.mountains, this.city])
+      o.setAlpha(this.skyAlpha);
     const g = this.road;
     g.clear();
     for (const q of list.quads) {
@@ -417,6 +457,23 @@ export class RaceScene extends Phaser.Scene {
         });
     }
     this.lastGear = p.gear;
+    if (p.nitroT > 0) {
+      // Nitrous: a blue-white flame from the exhaust.
+      for (let k = 0; k < 3; k++)
+        this.spawn({
+          x: s.x + s.w * 0.2 + (rnd() - 0.5) * 3,
+          y: s.y - s.h * 0.15,
+          vx: (rnd() - 0.5) * 30,
+          vy: 10 + rnd() * 50,
+          life: 0,
+          max: 0.18 + rnd() * 0.12,
+          r0: 3.5,
+          r1: 1,
+          color: k === 0 ? 0xffffff : k === 1 ? 0x6fd0ff : 0x3a7bff,
+          alpha: 0.95,
+          kind: 'pop',
+        });
+    }
     if (p.collisions > this.lastContacts) {
       this.cameras.main.shake(160, 0.008);
       for (let k = 0; k < 14; k++)
@@ -451,7 +508,11 @@ export class RaceScene extends Phaser.Scene {
     }
     // Speed lines when flat out or in a tow.
     const p = this.sim.player!;
-    const rush = Math.max((pct - 0.86) / 0.14, p.draft > 0.3 ? p.draft * 0.8 : 0);
+    const rush = Math.max(
+      (pct - 0.86) / 0.14,
+      p.draft > 0.3 ? p.draft * 0.8 : 0,
+      p.nitroT > 0 ? 1 : 0,
+    );
     if (rush > 0.05) {
       const cx = SCREEN_W / 2;
       const cy = HORIZON_Y + 6;
@@ -482,6 +543,8 @@ export class RaceScene extends Phaser.Scene {
     this.hud.pos.textContent = `P${this.sim.positionOf(p)}/${this.sim.cars.length}`;
     this.hud.time.textContent = formatTime(this.sim.time * 1000);
     this.hud.tow.classList.toggle('hidden', p.draft < 0.2);
+    this.hud.nitro.textContent = String(p.nitroShots);
+    this.hud.nitro.parentElement?.classList.toggle('firing', p.nitroT > 0);
     this.sim.cars.forEach((c, i) => {
       const f = (((c.z % L) + L) % L) / L;
       this.hud.markers[i]!.style.left = `${(f * 100).toFixed(1)}%`;

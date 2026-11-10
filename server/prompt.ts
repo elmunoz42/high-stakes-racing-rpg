@@ -3,6 +3,7 @@ import {
   carName,
   findCar,
   findCharacter,
+  findLocationIn,
   findPart,
   findSponsor,
   partName,
@@ -10,16 +11,17 @@ import {
 } from '../src/data/catalogue.ts';
 import { RIVALS } from '../src/data/rivals.ts';
 import type { Persona, ToolName } from '../src/data/schema.ts';
-import { HARBOUR_LOOP } from '../src/race/track.ts';
+import { findTrack } from '../src/race/tracks.ts';
 import {
   currentPrice,
   discountFloorPrice,
   installedParts,
   labourQuote,
   owns,
+  tradeInValue,
 } from '../src/rpg/actions.ts';
 import { carStats, msToKmh, performance } from '../src/rpg/carStats.ts';
-import { describeObjective, usd } from '../src/rpg/economy.ts';
+import { describeObjective, NITROUS_MAX_SHOTS, NITROUS_SHOT_USD, usd } from '../src/rpg/economy.ts';
 import type { GameState } from '../src/save/schema.ts';
 import type { ToolDef } from './providers/types.ts';
 
@@ -131,12 +133,18 @@ export function buildContext(persona: Persona, state: GameState, cat: Catalogue)
       `- Sponsor: ${sp?.name ?? state.sponsor.sponsorId}. Objective "${describeObjective(state.sponsor.objective)}", ${usd(state.sponsor.payoutUsd)} per race when met, ${state.sponsor.racesLeft} races left.`,
     );
   } else lines.push('- Sponsor: none yet.');
+  const here = findLocationIn(cat, state.location);
+  const track = findTrack(here?.trackId ?? 'harbour-loop');
+  lines.push(
+    `- You are all in ${here?.name ?? 'town'} (location ${here?.tier ?? 1} of ${cat.locations.length} on the tour) for the race on the ${track.name}. The paddock travels together: Mags, Teo, Dee Dee and Sterling are at every location.`,
+  );
+  lines.push(`- Nitrous shots in the car: ${state.nitrous} of ${NITROUS_MAX_SHOTS}.`);
   lines.push(`- Races entered: ${state.raceCount}`);
   if (state.lastRace) {
     const r = state.lastRace;
     const ahead = r.order.filter((o) => o.position < r.position).map((o) => o.name);
     lines.push(
-      `- Last race: Harbour Loop, finished P${r.position} of ${r.order.length} in ${(r.timeMs / 1000).toFixed(1)} s. Prize ${usd(r.prizeUsd)}.${r.objectiveMet === null ? '' : r.objectiveMet ? ` Met the sponsor objective (+${usd(r.sponsorPayoutUsd)}).` : ' Missed the sponsor objective.'} Contacts with other cars: ${r.collisions}. Top speed ${r.topSpeedKmh} km/h.${ahead.length ? ` Finished behind: ${ahead.join(', ')}.` : ' Won it.'}`,
+      `- Last race: ${findTrack(r.trackId).name}, finished P${r.position} of ${r.order.length} in ${(r.timeMs / 1000).toFixed(1)} s. Prize ${usd(r.prizeUsd)}.${r.objectiveMet === null ? '' : r.objectiveMet ? ` Met the sponsor objective (+${usd(r.sponsorPayoutUsd)}).` : ' Missed the sponsor objective.'} Contacts with other cars: ${r.collisions}. Top speed ${r.topSpeedKmh} km/h.${ahead.length ? ` Finished behind: ${ahead.join(', ')}.` : ' Won it.'}`,
     );
   } else lines.push('- Last race: none yet; the player has not raced here.');
   lines.push(
@@ -167,6 +175,9 @@ function roleContext(persona: Persona, state: GameState, cat: Catalogue): string
           `- [${p.id}] ${partName(p)}, part no. ${p.part_number}, ${p.category}, list ${usd(p.price_usd)}${p.quantity > 1 ? ` (${p.quantity} x ${usd(p.unit_price_usd)})` : ''}. Your floor: ${usd(discountFloorPrice(cat, p, persona.id))}.${offer ? ` You already offered ${usd(offer.priceUsd)}.` : ''}${owns(state, p.id) ? ' The player already owns this one.' : ''} ${p.blurb}`,
         );
       }
+      out.push(
+        `Nitrous: ${usd(NITROUS_SHOT_USD)} a shot, house price, no discount. The car holds ${NITROUS_MAX_SHOTS}; the player has ${state.nitrous}. To sell shots use sell_nitrous.`,
+      );
       out.push(
         'To discount, use offer_discount with a price between your floor and list. To sell, use sell_part; the player pays the current price (your offer if you made one, else list).',
       );
@@ -210,8 +221,43 @@ function roleContext(persona: Persona, state: GameState, cat: Catalogue): string
       }
       break;
     }
+    case 'dealer': {
+      const mine = findCar(cat, state.carId);
+      const trade = tradeInValue(cat, state);
+      out.push('# Your lot (sell only these, at exactly these prices)');
+      for (const c of cat.cars) {
+        if (c.id === state.carId) continue;
+        const cost = c.price_usd - trade;
+        out.push(
+          `- [${c.id}] ${carName(c)} (${c.generation}, ${c.drivetrain}, ${c.engine}): ${c.power_hp} hp, ${c.torque_nm} Nm, ${c.weight_kg} kg. Price ${usd(c.price_usd)}. After the player's trade-in they pay ${usd(cost)}${state.money < cost ? ' (they cannot afford it yet)' : ''}. ${c.blurb}`,
+        );
+      }
+      out.push(
+        `- Trade-in on the player's ${mine ? carName(mine) : 'car'}: ${usd(trade)} (70% of its listed price plus half the list price of fitted parts, which go with the car).`,
+      );
+      out.push('To sell a car, use sell_car. The player confirms on their screen.');
+      break;
+    }
+    case 'local': {
+      const track = findTrack(findLocationIn(cat, state.location)?.trackId ?? 'harbour-loop');
+      out.push(`# Your home track, the ${track.name}`);
+      for (const s of track.sections) {
+        const kind =
+          s.curve === 0
+            ? 'straight'
+            : `${s.curve > 0 ? 'right' : 'left'}, radius about ${Math.round(1000 / Math.abs(s.curve))} m`;
+        out.push(
+          `- ${s.name}: ${s.length} m, ${kind}${s.hill ? `, ${s.hill > 0 ? 'uphill' : 'downhill'} ${Math.abs(s.hill)} m` : ''}.`,
+        );
+      }
+      if (track.grip && track.grip < 1)
+        out.push('- The surface is icy: grip is well down on dry asphalt.');
+      out.push('Use give_tip to hand over one specific, actionable tip when you give advice.');
+      break;
+    }
     case 'coach': {
-      out.push('# The Harbour Loop (your corner nicknames in brackets)');
+      const track = findTrack(findLocationIn(cat, state.location)?.trackId ?? 'harbour-loop');
+      out.push(`# The ${track.name} (your corner nicknames in brackets, where you have one)`);
       const nick: Record<string, string> = {
         'Crane Hairpin': 'the Coathanger',
         'Gull Esses I': 'the Gossip',
@@ -220,7 +266,7 @@ function roleContext(persona: Persona, state: GameState, cat: Catalogue): string
         'Bridge Chicane R': 'the Stapler',
         'Bridge Chicane L': 'the Stapler',
       };
-      for (const s of HARBOUR_LOOP.sections) {
+      for (const s of track.sections) {
         const kind =
           s.curve === 0
             ? 'straight'
@@ -230,8 +276,9 @@ function roleContext(persona: Persona, state: GameState, cat: Catalogue): string
         );
       }
       out.push('# The opposition');
-      for (const r of RIVALS) {
-        const c = findCar(cat, r.carId);
+      const field = findLocationIn(cat, state.location);
+      for (const [i, r] of RIVALS.entries()) {
+        const c = findCar(cat, field?.rivalCars[i] ?? r.carId);
         out.push(
           `- ${r.name}, ${c ? carName(c) : r.carId}, pace ${Math.round(r.pace * 100)}% of the limit.`,
         );
@@ -324,6 +371,30 @@ const TOOL_DEFS: Record<ToolName, ToolDef> = {
         payout_usd: { type: 'number' },
       },
       required: ['objective', 'top_speed_kmh', 'payout_usd'],
+      additionalProperties: false,
+    },
+  },
+  sell_car: {
+    name: 'sell_car',
+    description:
+      'Offer to sell the player a car from your lot, taking their current car in trade. They confirm on their screen.',
+    parameters: {
+      type: 'object',
+      properties: {
+        car_id: { type: 'string', description: 'The id in square brackets from your lot.' },
+      },
+      required: ['car_id'],
+      additionalProperties: false,
+    },
+  },
+  sell_nitrous: {
+    name: 'sell_nitrous',
+    description:
+      'Offer to sell the player nitrous shots at the house price. They confirm on their screen.',
+    parameters: {
+      type: 'object',
+      properties: { shots: { type: 'integer', minimum: 1, maximum: 3 } },
+      required: ['shots'],
       additionalProperties: false,
     },
   },

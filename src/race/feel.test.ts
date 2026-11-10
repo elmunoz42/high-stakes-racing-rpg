@@ -176,3 +176,64 @@ describe('race balance', () => {
     console.log('BALANCE ' + lines.join(' | '));
   });
 });
+
+describe('US-014 nitrous', () => {
+  const flat = { steer: 0, throttle: 1, brake: 0 };
+  it('AC4: a shot makes the car faster over the same time, and firing with none does nothing', () => {
+    const run5 = (shots: number, press: boolean) => {
+      const s = sim(STRAIGHT, [{ ...entrant('p', true), nitrous: shots }]);
+      s.player!.v = 30;
+      run(s, 0.1, { ...flat, nitro: press });
+      run(s, 5, flat);
+      return s.player!;
+    };
+    const plain = run5(0, false);
+    const boosted = run5(1, true);
+    const empty = run5(0, true);
+    expect(boosted.z).toBeGreaterThan(plain.z + 8);
+    expect(boosted.nitroShots).toBe(0);
+    expect(boosted.nitroUsed).toBe(1);
+    expect(empty.z).toBeCloseTo(plain.z, 6);
+    expect(empty.nitroUsed).toBe(0);
+  });
+
+  it('fires one shot per press, not one per frame', () => {
+    const s = sim(STRAIGHT, [{ ...entrant('p', true), nitrous: 3 }]);
+    s.player!.v = 30;
+    run(s, 1, { ...flat, nitro: true });
+    expect(s.player!.nitroShots).toBe(2);
+  });
+});
+
+describe('locations', () => {
+  it('every location runs a full race with six cars, and rivals stay on the road', async () => {
+    const { LOCATIONS } = await import('../data/locations.ts');
+    for (const loc of LOCATIONS) {
+      const s = createRace(CATALOGUE, miata.id, baseStats(miata), 5, { locationId: loc.id });
+      expect(s.track.def.id).toBe(loc.trackId);
+      s.setPlayerAutopilot(true);
+      let worst = 0;
+      const r = s.runToFinish(1200, (q) => {
+        for (const c of q.cars)
+          if (!c.finished && !c.isPlayer) worst = Math.max(worst, Math.abs(c.x));
+        return { steer: 0, throttle: 0, brake: 0 };
+      });
+      expect(r.order).toHaveLength(6);
+      expect(worst, loc.id).toBeLessThan(ROAD_HALF_WIDTH + 0.6);
+      const lap = r.timeMs / 1000 / r.laps;
+      expect(lap, loc.id).toBeGreaterThan(45);
+      expect(lap, loc.id).toBeLessThan(130);
+    }
+  });
+
+  it('a stock starter car is outclassed at the last location, and a Viper is not', async () => {
+    const viper = CATALOGUE.cars.find((c) => c.id === 'viper-rt10-1994')!;
+    const pos = (car: typeof miata) => {
+      const s = createRace(CATALOGUE, car.id, baseStats(car), 3, { locationId: 'autodrome' });
+      s.setPlayerAutopilot(true);
+      return s.runToFinish(1200).position;
+    };
+    expect(pos(miata)).toBeGreaterThanOrEqual(5);
+    expect(pos(viper)).toBeLessThanOrEqual(3);
+  });
+});

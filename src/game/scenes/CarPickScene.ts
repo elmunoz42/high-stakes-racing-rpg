@@ -18,7 +18,7 @@ export class CarPickScene extends Phaser.Scene {
 
   create(): void {
     this.add.image(0, 0, 'bg-sky').setOrigin(0, 0).setDisplaySize(384, 216);
-    const cars = store.catalogue.cars;
+    const cars = store.catalogue.cars.filter((c) => c.starter);
     let chosen: Car | null = null;
     const buy = h('button', { class: 'primary', disabled: true }, 'Choose a car');
     const cash = h(

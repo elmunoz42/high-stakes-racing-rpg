@@ -2,8 +2,18 @@ import type Phaser from 'phaser';
 import { type Body, CAR_H, CAR_W, SIDE_H, SIDE_W, drawCarRear, drawCarSide } from './cars.ts';
 import { drawPerson, type Look, PERSON_H, PERSON_W, type Style } from './people.ts';
 import type { Ctx } from './pixel.ts';
-import { INTERIORS, TOWN } from './town.ts';
-import { BACKDROPS, SCENERY } from './race.ts';
+import {
+  drawLocalBuilding,
+  drawLocalRoom,
+  drawTownMid,
+  INTERIORS,
+  PADDOCK,
+  type Sign,
+  TOWN,
+} from './town.ts';
+import { bands } from './pixel.ts';
+import { LOOKS } from './race.ts';
+import { BACKDROPS, lookArt, type LookId, SCENERY, SCENERY_AWAY } from './race.ts';
 
 /** Creates a canvas texture once; later calls with the same key are free. */
 export function canvasTexture(
@@ -49,12 +59,12 @@ export function carSideTexture(scene: Phaser.Scene, body: Body, color: string): 
 }
 
 export function generateRaceTextures(scene: Phaser.Scene): void {
-  for (const [key, [w, h, draw]] of Object.entries({ ...SCENERY, ...BACKDROPS }))
+  for (const [key, [w, h, draw]] of Object.entries({ ...SCENERY, ...SCENERY_AWAY, ...BACKDROPS }))
     canvasTexture(scene, key, w, h, draw);
 }
 
 export function generateTownTextures(scene: Phaser.Scene): void {
-  for (const [key, [w, h, draw]] of Object.entries({ ...TOWN, ...INTERIORS }))
+  for (const [key, [w, h, draw]] of Object.entries({ ...TOWN, ...PADDOCK, ...INTERIORS }))
     canvasTexture(scene, key, w, h, draw);
 }
 
@@ -63,6 +73,22 @@ export function personTextures(scene: Phaser.Scene, key: string, look: Look, sty
   for (let f = 0; f < 5; f++)
     canvasTexture(scene, `${key}-${f}`, PERSON_W, PERSON_H, (c) => drawPerson(c, look, style, f));
   return key;
+}
+
+/** Sky, sun or moon, clouds and mountains for a look. Keys: bg-sky-<id> and so on. */
+export function generateLookTextures(scene: Phaser.Scene, id: LookId): void {
+  for (const [key, [w, h, draw]] of Object.entries(lookArt(id)))
+    canvasTexture(scene, key, w, h, draw);
+  canvasTexture(scene, `town-sky-${id}`, 384, 216, (c) =>
+    bands(c, 0, 0, 384, 150, LOOKS[id].sky, 40),
+  );
+  canvasTexture(scene, `town-mid-${id}`, 128, 64, (c) => drawTownMid(c, id));
+}
+
+/** Outside and inside of a generated local business. */
+export function localTextures(scene: Phaser.Scene, art: string, room: string, sign: Sign): void {
+  canvasTexture(scene, art, 190, 116, (c) => drawLocalBuilding(c, sign));
+  canvasTexture(scene, room, 384, 216, (c) => drawLocalRoom(c, sign));
 }
 
 export { CAR_H, CAR_W };

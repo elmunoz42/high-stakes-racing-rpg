@@ -16,9 +16,11 @@ describe('car catalogue (US-001 AC3)', () => {
       expect(car.checked_on <= today).toBe(true);
     },
   );
-  it('has exactly three starter cars the career fund can buy', () => {
-    expect(CARS).toHaveLength(3);
-    for (const car of CARS) expect(car.price_usd).toBeLessThan(CAREER_FUND_USD);
+  it('has exactly three starter cars the career fund can buy, and three to trade up to', () => {
+    const starters = CARS.filter((c) => c.starter);
+    expect(starters).toHaveLength(3);
+    expect(CARS).toHaveLength(6);
+    for (const car of starters) expect(car.price_usd).toBeLessThan(CAREER_FUND_USD);
   });
   it('has unique ids', () => {
     expect(new Set(CARS.map((c) => c.id)).size).toBe(CARS.length);
@@ -40,7 +42,7 @@ describe('parts catalogue (US-004 AC5)', () => {
     expect(new Set(PARTS.map((p) => p.id)).size).toBe(PARTS.length);
   });
   it('gives every starter car parts in at least two categories', () => {
-    for (const car of CARS) {
+    for (const car of CARS.filter((c) => c.starter)) {
       const cats = new Set(PARTS.filter((p) => p.fits.includes(car.id)).map((p) => p.category));
       expect(cats.size).toBeGreaterThanOrEqual(2);
     }
@@ -64,12 +66,22 @@ describe('characters and locations', async () => {
   it.each(CHARACTERS.map((c) => [c.id, c]))('%s persona card passes the schema', (_id, c) => {
     expect(() => PersonaSchema.parse(c)).not.toThrow();
   });
-  it('has one character per role', () => {
-    expect(new Set(CHARACTERS.map((c) => c.role)).size).toBe(4);
+  it('covers every role: the paddock four, a dealer and locals', () => {
+    expect(new Set(CHARACTERS.map((c) => c.role)).size).toBe(6);
   });
   it('every building character exists', () => {
     for (const l of LOCATIONS)
       for (const b of l.buildings)
         if (b.characterId) expect(CHARACTERS.some((c) => c.id === b.characterId)).toBe(true);
+  });
+  it('has six tiered locations whose tracks and rival cars exist', async () => {
+    const { TRACKS } = await import('../race/tracks.ts');
+    expect(LOCATIONS.map((l) => l.tier)).toEqual([1, 2, 3, 4, 5, 6]);
+    for (const l of LOCATIONS) {
+      expect(TRACKS.some((t) => t.id === l.trackId)).toBe(true);
+      for (const id of l.rivalCars) expect(CARS.some((c) => c.id === id)).toBe(true);
+      expect(l.buildings.some((b) => b.kind === 'gate')).toBe(true);
+      expect(l.buildings.some((b) => b.kind === 'travel')).toBe(true);
+    }
   });
 });

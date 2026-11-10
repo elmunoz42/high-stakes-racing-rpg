@@ -21,6 +21,7 @@ const car = (id: string, power_hp: number, weight_kg: number, price_usd = 9000):
   sources: [],
   checked_on: '2026-01-01',
   blurb: 'test',
+  starter: true,
   game: { color: '#ff0000', body: 'coupe' },
 });
 
@@ -79,7 +80,7 @@ const persona = (
 });
 
 export const TEST_CATALOGUE: Catalogue = {
-  cars: [car('alpha', 130, 1000), car('beta', 200, 1000, 20000)],
+  cars: [car('alpha', 130, 1000), car('beta', 200, 1000, 20000), car('gamma', 160, 1000, 11000)],
   parts: [
     part('tyre-a', 'tyres', 150, 'sport', 4),
     part('coil-a', 'suspension', 1000),
@@ -98,6 +99,50 @@ export const TEST_CATALOGUE: Catalogue = {
       races: 2,
     },
   ],
+  locations: [
+    {
+      id: 'home',
+      name: 'Home',
+      tier: 1,
+      blurb: 't',
+      width: 1000,
+      trackId: 't',
+      look: 'dusk',
+      travelCostUsd: 0,
+      prizeMult: 1,
+      rivalCars: ['alpha', 'alpha', 'alpha', 'alpha', 'alpha'],
+      paceBonus: 0,
+      buildings: [],
+    },
+    {
+      id: 'away',
+      name: 'Away',
+      tier: 2,
+      blurb: 't',
+      width: 1000,
+      trackId: 't2',
+      look: 'day',
+      travelCostUsd: 200,
+      prizeMult: 2,
+      rivalCars: ['alpha', 'alpha', 'alpha', 'alpha', 'alpha'],
+      paceBonus: 0,
+      buildings: [],
+    },
+    {
+      id: 'far',
+      name: 'Far',
+      tier: 3,
+      blurb: 't',
+      width: 1000,
+      trackId: 't3',
+      look: 'day',
+      travelCostUsd: 400,
+      prizeMult: 3,
+      rivalCars: ['alpha', 'alpha', 'alpha', 'alpha', 'alpha'],
+      paceBonus: 0,
+      buildings: [],
+    },
+  ],
   characters: [
     persona('coach', 'coach', ['give_tip', 'adjust_relationship']),
     persona('mech', 'mechanic', ['install_part', 'give_tip', 'adjust_relationship']),
@@ -107,6 +152,7 @@ export const TEST_CATALOGUE: Catalogue = {
       ['quote_part', 'offer_discount', 'sell_part', 'adjust_relationship'],
       { discountFloor: 0.85 },
     ),
+    persona('lot', 'dealer', ['sell_car', 'adjust_relationship']),
     persona('rep', 'sponsor', ['offer_sponsorship', 'adjust_relationship'], { sponsorId: 'fizz' }),
   ],
 };

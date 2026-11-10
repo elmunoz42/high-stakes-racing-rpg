@@ -3,6 +3,7 @@ import {
   type Catalogue,
   characterByRole,
   findCar,
+  findLocationIn,
   findCharacter,
   findPart,
   findSponsor,
@@ -11,6 +12,11 @@ import type { Part } from '../data/schema.ts';
 import { type GameState, type RaceRecord, SAVE_VERSION } from '../save/schema.ts';
 import {
   CAREER_FUND_USD,
+  NITROUS_MAX_SHOTS,
+  NITROUS_SHOT_USD,
+  TRADE_IN_CAR,
+  TRADE_IN_PARTS,
+  UNLOCK_POSITION,
   DEFAULT_DISCOUNT_FLOOR,
   RELATIONSHIP_MAX,
   RELATIONSHIP_MIN,
@@ -34,7 +40,7 @@ export function createCareer(
   cat: Catalogue,
   carId: string,
   seed: number,
-  location = 'harbour-district',
+  location = cat.locations[0]?.id ?? 'harbour-district',
 ): GameState {
   const car = findCar(cat, carId);
   if (!car) throw new Error(`Unknown car: ${carId}`);
@@ -53,6 +59,8 @@ export function createCareer(
     lastRace: null,
     raceCount: 0,
     location,
+    nitrous: 0,
+    bestFinish: {},
   };
 }
 
@@ -64,6 +72,22 @@ export function currentPrice(state: GameState, part: Part): number {
 export function discountFloorPrice(cat: Catalogue, part: Part, characterId: string): number {
   const floor = findCharacter(cat, characterId)?.discountFloor ?? DEFAULT_DISCOUNT_FLOOR;
   return Math.ceil(part.price_usd * floor * 100) / 100;
+}
+
+/** What the dealer gives for the player's current car, fitted parts included. */
+export function tradeInValue(cat: Catalogue, state: GameState): number {
+  const car = findCar(cat, state.carId);
+  const parts = installedParts(cat, state).reduce((sum, p) => sum + p.price_usd, 0);
+  return Math.round((car?.price_usd ?? 0) * TRADE_IN_CAR + parts * TRADE_IN_PARTS);
+}
+
+/** A location is open if it is the first, or the player has a podium at the one before it. */
+export function isUnlocked(cat: Catalogue, state: GameState, locationId: string): boolean {
+  const loc = cat.locations.find((l) => l.id === locationId);
+  if (!loc) return false;
+  if (loc.tier <= 1) return true;
+  const prev = cat.locations.find((l) => l.tier === loc.tier - 1);
+  return !!prev && (state.bestFinish[prev.id] ?? 99) <= UNLOCK_POSITION;
 }
 
 export function owns(state: GameState, partId: string): boolean {
@@ -222,7 +246,8 @@ export function applyAction(state: GameState, action: GameAction, cat: Catalogue
 
     case 'recordRace': {
       const r = action.result;
-      const prize = prizeFor(r.position);
+      const here = findLocationIn(cat, s.location);
+      const prize = prizeFor(r.position, here?.prizeMult ?? 1);
       let payout = 0;
       let met: boolean | null = null;
       const sponsorId = s.sponsor?.sponsorId ?? null;
@@ -243,7 +268,63 @@ export function applyAction(state: GameState, action: GameAction, cat: Catalogue
       };
       s.lastRace = record;
       s.raceCount += 1;
+      s.nitrous = Math.max(0, s.nitrous - (r.nitrousUsed ?? 0));
+      s.bestFinish[s.location] = Math.min(s.bestFinish[s.location] ?? 99, r.position);
       if (s.sponsor && s.sponsor.racesLeft === 0) s.sponsor = null;
+      return { ok: true, state: s };
+    }
+
+    case 'buyCar': {
+      const car = findCar(cat, action.carId);
+      if (!car) return fail('unknown_car', `No car with id ${action.carId} on the lot.`);
+      if (car.id === s.carId)
+        return fail('already_owned', `Player already drives the ${car.model}.`);
+      const cost = car.price_usd - tradeInValue(cat, s);
+      if (s.money < cost)
+        return fail(
+          'insufficient_funds',
+          `After trade-in the ${car.model} costs ${cost}; player has ${s.money}.`,
+        );
+      s.money = cents(s.money - cost);
+      s.carId = car.id;
+      s.installed = {}; // fitted parts go with the old car
+      s.offers.discounts = {};
+      return { ok: true, state: s };
+    }
+
+    case 'buyNitrous': {
+      if (s.nitrous + action.shots > NITROUS_MAX_SHOTS)
+        return fail(
+          'full',
+          `The car carries at most ${NITROUS_MAX_SHOTS} shots; it has ${s.nitrous}.`,
+        );
+      const cost = action.shots * NITROUS_SHOT_USD;
+      if (s.money < cost)
+        return fail(
+          'insufficient_funds',
+          `${action.shots} shots cost ${cost}; player has ${s.money}.`,
+        );
+      s.money = cents(s.money - cost);
+      s.nitrous += action.shots;
+      return { ok: true, state: s };
+    }
+
+    case 'travel': {
+      const dest = cat.locations.find((l) => l.id === action.locationId);
+      if (!dest) return fail('unknown_location', `No location ${action.locationId}.`);
+      if (dest.id === s.location) return fail('invalid', `Player is already in ${dest.name}.`);
+      if (!isUnlocked(cat, s, dest.id))
+        return fail(
+          'locked',
+          `${dest.name} opens after a top ${UNLOCK_POSITION} finish at the location before it.`,
+        );
+      if (s.money < dest.travelCostUsd)
+        return fail(
+          'insufficient_funds',
+          `Travel to ${dest.name} costs ${dest.travelCostUsd}; player has ${s.money}.`,
+        );
+      s.money = cents(s.money - dest.travelCostUsd);
+      s.location = dest.id;
       return { ok: true, state: s };
     }
   }

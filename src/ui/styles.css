@@ -655,3 +655,77 @@ img.portrait {
   width: 4.6em;
   height: 4.6em;
 }
+
+.race-hud .nitro-box {
+  position: absolute;
+  right: 9.2em;
+  bottom: 1em;
+  background: var(--panel);
+  border: 2px solid #3a7bff;
+  border-radius: 4px;
+  padding: 0.2em 0.6em;
+  font-weight: 800;
+  display: flex;
+  gap: 0.5em;
+  align-items: center;
+  font-size: 0.85em;
+}
+.race-hud .nitro-box .nitro {
+  color: #6fd0ff;
+  font-size: 1.5em;
+}
+.race-hud .nitro-box.firing {
+  background: #3a7bff;
+  color: #fff;
+  box-shadow: 0 0 1em #6fd0ff;
+}
+.race-hud .nitro-box.firing .nitro {
+  color: #fff;
+}
+.travel {
+  position: absolute;
+  inset: 9% 12% 6%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6em;
+}
+.travel h2 {
+  margin: 0;
+  color: var(--accent);
+}
+.travel .places {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.6em;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+.travel .place {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3em;
+  padding: 0.6em;
+  border: 2px solid var(--line);
+  border-radius: 6px;
+  background: var(--panel-2);
+  font-size: 0.85em;
+}
+.travel .place.here {
+  border-color: var(--good);
+}
+.travel .place.locked {
+  opacity: 0.55;
+}
+.travel .place h3 {
+  margin: 0;
+  font-size: 1.05em;
+}
+.travel .place button {
+  margin-top: auto;
+}
+.travel footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}

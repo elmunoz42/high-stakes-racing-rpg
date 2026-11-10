@@ -6,7 +6,12 @@ import { openDialogue } from '../../ui/dialogue.ts';
 import { clear, h, mount, typing } from '../../ui/dom.ts';
 import { mountTownHud } from '../../ui/hud.ts';
 import { PLAYER_LOOK, styleForRole } from '../art/people.ts';
-import { carSideTexture, generateTownTextures, personTextures } from '../art/textures.ts';
+import {
+  carSideTexture,
+  generateTownTextures,
+  localTextures,
+  personTextures,
+} from '../art/textures.ts';
 import { goto } from '../flow.ts';
 import { registerHook } from '../testHooks.ts';
 import { Walker } from '../walker.ts';
@@ -46,7 +51,9 @@ export class InteriorScene extends Phaser.Scene {
     personTextures(this, 'player', PLAYER_LOOK, 'player');
     personTextures(this, `npc-${persona.id}`, persona.look, styleForRole(persona.role));
 
-    this.add.image(0, 0, `room-${building.kind}`).setOrigin(0, 0);
+    if (building.sign && building.room)
+      localTextures(this, building.art, building.room, building.sign);
+    this.add.image(0, 0, building.room ?? 'room-garage').setOrigin(0, 0);
     if (building.kind === 'garage') {
       const car = findCar(store.catalogue, state.carId);
       if (car)
