@@ -12,7 +12,8 @@ A browser game in two equal halves:
 
 Real cars, real parts, real prices: six cars and eighteen aftermarket parts
 carry a source link and the date the price was checked. Six race locations
-open up as you finish on the podium.
+open up as you finish on the podium, and every one has a bar where you can
+talk to the other racers and challenge them to a night race for money.
 
 ## Run it
 

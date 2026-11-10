@@ -89,7 +89,7 @@ export class InteriorScene extends Phaser.Scene {
         ease: 'Sine.inOut',
       });
       const name = findRacer(id)?.short ?? persona.name;
-      this.add
+      const label = this.add
         .text(x, FLOOR_Y - 76, name, {
           fontFamily: 'monospace',
           fontSize: '8px',
@@ -97,9 +97,11 @@ export class InteriorScene extends Phaser.Scene {
           backgroundColor: '#0b0d17cc',
           padding: { x: 2, y: 1 },
         })
-        .setOrigin(0.5, 1)
+        .setOrigin(0, 1)
         .setResolution(4)
         .setDepth(41);
+      // Whole-pixel position keeps the small text sharp.
+      label.setX(Math.round(x - label.width / 2));
       return [{ id, x, name: persona.name }];
     });
 

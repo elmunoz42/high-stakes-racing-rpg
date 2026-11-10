@@ -1,15 +1,17 @@
 ---
 id: US-017
 title: Hear the racers during a race
-status: draft
+status: verified
 priority: must
 source: spec:2026-11-10-0900-bars-duels-race-lines
 tags: [race, racers]
 sets: [demo, production]
 verify: [browser, unit]
 tests:
-  e2e: []
-  unit: []
+  e2e: [tests/e2e/stories/US-017.spec.ts]
+  unit: [src/race/feel.test.ts]
+verified_level: demo
+last_verified: 2026-11-10
 ---
 
 As a player, I want the other racers to say things when we pass or touch, so that the race feels like it is against people.

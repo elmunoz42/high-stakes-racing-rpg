@@ -1,15 +1,17 @@
 ---
 id: US-016
 title: Race a rival one on one at night for money
-status: draft
+status: verified
 priority: must
 source: spec:2026-11-10-0900-bars-duels-race-lines
 tags: [bar, duel, race, economy]
 sets: [demo, production]
 verify: [browser, unit]
 tests:
-  e2e: []
-  unit: []
+  e2e: [tests/e2e/stories/US-016.spec.ts]
+  unit: [src/rpg/actions.test.ts, src/save/store.test.ts, server/tools.test.ts, src/race/feel.test.ts]
+verified_level: demo
+last_verified: 2026-11-10
 ---
 
 As a player, I want to challenge a racer to a one-on-one night race for money, so that I can gamble on my own driving.

@@ -44,6 +44,14 @@ looks and a local character each, unlocked by podiums; nitrous shots bought
 at the parts counter; horizon flicker fixed. Stories US-012 to US-014.
 Pulls the world map, travel costs and tiered prizes forward from M3.
 
+## Bars, night duels and race lines (done 2026-11-10): spec `2026-11-10-0900-bars-duels-race-lines`
+
+A bar in every location with six racers to talk to (the five rivals plus
+Nyx Calloway, who only races at night); one-on-one night duels for a wager;
+ten race lines per racer for passing, being passed and contact. Also the
+horizon and scenery flicker fix, verified by a frame-to-frame pixel check.
+Stories US-015 to US-017. Pulls rivals-as-characters forward from M3.
+
 ## M2: Garage and economy depth
 
 - Catalogue grows to about 10 cars and 80 parts, all sourced

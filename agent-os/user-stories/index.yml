@@ -117,7 +117,7 @@ US-014:
 US-015:
   file: US-015-meet-the-racers-at-the-bar.md
   title: Meet the racers at the bar
-  status: draft
+  status: verified
   tags: [bar, dialogue, racers]
   sets: [demo, production]
   source: spec:2026-11-10-0900-bars-duels-race-lines
@@ -125,7 +125,7 @@ US-015:
 US-016:
   file: US-016-night-duel-for-money.md
   title: Race a rival one on one at night for money
-  status: draft
+  status: verified
   tags: [bar, duel, race, economy]
   sets: [demo, production]
   source: spec:2026-11-10-0900-bars-duels-race-lines
@@ -133,7 +133,7 @@ US-016:
 US-017:
   file: US-017-hear-the-racers-during-a-race.md
   title: Hear the racers during a race
-  status: draft
+  status: verified
   tags: [race, racers]
   sets: [demo, production]
   source: spec:2026-11-10-0900-bars-duels-race-lines

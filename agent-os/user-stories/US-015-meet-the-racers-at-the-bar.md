@@ -1,15 +1,17 @@
 ---
 id: US-015
 title: Meet the racers at the bar
-status: draft
+status: verified
 priority: must
 source: spec:2026-11-10-0900-bars-duels-race-lines
 tags: [bar, dialogue, racers]
 sets: [demo, production]
 verify: [browser, unit]
 tests:
-  e2e: []
-  unit: []
+  e2e: [tests/e2e/stories/US-015.spec.ts]
+  unit: [src/data/catalogue.test.ts, server/prompt.test.ts]
+verified_level: demo
+last_verified: 2026-11-10
 ---
 
 As a player, I want a bar in every city where the other racers hang out, so that my rivals are people I can talk to.

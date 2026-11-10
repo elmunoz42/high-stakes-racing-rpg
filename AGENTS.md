@@ -37,8 +37,8 @@ Read in this order before doing anything:
 3. The current spec: `agent-os/specs/2026-11-09-2300-m1-vertical-slice/plan.md`
 
 Current state: M1 vertical slice plus the race feel and visual pass are done
-(stories US-001 to US-014 verified at demo level; latest work is on branch
-`cars-locations-nitrous`). Six locations, six cars, nine characters. All art is generated in code under `src/game/art/`. Next: M2 (garage and economy
+(stories US-001 to US-017 verified at demo level; latest work is on branch
+`cars-locations-nitrous`). Six locations, six cars, fifteen characters. All art is generated in code under `src/game/art/`. Next: M2 (garage and economy
 depth); shape it with the shape-spec skill first.
 
 Running things: `npm run dev` (real characters, needs `OPENAI_API_KEY` in

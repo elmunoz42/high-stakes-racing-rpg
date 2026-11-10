@@ -136,6 +136,21 @@ invented brands.
   invented house price, fired with N for a few seconds of extra shove. Glacier
   Ridge is icy: grip there is well below dry asphalt.
 
+## The bar and the racers
+
+- Every location has a bar where the six racers drink: Kenji "Static" Morrow,
+  Priya Nandakumar, "Big" Lou Ferreira, Rosa "Ro" Esposito, Dmitri Volk and
+  Nyx Calloway. They are LLM characters like everyone else. Nyx never enters
+  the day race.
+- Any of them will race you one on one at night for money: two laps of the
+  local track, winner takes the wager. Wagers run from $100 to a cap that
+  grows with the location (1,000 at the Harbour, 5,000 at the Autodrome) and
+  never exceed your cash. Duels keep a win/loss record per racer and do not
+  count for sponsors, unlocks or prize money.
+- In races each racer has ten lines of their own, said when you pass them,
+  when they pass you and on contact. They are predefined, in
+  `src/data/rivals.ts`; the simulation reports the events.
+
 ## Tone
 
 Warm, funny, a bit scruffy. Late-night car-meet energy rather than corporate
