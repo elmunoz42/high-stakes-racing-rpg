@@ -8,7 +8,7 @@ import type { RaceResult } from '../race/types.ts';
  */
 
 /** Total career fund. The starter car is bought out of it; the rest is cash. */
-export const CAREER_FUND_USD = 16_000;
+export const CAREER_FUND_USD = 18_500;
 
 /** Prize money by finishing position (index 0 = 1st). */
 export const PRIZES_USD = [2_400, 1_500, 1_000, 650, 400, 250] as const;
