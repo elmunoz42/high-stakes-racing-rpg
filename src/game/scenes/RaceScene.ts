@@ -6,6 +6,7 @@ import {
   buildDrawList,
   CAMERA_DEPTH,
   CAMERA_HEIGHT,
+  FOG_FULL,
   HORIZON_Y,
   SCREEN_H,
   SCREEN_W,
@@ -361,7 +362,7 @@ export class RaceScene extends Phaser.Scene {
 
   private drawSprite(i: number, s: SpriteDraw): void {
     // Far scenery fades in instead of popping, and specks are not drawn at all.
-    const alpha = Math.max(0, Math.min(1, (1 - s.fog) * 5));
+    const alpha = Math.max(0, Math.min(1, (FOG_FULL + 0.04 - s.fog) * 8));
     if (s.y - s.h >= s.clipY || s.h < 2 || alpha <= 0.02) {
       this.pool[i]?.setVisible(false);
       return;
@@ -385,11 +386,17 @@ export class RaceScene extends Phaser.Scene {
       .setDepth(2 + s.depth / 100)
       .setFlipX(s.flip)
       .setAlpha(alpha);
-    img.setPosition(Math.round(s.x), Math.round(y));
-    img.setDisplaySize(Math.max(1, s.w), Math.max(1, s.h));
+    // Snap the sprite's box to whole pixels as one rectangle. Rounding position
+    // and size separately made edges shimmer back and forth as sprites grew.
+    const left = Math.round(s.x - s.w / 2);
+    const right = Math.max(left + 1, Math.round(s.x + s.w / 2));
+    const bottom = Math.round(y);
+    const height = Math.max(1, Math.round(s.h));
+    img.setPosition((left + right) / 2, bottom);
+    img.setDisplaySize(right - left, height);
     if (s.y > s.clipY) {
       const visible = Math.max(0, 1 - (s.y - s.clipY) / s.h);
-      img.setCrop(0, 0, frameW, frameH * visible);
+      img.setCrop(0, 0, frameW, Math.round(frameH * visible));
     } else {
       img.setCrop();
     }

@@ -65,9 +65,9 @@ describe('projection', () => {
     // A haze band covers the seam at the horizon.
     expect(list.quads[0]).toMatchObject({ color: HAZE, y1: SCREEN_H });
     expect(list.quads[0]!.y2).toBeLessThan(HORIZON_Y);
-    // Everything drawn in the top rows of the ground is exactly the haze colour.
+    // The top row of the ground is exactly the haze colour, so it meets the band with no step.
     const top = Math.min(...list.quads.slice(1).map((q) => q.y2));
-    const far = list.quads.slice(1).filter((q) => q.y2 <= top + 1);
+    const far = list.quads.slice(1).filter((q) => q.y2 === top);
     expect(far.length).toBeGreaterThan(0);
     for (const q of far) expect(q.color).toBe(HAZE);
     // Quads sit on whole pixel rows.

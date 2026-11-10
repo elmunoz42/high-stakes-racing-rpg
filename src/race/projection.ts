@@ -31,6 +31,8 @@ export const PLAYER_DISTANCE = 5.4;
 export const CAR_SPRITE_SCALE = 1.35;
 /** Colour the distance fades to (dusk haze). */
 export const HAZE = 0xe8987a;
+/** Fraction of the draw distance at which the ground is fully haze. */
+export const FOG_FULL = 0.62;
 
 export interface Camera {
   /** Projection depth: smaller is a wider field of view. */
@@ -241,17 +243,6 @@ export function buildDrawList(
   let x = 0;
   let maxY = SCREEN_H;
 
-  // The highest row the ground reaches. The last few rows below it blend into
-  // the haze whatever their distance, so the top edge never shows a colour step.
-  let topY = SCREEN_H;
-  for (let n = 1; n < DRAW_SEGMENTS; n++) {
-    const idx = base.index + n;
-    const seg = track.segments[idx % N]!;
-    const z2 = lapBase + seg.z + (idx >= N ? L : 0) - cameraZ + SEGMENT_LENGTH;
-    if (z2 > 1)
-      topY = Math.min(topY, HORIZON_Y - (cam.depth / z2) * (seg.y2 - cameraY) * (SCREEN_W / 2));
-  }
-
   for (let n = 0; n < DRAW_SEGMENTS; n++) {
     const idx = base.index + n;
     const seg = track.segments[idx % N]!;
@@ -268,8 +259,10 @@ export function buildDrawList(
     // Distance fades everything fully into the haze, and stripe contrast fades
     // out sooner: far segments are under a pixel tall, and alternating colours
     // at that size shimmer.
-    const edge = Math.max(0, Math.min(1, 1 - (p2.y - topY - 1.5) / 6));
-    const fog = Math.max(edge, Math.min(1, (n / (DRAW_SEGMENTS - 16)) ** 1.5));
+    // A plain distance fade that reaches full haze well before the far end, so
+    // every strip thin enough to shimmer is already one flat colour. (Fading by
+    // screen position instead made strips at hill crests flip colour.)
+    const fog = Math.min(1, (n / (DRAW_SEGMENTS * FOG_FULL)) ** 1.5);
     const flat = Math.min(1, fog * 2.4);
     const tint = (c: number) => mix(c, haze, fog);
     const s = seg.stripe ? 0 : 1;

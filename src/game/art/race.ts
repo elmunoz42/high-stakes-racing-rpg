@@ -133,7 +133,7 @@ export const SCENERY: Record<string, Art> = {
     (c) => {
       rect(c, '#6f7f92', 0, 14, 128, 50);
       trap(c, '#55657a', 0, 14, 60, 68, 0, 128);
-      for (let x = 2; x < 128; x += 5) rect(c, '#64748a', x, 16, 1, 46);
+      for (let x = 4; x < 128; x += 12) rect(c, '#6a7a8e', x, 16, 4, 46);
       rect(c, '#2c3440', 12, 30, 34, 34);
       rect(c, '#2c3440', 82, 30, 34, 34);
       for (let y = 33; y < 64; y += 4) {
@@ -153,7 +153,8 @@ export const SCENERY: Record<string, Art> = {
       const cols = ['#c0392b', '#2a6fb0', '#e0a030', '#2e8b57', '#8e44ad'];
       const box = (x: number, y: number, k: number) => {
         rect(c, cols[k % 5]!, x, y, 38, 14);
-        for (let i = 2; i < 38; i += 3) rect(c, shade(cols[k % 5]!, 0.8), x + i, y + 1, 1, 12);
+        // Broad, low-contrast ribs: 1px high-contrast lines shimmer when the sprite scales.
+        for (let i = 4; i < 38; i += 8) rect(c, shade(cols[k % 5]!, 0.93), x + i, y + 1, 3, 12);
         rect(c, shade(cols[k % 5]!, 1.25), x, y, 38, 1);
       };
       box(0, 30, 0);
