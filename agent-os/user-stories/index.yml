@@ -73,3 +73,19 @@ US-009:
   tags: [save]
   sets: [demo, production]
   source: spec:2026-11-09-2300-m1-vertical-slice
+
+US-010:
+  file: US-010-feel-the-cars-limits.md
+  title: Feel the car's limits
+  status: draft
+  tags: [race, physics]
+  sets: [demo, production]
+  source: spec:2026-11-10-0030-race-feel-and-visual-pass
+
+US-011:
+  file: US-011-read-the-race-from-the-hud.md
+  title: Read the race from the HUD
+  status: draft
+  tags: [race, hud]
+  sets: [demo, production]
+  source: spec:2026-11-10-0030-race-feel-and-visual-pass

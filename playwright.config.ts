@@ -1,5 +1,10 @@
 import { defineConfig, devices } from '@playwright/test';
 
+// Story tests run their own mock servers on separate ports, so they never
+// collide with (or talk to) a game you have running with real characters.
+const WEB_PORT = 5273;
+const API_PORT = 8887;
+
 export default defineConfig({
   testDir: 'tests/e2e',
   timeout: 60_000,
@@ -8,7 +13,7 @@ export default defineConfig({
   workers: 1,
   reporter: [['list']],
   use: {
-    baseURL: 'http://localhost:5173',
+    baseURL: `http://localhost:${WEB_PORT}`,
     trace: 'retain-on-failure',
     viewport: { width: 1280, height: 720 },
   },
@@ -25,8 +30,8 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: 'npm run dev:mock',
-    url: 'http://localhost:5173',
+    command: `npx cross-env WEB_PORT=${WEB_PORT} API_PORT=${API_PORT} npm run dev:mock`,
+    url: `http://localhost:${WEB_PORT}`,
     reuseExistingServer: true,
     timeout: 60_000,
   },
