@@ -1,15 +1,17 @@
 ---
 id: US-006
 title: Negotiate a sponsorship deal
-status: draft
+status: verified
 priority: must
 source: spec:2026-11-09-2300-m1-vertical-slice
 tags: [sponsor, dialogue, economy]
 sets: [demo, production]
 verify: [browser, unit]
 tests:
-  e2e: []
-  unit: []
+  e2e: [tests/e2e/stories/US-006.spec.ts]
+  unit: [src/rpg/actions.test.ts, server/tools.test.ts]
+verified_level: demo
+last_verified: 2026-11-10
 ---
 
 As a player, I want to talk a sponsor into backing me, so that I earn money for how I race.

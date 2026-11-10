@@ -1,15 +1,17 @@
 ---
 id: US-003
 title: Talk to a character in free text
-status: draft
+status: verified
 priority: must
 source: spec:2026-11-09-2300-m1-vertical-slice
 tags: [dialogue, llm]
 sets: [demo, production]
 verify: [browser, unit]
 tests:
-  e2e: []
-  unit: []
+  e2e: [tests/e2e/stories/US-003.spec.ts]
+  unit: [server/prompt.test.ts, server/app.test.ts]
+verified_level: demo
+last_verified: 2026-11-10
 ---
 
 As a player, I want to talk to a character in my own words and get replies in their voice, so that the paddock feels alive.

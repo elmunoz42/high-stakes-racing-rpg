@@ -1,15 +1,17 @@
 ---
 id: US-002
 title: Walk the town and enter buildings
-status: draft
+status: verified
 priority: must
 source: spec:2026-11-09-2300-m1-vertical-slice
 tags: [town]
 sets: [demo, production]
 verify: [browser]
 tests:
-  e2e: []
+  e2e: [tests/e2e/stories/US-002.spec.ts]
   unit: []
+verified_level: demo
+last_verified: 2026-11-10
 ---
 
 As a player, I want to walk a side-scrolling town and go into its buildings, so that the race location feels like a place.

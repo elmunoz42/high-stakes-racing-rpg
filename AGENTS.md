@@ -36,8 +36,15 @@ Read in this order before doing anything:
 2. `agent-os/standards/` (four short files, indexed in `index.yml`)
 3. The current spec: `agent-os/specs/2026-11-09-2300-m1-vertical-slice/plan.md`
 
-Current state: M0 done (docs, standards, spec, stories). No game code yet.
-Next: M1, starting at Task 2 of the spec plan, on branch `m1-vertical-slice`.
+Current state: M1 vertical slice done on branch `m1-vertical-slice` (stories
+US-001 to US-009 verified at demo level). Next: M2 (garage and economy
+depth); shape it with the shape-spec skill first.
+
+Running things: `npm run dev` (real characters, needs `OPENAI_API_KEY` in
+`.env`), `npm run dev:mock` (scripted characters), `npm run check`,
+`npm run test:e2e` (uses the mock; add `PW_CHANNEL=chrome` if Playwright's
+Chromium is not installed). `npx tsx scripts/talk.ts <character-id> "line"`
+talks to a character through the real engine from the terminal.
 
 Project rules:
 
@@ -48,8 +55,11 @@ Project rules:
 - The LLM proposes game actions; validators decide. Free text never changes
   money, inventory or stats.
 - Tests never call the real model. Use `LLM_PROVIDER=mock`.
-- Game characters run on OpenAI (model GPT-6 Luna). Read the current OpenAI API
-  docs before writing SDK code; do not write model IDs or API details from memory.
+- Game characters run on OpenAI GPT-6 Luna (`gpt-6-luna`, Responses API).
+  Read the current OpenAI API docs before changing SDK code; do not write model
+  IDs or API details from memory. A ChatGPT subscription does not cover API use.
+- After changing a persona card or the world rules, run real conversations with
+  `scripts/talk.ts` and record what changed in the spec's notes.
 - Original game: no names, tracks, characters, art, music or UI taken from
   existing games. No manufacturer logos or official imagery.
 - Never commit `.env` or any key.

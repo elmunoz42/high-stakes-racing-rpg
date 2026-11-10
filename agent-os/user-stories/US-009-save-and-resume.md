@@ -1,15 +1,17 @@
 ---
 id: US-009
 title: Save and resume a career
-status: draft
+status: verified
 priority: must
 source: spec:2026-11-09-2300-m1-vertical-slice
 tags: [save]
 sets: [demo, production]
 verify: [browser, unit]
 tests:
-  e2e: []
-  unit: []
+  e2e: [tests/e2e/stories/US-009.spec.ts]
+  unit: [src/save/store.test.ts]
+verified_level: demo
+last_verified: 2026-11-10
 ---
 
 As a player, I want my career saved automatically, so that I can close the tab and carry on later.

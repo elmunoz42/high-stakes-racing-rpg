@@ -15,6 +15,8 @@ app:
 
 tests:
   unit: npm test
+  # Set PW_CHANNEL=chrome to run in an installed Google Chrome when Playwright's
+  # own Chromium is not installed (it needs about 400 MB of free disk).
   e2e: npx playwright test --grep @US          # production: every story test
   e2e_demo: npx playwright test --grep @demo   # demo: happy path tests only
   e2e_dir: tests/e2e/stories        # where hardened story tests live

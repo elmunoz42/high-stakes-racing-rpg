@@ -1,15 +1,17 @@
 ---
 id: US-005
 title: Have the mechanic install a part
-status: draft
+status: verified
 priority: must
 source: spec:2026-11-09-2300-m1-vertical-slice
 tags: [garage, dialogue]
 sets: [demo, production]
 verify: [browser, unit]
 tests:
-  e2e: []
-  unit: []
+  e2e: [tests/e2e/stories/US-005.spec.ts]
+  unit: [src/rpg/actions.test.ts, src/rpg/carStats.test.ts]
+verified_level: demo
+last_verified: 2026-11-10
 ---
 
 As a player, I want my mechanic to fit a part I own, so that my car actually gets better.

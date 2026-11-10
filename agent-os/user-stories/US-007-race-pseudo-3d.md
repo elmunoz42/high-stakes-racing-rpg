@@ -1,15 +1,17 @@
 ---
 id: US-007
 title: Race against AI rivals
-status: draft
+status: verified
 priority: must
 source: spec:2026-11-09-2300-m1-vertical-slice
 tags: [race]
 sets: [demo, production]
 verify: [browser, unit]
 tests:
-  e2e: []
-  unit: []
+  e2e: [tests/e2e/stories/US-007.spec.ts]
+  unit: [src/race/sim.test.ts, src/race/projection.test.ts]
+verified_level: demo
+last_verified: 2026-11-10
 ---
 
 As a player, I want to race my car against rivals on a pseudo-3D road, so that the build and the advice pay off on track.

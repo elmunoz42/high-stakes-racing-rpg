@@ -1,15 +1,17 @@
 ---
 id: US-008
 title: Collect prize money and sponsor payout
-status: draft
+status: verified
 priority: must
 source: spec:2026-11-09-2300-m1-vertical-slice
 tags: [race, economy, sponsor]
 sets: [demo, production]
 verify: [browser, unit]
 tests:
-  e2e: []
-  unit: []
+  e2e: [tests/e2e/stories/US-008.spec.ts]
+  unit: [src/rpg/actions.test.ts]
+verified_level: demo
+last_verified: 2026-11-10
 ---
 
 As a player, I want to be paid for my result, so that racing funds the next upgrade.

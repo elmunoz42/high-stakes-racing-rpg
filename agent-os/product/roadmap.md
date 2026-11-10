@@ -10,7 +10,11 @@ and closed with `/verify-stories`.
 - mission, tech stack, roadmap, game design, standards
 - M1 spec and user stories US-001 to US-009 written
 
-## M1: Vertical slice (MVP) — spec `2026-11-09-2300-m1-vertical-slice`
+## M1: Vertical slice (MVP), done 2026-11-10: spec `2026-11-09-2300-m1-vertical-slice`
+
+Shipped: stories US-001 to US-009 verified at demo level. Starter cars: 1994
+Mazda MX-5 Miata, 1991 Volkswagen GTI 16V, 1991 Nissan 240SX. 14 sourced
+parts. Characters run on OpenAI `gpt-6-luna`.
 
 One location, one race, the full loop end to end with placeholder art.
 
