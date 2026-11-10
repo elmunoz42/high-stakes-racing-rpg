@@ -89,3 +89,27 @@ US-011:
   tags: [race, hud]
   sets: [demo, production]
   source: spec:2026-11-10-0030-race-feel-and-visual-pass
+
+US-012:
+  file: US-012-travel-to-a-new-location.md
+  title: Travel to a new race location
+  status: draft
+  tags: [travel, career]
+  sets: [demo, production]
+  source: spec:2026-11-10-0500-cars-locations-nitrous
+
+US-013:
+  file: US-013-trade-up-to-a-faster-car.md
+  title: Trade up to a faster car
+  status: draft
+  tags: [dealer, economy, dialogue]
+  sets: [demo, production]
+  source: spec:2026-11-10-0500-cars-locations-nitrous
+
+US-014:
+  file: US-014-buy-and-use-nitrous.md
+  title: Buy and use nitrous
+  status: draft
+  tags: [shop, race, nitrous]
+  sets: [demo, production]
+  source: spec:2026-11-10-0500-cars-locations-nitrous
