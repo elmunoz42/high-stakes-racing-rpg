@@ -61,6 +61,7 @@ const persona = (
   from: 'Testville',
   pitch: 'test',
   portraitColor: '#888888',
+  look: { skin: '#aa8866', hair: '#222222', top: '#3355aa', legs: '#222222' },
   voice: ['plain'],
   neverSays: [],
   wants: ['test'],

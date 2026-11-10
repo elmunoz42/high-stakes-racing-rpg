@@ -1,6 +1,9 @@
 import Phaser from 'phaser';
 import { initFlow } from './game/flow.ts';
 import { BootScene } from './game/scenes/BootScene.ts';
+import { CarPickScene } from './game/scenes/CarPickScene.ts';
+import { InteriorScene } from './game/scenes/InteriorScene.ts';
+import { TownScene } from './game/scenes/TownScene.ts';
 import { RaceScene } from './game/scenes/RaceScene.ts';
 import { ResultsScene } from './game/scenes/ResultsScene.ts';
 import { TitleScene } from './game/scenes/TitleScene.ts';
@@ -15,7 +18,7 @@ const game = new Phaser.Game({
   pixelArt: true,
   backgroundColor: '#0b0d17',
   scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
-  scene: [BootScene, TitleScene, RaceScene, ResultsScene],
+  scene: [BootScene, TitleScene, CarPickScene, TownScene, InteriorScene, RaceScene, ResultsScene],
 });
 
 initFlow(game);

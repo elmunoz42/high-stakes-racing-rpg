@@ -56,3 +56,20 @@ describe('sponsors', () => {
     },
   );
 });
+
+describe('characters and locations', async () => {
+  const { CHARACTERS } = await import('./characters/index.ts');
+  const { PersonaSchema } = await import('./schema.ts');
+  const { LOCATIONS } = await import('./locations.ts');
+  it.each(CHARACTERS.map((c) => [c.id, c]))('%s persona card passes the schema', (_id, c) => {
+    expect(() => PersonaSchema.parse(c)).not.toThrow();
+  });
+  it('has one character per role', () => {
+    expect(new Set(CHARACTERS.map((c) => c.role)).size).toBe(4);
+  });
+  it('every building character exists', () => {
+    for (const l of LOCATIONS)
+      for (const b of l.buildings)
+        if (b.characterId) expect(CHARACTERS.some((c) => c.id === b.characterId)).toBe(true);
+  });
+});

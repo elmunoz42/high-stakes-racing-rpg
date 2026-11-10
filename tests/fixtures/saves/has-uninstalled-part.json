@@ -3,9 +3,7 @@
   "seed": 42,
   "money": 3000,
   "carId": "mx5-na-1994",
-  "inventory": [
-    "michelin-pe2-185-60r14"
-  ],
+  "inventory": ["michelin-pe2-185-60r14"],
   "installed": {},
   "sponsor": null,
   "offers": {

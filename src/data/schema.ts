@@ -117,6 +117,13 @@ export const PersonaSchema = z.object({
   from: z.string(),
   pitch: z.string(),
   portraitColor: z.string().regex(/^#[0-9a-f]{6}$/i),
+  /** Placeholder sprite colours. */
+  look: z.object({
+    skin: z.string().regex(/^#[0-9a-f]{6}$/i),
+    hair: z.string().regex(/^#[0-9a-f]{6}$/i),
+    top: z.string().regex(/^#[0-9a-f]{6}$/i),
+    legs: z.string().regex(/^#[0-9a-f]{6}$/i),
+  }),
   voice: z.array(z.string()).min(1),
   neverSays: z.array(z.string()),
   wants: z.array(z.string()).min(1),
