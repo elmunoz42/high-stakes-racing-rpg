@@ -30,4 +30,47 @@ describe('projection', () => {
     expect(list.sprites.filter((s) => s.car && !s.car.isPlayer).length).toBeGreaterThanOrEqual(3);
     expect(STEP).toBeCloseTo(1 / 60);
   });
+
+  it('fades the far ground fully into the haze with no stripe contrast (horizon flicker fix)', async () => {
+    const { HAZE, HORIZON_Y } = await import('./projection.ts');
+    // Flat and straight, so the top rows of ground really are the farthest segments.
+    const { RaceSim } = await import('./sim.ts');
+    const { buildTrack } = await import('./track.ts');
+    const { performance } = await import('../rpg/carStats.ts');
+    const flat = buildTrack({
+      id: 'f',
+      name: 'f',
+      laps: 1,
+      sections: [{ length: 4000, curve: 0, hill: 0, scenery: 'harbour' }],
+    });
+    const sim = new RaceSim({
+      track: flat,
+      laps: 1,
+      seed: 1,
+      entrants: [
+        {
+          id: 'p',
+          name: 'p',
+          carName: 'x',
+          isPlayer: true,
+          perf: performance(baseStats(car)),
+          pace: 1,
+          color: '#ffffff',
+          body: 'coupe',
+        },
+      ],
+    });
+    sim.cars[0]!.z = 500;
+    const list = buildDrawList(sim);
+    // A haze band covers the seam at the horizon.
+    expect(list.quads[0]).toMatchObject({ color: HAZE, y1: SCREEN_H });
+    expect(list.quads[0]!.y2).toBeLessThan(HORIZON_Y);
+    // Everything drawn in the top rows of the ground is exactly the haze colour.
+    const top = Math.min(...list.quads.slice(1).map((q) => q.y2));
+    const far = list.quads.slice(1).filter((q) => q.y2 <= top + 1);
+    expect(far.length).toBeGreaterThan(0);
+    for (const q of far) expect(q.color).toBe(HAZE);
+    // Quads sit on whole pixel rows.
+    for (const q of list.quads) expect(Number.isInteger(q.y1) && Number.isInteger(q.y2)).toBe(true);
+  });
 });

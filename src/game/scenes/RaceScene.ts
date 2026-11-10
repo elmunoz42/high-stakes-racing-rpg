@@ -320,7 +320,9 @@ export class RaceScene extends Phaser.Scene {
   }
 
   private drawSprite(i: number, s: SpriteDraw): void {
-    if (s.y - s.h >= s.clipY) {
+    // Far scenery fades in instead of popping, and specks are not drawn at all.
+    const alpha = Math.max(0, Math.min(1, (1 - s.fog) * 5));
+    if (s.y - s.h >= s.clipY || s.h < 2 || alpha <= 0.02) {
       this.pool[i]?.setVisible(false);
       return;
     }
@@ -341,7 +343,8 @@ export class RaceScene extends Phaser.Scene {
     img
       .setVisible(true)
       .setDepth(2 + s.depth / 100)
-      .setFlipX(s.flip);
+      .setFlipX(s.flip)
+      .setAlpha(alpha);
     img.setPosition(Math.round(s.x), Math.round(y));
     img.setDisplaySize(Math.max(1, s.w), Math.max(1, s.h));
     if (s.y > s.clipY) {

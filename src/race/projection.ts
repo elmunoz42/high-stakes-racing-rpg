@@ -177,7 +177,11 @@ function project(cam: Camera, camX: number, camY: number, camZ: number): Project
 
 const clampX = (x: number) => Math.max(0, Math.min(SCREEN_W, x));
 
-export function buildDrawList(sim: RaceSim, cam: Camera = DEFAULT_CAMERA): DrawList {
+export function buildDrawList(
+  sim: RaceSim,
+  cam: Camera = DEFAULT_CAMERA,
+  haze: number = HAZE,
+): DrawList {
   const player = sim.player ?? sim.cars[0]!;
   const track = sim.track;
   const L = track.length;
@@ -189,7 +193,19 @@ export function buildDrawList(sim: RaceSim, cam: Camera = DEFAULT_CAMERA): DrawL
   const lapBase = Math.floor(cameraZ / L) * L;
   const basePercent = (cameraZ - lapBase - base.z) / SEGMENT_LENGTH;
 
-  const quads: Quad[] = [];
+  // A solid band of haze from the horizon down sits behind all ground, so the
+  // seam where the road meets the sky never shows gaps or flicker.
+  const quads: Quad[] = [
+    {
+      x1: SCREEN_W / 2,
+      y1: SCREEN_H,
+      w1: SCREEN_W,
+      x2: SCREEN_W / 2,
+      y2: HORIZON_Y - 2,
+      w2: SCREEN_W,
+      color: haze,
+    },
+  ];
   const sprites: SpriteDraw[] = [];
   const rows: { seg: Segment; p1: Projected; p2: Projected; clip: number; z1: number }[] = [];
 
@@ -197,6 +213,17 @@ export function buildDrawList(sim: RaceSim, cam: Camera = DEFAULT_CAMERA): DrawL
   let dx = -curveStep(base) * basePercent;
   let x = 0;
   let maxY = SCREEN_H;
+
+  // The highest row the ground reaches. The last few rows below it blend into
+  // the haze whatever their distance, so the top edge never shows a colour step.
+  let topY = SCREEN_H;
+  for (let n = 1; n < DRAW_SEGMENTS; n++) {
+    const idx = base.index + n;
+    const seg = track.segments[idx % N]!;
+    const z2 = lapBase + seg.z + (idx >= N ? L : 0) - cameraZ + SEGMENT_LENGTH;
+    if (z2 > 1)
+      topY = Math.min(topY, HORIZON_Y - (cam.depth / z2) * (seg.y2 - cameraY) * (SCREEN_W / 2));
+  }
 
   for (let n = 0; n < DRAW_SEGMENTS; n++) {
     const idx = base.index + n;
@@ -211,45 +238,57 @@ export function buildDrawList(sim: RaceSim, cam: Camera = DEFAULT_CAMERA): DrawL
 
     if (z1 <= cam.depth * 0.5 || p2.y >= p1.y || p2.y >= maxY) continue;
 
-    const fog = Math.min(0.82, (n / DRAW_SEGMENTS) ** 1.5);
-    const tint = (c: number) => mix(c, HAZE, fog);
+    // Distance fades everything fully into the haze, and stripe contrast fades
+    // out sooner: far segments are under a pixel tall, and alternating colours
+    // at that size shimmer.
+    const edge = Math.max(0, Math.min(1, 1 - (p2.y - topY - 1.5) / 6));
+    const fog = Math.max(edge, Math.min(1, (n / (DRAW_SEGMENTS - 16)) ** 1.5));
+    const flat = Math.min(1, fog * 2.4);
+    const tint = (c: number) => mix(c, haze, fog);
     const s = seg.stripe ? 0 : 1;
+    const band = (pair: readonly number[]) => mix(pair[s]!, mix(pair[0]!, pair[1]!, 0.5), flat);
+    const y1 = Math.round(p1.y);
+    const y2 = Math.round(p2.y);
+    if (y1 <= y2) {
+      maxY = p2.y;
+      continue;
+    }
     const g = GROUND[seg.theme];
     const quad = (cx1: number, w1: number, cx2: number, w2: number, color: number) =>
-      quads.push({ x1: cx1, y1: p1.y, w1, x2: cx2, y2: p2.y, w2, color: tint(color) });
+      quads.push({ x1: cx1, y1, w1, x2: cx2, y2, w2, color: tint(color) });
 
     // Ground either side of the road centre.
     const c1 = clampX(p1.x);
     const c2 = clampX(p2.x);
-    quad(c1 / 2, c1 / 2, c2 / 2, c2 / 2, g.left[s]!);
+    quad(c1 / 2, c1 / 2, c2 / 2, c2 / 2, band(g.left));
     quad(
       (c1 + SCREEN_W) / 2,
       (SCREEN_W - c1) / 2,
       (c2 + SCREEN_W) / 2,
       (SCREEN_W - c2) / 2,
-      g.right[s]!,
+      band(g.right),
     );
     if (g.verge) {
       const k = 1.125 + g.verge.width;
-      if (g.verge.sides === 'both') quad(p1.x, p1.w * k, p2.x, p2.w * k, g.verge.color[s]!);
+      if (g.verge.sides === 'both') quad(p1.x, p1.w * k, p2.x, p2.w * k, band(g.verge.color));
       else
         quad(
           p1.x - (p1.w * k) / 2,
           (p1.w * k) / 2,
           p2.x - (p2.w * k) / 2,
           (p2.w * k) / 2,
-          g.verge.color[s]!,
+          band(g.verge.color),
         );
     }
     // Kerbs, road, paint.
-    quad(p1.x, p1.w * 1.125, p2.x, p2.w * 1.125, RUMBLE[s]!);
-    quad(p1.x, p1.w, p2.x, p2.w, g.road[s]!);
+    quad(p1.x, p1.w * 1.125, p2.x, p2.w * 1.125, band(RUMBLE));
+    quad(p1.x, p1.w, p2.x, p2.w, band(g.road));
     if (seg.isStartLine) {
       for (let k = 0; k < 8; k++) {
         const f = -1 + (2 * k + 1) / 8;
         quad(p1.x + p1.w * f, p1.w / 8, p2.x + p2.w * f, p2.w / 8, CHECKER[(k + seg.index) % 2]!);
       }
-    } else {
+    } else if (fog < 0.55) {
       for (const side of [-0.92, 0.92])
         quad(p1.x + p1.w * side, p1.w / 48, p2.x + p2.w * side, p2.w / 48, PAINT);
       if (seg.stripe) {
