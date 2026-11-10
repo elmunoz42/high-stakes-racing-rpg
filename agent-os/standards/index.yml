@@ -1,0 +1,17 @@
+# Agent OS Standards Index
+
+data:
+  real-world-catalogue:
+    description: Sourcing rules and required fields for real cars, parts and prices; names as facts, no logos
+
+game:
+  architecture:
+    description: Pure rule modules vs thin Phaser scenes, single game state, validated actions, deterministic sim, content as data
+
+llm:
+  npc-dialogue:
+    description: LLM character dialogue rules: server-side key, mock provider, persona cards, tool calls validated by the engine
+
+testing:
+  game-testing:
+    description: Vitest and Playwright story tests for the game, window.__game test hooks, save fixtures, mock LLM, ports

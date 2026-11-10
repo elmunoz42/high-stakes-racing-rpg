@@ -1,0 +1,18 @@
+# agent-os
+agent-os/.backups/
+agent-os/user-stories/_runs/*/screenshots/
+agent-os/user-stories/_runs/*/*.json
+agent-os/user-stories/_runs/*/*.log
+agent-os/user-stories/report.html
+.playwright/
+.playwright-cli/
+
+# project
+node_modules/
+dist/
+.env
+.env.*
+!.env.example
+test-results/
+playwright-report/
+.DS_Store

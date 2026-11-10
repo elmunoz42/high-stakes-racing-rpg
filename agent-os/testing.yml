@@ -1,0 +1,26 @@
+# Agent OS testing config. Read by the verify-stories skill.
+# Adjust commands to your stack. All keys are optional; the agent will
+# detect sensible defaults and offer to fill this file in.
+
+# Testing level: demo (happy path, fast, moderate checks) or production
+# (edge cases, full regression tests). Leave empty and the agent asks once
+# and saves the answer here. A request can override it for one run.
+level: demo
+
+app:
+  start: npm run dev:mock          # Vite + API with the mock LLM provider
+  base_url: http://localhost:5173
+  health: /                         # path that returns 200 when ready
+  reuse_running: true               # use an already running app if healthy
+
+tests:
+  unit: npm test
+  e2e: npx playwright test --grep @US          # production: every story test
+  e2e_demo: npx playwright test --grep @demo   # demo: happy path tests only
+  e2e_dir: tests/e2e/stories        # where hardened story tests live
+
+browser:
+  # First available tool wins. playwright-cli is the default for agent checks.
+  order: [playwright-cli, playwright-mcp, claude-browser, chrome-devtools-mcp]
+  headed: false
+  artifacts: agent-os/user-stories/_runs

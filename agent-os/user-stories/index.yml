@@ -1,0 +1,75 @@
+# Agent OS User Stories Index
+# Maintained by the write-user-stories and verify-stories skills.
+# One entry per story file in this folder. Keep entries alphabetized by id.
+
+US-001:
+  file: US-001-start-career-pick-starter-car.md
+  title: Start a career and pick a starter car
+  status: draft
+  tags: [career, garage]
+  sets: [demo, production]
+  source: spec:2026-11-09-2300-m1-vertical-slice
+
+US-002:
+  file: US-002-walk-town-enter-buildings.md
+  title: Walk the town and enter buildings
+  status: draft
+  tags: [town]
+  sets: [demo, production]
+  source: spec:2026-11-09-2300-m1-vertical-slice
+
+US-003:
+  file: US-003-talk-to-character.md
+  title: Talk to a character in free text
+  status: draft
+  tags: [dialogue, llm]
+  sets: [demo, production]
+  source: spec:2026-11-09-2300-m1-vertical-slice
+
+US-004:
+  file: US-004-buy-real-part.md
+  title: Buy a real part from the parts seller
+  status: draft
+  tags: [shop, economy, dialogue]
+  sets: [demo, production]
+  source: spec:2026-11-09-2300-m1-vertical-slice
+
+US-005:
+  file: US-005-mechanic-installs-part.md
+  title: Have the mechanic install a part
+  status: draft
+  tags: [garage, dialogue]
+  sets: [demo, production]
+  source: spec:2026-11-09-2300-m1-vertical-slice
+
+US-006:
+  file: US-006-negotiate-sponsorship.md
+  title: Negotiate a sponsorship deal
+  status: draft
+  tags: [sponsor, dialogue, economy]
+  sets: [demo, production]
+  source: spec:2026-11-09-2300-m1-vertical-slice
+
+US-007:
+  file: US-007-race-pseudo-3d.md
+  title: Race against AI rivals
+  status: draft
+  tags: [race]
+  sets: [demo, production]
+  source: spec:2026-11-09-2300-m1-vertical-slice
+
+US-008:
+  file: US-008-race-rewards.md
+  title: Collect prize money and sponsor payout
+  status: draft
+  tags: [race, economy, sponsor]
+  sets: [demo, production]
+  source: spec:2026-11-09-2300-m1-vertical-slice
+
+US-009:
+  file: US-009-save-and-resume.md
+  title: Save and resume a career
+  status: draft
+  tags: [save]
+  sets: [demo, production]
+  source: spec:2026-11-09-2300-m1-vertical-slice
