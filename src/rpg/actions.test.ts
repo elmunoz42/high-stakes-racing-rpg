@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { TEST_CATALOGUE as cat } from '../../tests/unit/fixtures/catalogue.ts';
 import type { GameAction } from '../../shared/actions.ts';
 import type { GameState } from '../save/schema.ts';
-import { applyAction, createCareer } from './actions.ts';
+import { applyAction, createCareer, placeStatus } from './actions.ts';
 import { CAREER_FUND_USD, LABOUR_USD, prizeFor } from './economy.ts';
 import type { RaceResult } from '../race/types.ts';
 
@@ -293,6 +293,15 @@ describe('travel (US-012 AC4)', () => {
     expect(s.lastRace?.unlocked).toBe('away');
     s = run(s, { type: 'recordRace', result: result(1) });
     expect(s.lastRace?.unlocked).toBeUndefined();
+  });
+  it('shows each place on the map as here, cleared, open or locked (US-012 AC8)', () => {
+    const status = (s: GameState) =>
+      Object.fromEntries(cat.locations.map((l) => [l.id, placeStatus(cat, s, l.id)]));
+    expect(status(start())).toEqual({ home: 'here', away: 'locked', far: 'locked' });
+    let s = run(start(), { type: 'recordRace', result: result(1) });
+    expect(status(s)).toEqual({ home: 'here', away: 'open', far: 'locked' });
+    s = run(s, { type: 'travel', locationId: 'away' });
+    expect(status(s)).toEqual({ home: 'cleared', away: 'here', far: 'locked' });
   });
   it('pays bigger prizes at higher tiers', () => {
     let s = run(

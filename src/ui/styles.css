@@ -682,52 +682,53 @@ img.portrait {
 .race-hud .nitro-box.firing .nitro {
   color: #fff;
 }
-.travel {
+/* World map: a card for the selected place along the bottom. */
+.map-card {
   position: absolute;
-  inset: 9% 12% 6%;
+  left: 2%;
+  right: 2%;
+  bottom: 2.5%;
   display: flex;
-  flex-direction: column;
-  gap: 0.6em;
-}
-.travel h2 {
-  margin: 0;
-  color: var(--accent);
-}
-.travel .places {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0.6em;
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-}
-.travel .place {
-  display: flex;
-  flex-direction: column;
-  gap: 0.3em;
-  padding: 0.6em;
-  border: 2px solid var(--line);
-  border-radius: 6px;
-  background: var(--panel-2);
-  font-size: 0.85em;
-}
-.travel .place.here {
-  border-color: var(--good);
-}
-.travel .place.locked {
-  opacity: 0.55;
-}
-.travel .place h3 {
-  margin: 0;
-  font-size: 1.05em;
-}
-.travel .place button {
-  margin-top: auto;
-}
-.travel footer {
-  display: flex;
-  justify-content: space-between;
+  gap: 1em;
   align-items: center;
+  padding: 0.5em 0.8em;
+  font-size: 0.82em;
+  border: 2px solid var(--accent);
+}
+.map-card.locked {
+  border-color: var(--line);
+}
+.map-card.here {
+  border-color: #6fd0ff;
+}
+.map-card h2 {
+  margin: 0 0 0.15em;
+  color: var(--accent);
+  font-size: 1.15em;
+}
+.map-card-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15em;
+}
+.map-card-side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.3em;
+}
+.map-title {
+  position: absolute;
+  top: 0.6em;
+  left: 0.6em;
+}
+.map-keys {
+  position: absolute;
+  top: 0.6em;
+  right: 0.6em;
+  font-size: 0.75em;
+  opacity: 0.85;
 }
 
 .race-line {

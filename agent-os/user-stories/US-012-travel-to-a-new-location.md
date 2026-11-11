@@ -18,13 +18,14 @@ As a player, I want to travel to new race locations as I prove myself, so that t
 
 ## Acceptance criteria
 
-- AC1: Given I am in town, when I use the travel sign, then I see all six locations with their travel cost and which are locked.
-- AC2: Given a location is unlocked and I can afford the trip, when I travel there, then I arrive in that town, my money drops by the travel cost, and its start gate names its own track.
+- AC1: Given I am in town, when I use the travel board, then a world map opens showing all six locations on one island joined by a road, which are locked, which I have cleared, and where I am; choosing a place shows its track, prize and travel cost.
+- AC2: Given a location is unlocked and I can afford the trip, when I travel there, then my car drives along the road on the map and I arrive in that town, my money drops by the travel cost, and its start gate names its own track.
 - AC3: Given I am at another location, when I race and finish, then the results name that location's track and the prize is larger than the same position pays at the first location.
 - AC4 (unit): A location is locked until I have finished on the podium at the one before it, and travel to a locked location or one I cannot afford is rejected.
 - AC5 (unit): A version 1 save is migrated to version 2 with no nitrous and only the first location's progress.
 - AC6: Given my first podium at a location, when the results show, then they tell me the next location is open and to use the Travel board; back in town, a pointer shows which way the Travel board is until I reach it.
 - AC7 (unit): The race that first opens a location records which one; later races there do not.
+- AC8 (unit): Each place on the map shows as here, cleared (podium), open or locked.
 
 ## Test data
 

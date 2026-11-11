@@ -1,7 +1,8 @@
 import type Phaser from 'phaser';
 import { clearAll } from '../ui/dom.ts';
 
-export type SceneKey = 'Boot' | 'Title' | 'CarPick' | 'Town' | 'Interior' | 'Race' | 'Results';
+export type SceneKey =
+  'Boot' | 'Title' | 'CarPick' | 'Town' | 'Interior' | 'Race' | 'Results' | 'Map';
 
 let game: Phaser.Game | null = null;
 let current: SceneKey = 'Boot';

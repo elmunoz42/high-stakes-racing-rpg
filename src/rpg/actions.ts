@@ -99,6 +99,18 @@ export function isUnlocked(cat: Catalogue, state: GameState, locationId: string)
   return !!prev && (state.bestFinish[prev.id] ?? 99) <= UNLOCK_POSITION;
 }
 
+export type PlaceStatus = 'here' | 'cleared' | 'open' | 'locked';
+
+/**
+ * How a location shows on the world map: where you are, cleared (a podium
+ * there, so the next one is open), open but not yet cleared, or locked.
+ */
+export function placeStatus(cat: Catalogue, state: GameState, locationId: string): PlaceStatus {
+  if (locationId === state.location) return 'here';
+  if (!isUnlocked(cat, state, locationId)) return 'locked';
+  return (state.bestFinish[locationId] ?? 99) <= UNLOCK_POSITION ? 'cleared' : 'open';
+}
+
 /** The most a racer will wager at the player's current location. */
 export function maxWager(cat: Catalogue, state: GameState): number {
   return Math.floor(

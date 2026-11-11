@@ -23,9 +23,7 @@ test.describe('US-012 Travel to a new race location', () => {
     await expect(hint).toHaveText('← Travel board: Pinewood is open');
     await game.shot('US-012-AC6-town');
     await game.setPlayerX(30);
-    await expect(page.getByTestId('interact-prompt')).toHaveText(
-      'Press E to read the travel board',
-    );
+    await expect(page.getByTestId('interact-prompt')).toHaveText('Press E to open the world map');
     await expect(hint).toBeHidden();
   });
 });

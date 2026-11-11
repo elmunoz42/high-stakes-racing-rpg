@@ -25,6 +25,7 @@ export interface GameHooks {
   readonly race: unknown;
   readonly town: unknown;
   readonly dialogue: unknown;
+  readonly map: unknown;
 }
 
 declare global {
@@ -56,6 +57,9 @@ export function installTestHooks(): void {
     },
     get dialogue() {
       return hooks.dialogue;
+    },
+    get map() {
+      return hooks.map;
     },
   };
 }

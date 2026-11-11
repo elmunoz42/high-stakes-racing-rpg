@@ -6,7 +6,6 @@ import { isUnlocked, nextLocation } from '../../rpg/actions.ts';
 import { store } from '../../save/store.ts';
 import { clear, h, mount, typing } from '../../ui/dom.ts';
 import { mountTownHud } from '../../ui/hud.ts';
-import { openTravel } from '../../ui/travel.ts';
 import { PLAYER_LOOK } from '../art/people.ts';
 import { LOOKS } from '../art/race.ts';
 import {
@@ -245,7 +244,7 @@ export class TownScene extends Phaser.Scene {
 
   private promptFor(b: Building): string {
     if (b.kind === 'gate') return `Press E to race the ${this.trackName}`;
-    if (b.kind === 'travel') return 'Press E to read the travel board';
+    if (b.kind === 'travel') return 'Press E to open the world map';
     return `Press E to enter ${b.name}`;
   }
 
@@ -285,20 +284,8 @@ export class TownScene extends Phaser.Scene {
       this.arrow.setPosition(near.x, GROUND_Y - 52 + Math.round(Math.sin(this.clock * 6) * 2));
     if (near && !typing() && this.interactKeys.some((k) => Phaser.Input.Keyboard.JustDown(k))) {
       if (near.kind === 'gate') goto('Race');
-      else if (near.kind === 'travel') {
-        this.busy = true;
-        this.walker.frozen = true;
-        clear('prompt');
-        openTravel(
-          () => {
-            this.busy = false;
-            this.walker.frozen = false;
-            this.near = null;
-            for (const k of this.interactKeys) k.reset();
-          },
-          () => goto('Town'),
-        );
-      } else goto('Interior', { buildingId: near.id });
+      else if (near.kind === 'travel') goto('Map');
+      else goto('Interior', { buildingId: near.id });
     }
   }
 }
