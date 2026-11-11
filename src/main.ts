@@ -16,6 +16,10 @@ const game = new Phaser.Game({
   width: SCREEN_W,
   height: SCREEN_H,
   pixelArt: true,
+  // Keep every corner of every filled shape. By default Phaser drops a corner
+  // that is within a pixel of the previous one, which turns the one-pixel-tall
+  // ground strips near the horizon into slivers that let the backing through.
+  render: { pathDetailThreshold: 0 },
   backgroundColor: '#0b0d17',
   scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
   scene: [BootScene, TitleScene, CarPickScene, TownScene, InteriorScene, RaceScene, ResultsScene],

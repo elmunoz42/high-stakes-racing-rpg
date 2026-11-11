@@ -8,7 +8,7 @@ tags: [race]
 sets: [demo, production]
 verify: [browser, unit]
 tests:
-  e2e: [tests/e2e/stories/US-007.spec.ts]
+  e2e: [tests/e2e/stories/US-007.spec.ts, tests/e2e/stories/US-007-ground.spec.ts]
   unit: [src/race/sim.test.ts, src/race/projection.test.ts, src/race/feel.test.ts]
 verified_level: demo
 last_verified: 2026-11-10
@@ -23,6 +23,7 @@ As a player, I want to race my car against rivals on a pseudo-3D road, so that t
 - AC3: Given I complete the final lap, then the race ends and I see the finishing order with my position and time.
 - AC4 (unit): With the same seed and inputs, the race simulation produces the same result.
 - AC5 (unit): A car with more power reaches a higher top speed and a car with more grip takes a corner faster, all else equal.
+- AC6: Given the race is running, then the ground is drawn solid all the way up to the skyline, with no strips of another colour showing through under it.
 
 ## Test data
 

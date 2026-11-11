@@ -68,13 +68,14 @@ describe('projection', () => {
     expect(bl.y2).toBeLessThan(HORIZON_Y);
     const top = Math.min(...list.quads.slice(2).map((q) => q.y2));
     const farthest = list.quads.slice(2).filter((q) => q.y2 === top);
-    expect(farthest[0]!.color).toBe(bl.color);
-    expect(farthest[1]!.color).toBe(br.color);
-    // And that colour is still the ground's own (sand on the right), not the haze.
     const dist = (a: number, b: number) =>
       Math.abs(((a >> 16) & 255) - ((b >> 16) & 255)) +
       Math.abs(((a >> 8) & 255) - ((b >> 8) & 255)) +
       Math.abs((a & 255) - (b & 255));
+    // (Within a rounding step: the backing is an average of the far segments.)
+    expect(dist(farthest[0]!.color, bl.color)).toBeLessThanOrEqual(6);
+    expect(dist(farthest[1]!.color, br.color)).toBeLessThanOrEqual(6);
+    // And that colour is still the ground's own (sand on the right), not the haze.
     expect(dist(br.color, 0xc7b189)).toBeLessThan(dist(br.color, HAZE));
     // Quads sit on whole pixel rows.
     for (const q of list.quads) expect(Number.isInteger(q.y1) && Number.isInteger(q.y2)).toBe(true);

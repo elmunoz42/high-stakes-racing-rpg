@@ -35,6 +35,8 @@ export const HAZE = 0xe8987a;
 export const FOG_FULL = 0.62;
 /** Most the ground ever fades towards the haze: enough for depth, not enough to change its colour. */
 export const FOG_MAX = 0.3;
+/** Fraction of the draw distance by which the ground has faded that far, so the top rows and the backing behind them match. */
+export const FOG_REACH = 0.4;
 
 export interface Camera {
   /** Projection depth: smaller is a wider field of view. */
@@ -190,6 +192,16 @@ function mix(a: number, b: number, t: number): number {
   return (Math.round(r) << 16) | (Math.round(g) << 8) | Math.round(bl);
 }
 
+/** How many of the farthest segments the backing colour is averaged over. */
+const FAR_BLEND = 40;
+const addRgb = (sum: number[], c: number) => {
+  sum[0]! += (c >> 16) & 255;
+  sum[1]! += (c >> 8) & 255;
+  sum[2]! += c & 255;
+};
+const rgb = (v: number[]) =>
+  (Math.round(v[0]!) << 16) | (Math.round(v[1]!) << 8) | Math.round(v[2]!);
+
 interface Projected {
   x: number;
   y: number;
@@ -251,8 +263,8 @@ export function buildDrawList(
   };
   const backRight: Quad = { ...back };
   const quads: Quad[] = [back, backRight];
-  let farLeft = haze;
-  let farRight = haze;
+  const farL = [0, 0, 0];
+  const farR = [0, 0, 0];
   let farX = SCREEN_W / 2;
   const sprites: SpriteDraw[] = [];
   const rows: { seg: Segment; p1: Projected; p2: Projected; clip: number; z1: number }[] = [];
@@ -273,6 +285,16 @@ export function buildDrawList(
     x += dx;
     dx += curveStep(seg);
 
+    if (n >= DRAW_SEGMENTS - FAR_BLEND) {
+      // The backing takes the colours of the ground at the draw distance, seen
+      // or not, averaged over the last stretch so a change of scenery far
+      // ahead fades in. (Taking them from the farthest strip actually drawn
+      // made the backing jump whenever a hill hid or revealed one.)
+      const far = GROUND[seg.theme];
+      addRgb(farL, mix(far.left[0], far.left[1], 0.5));
+      addRgb(farR, mix(far.right[0], far.right[1], 0.5));
+      farX = clampX(p2.x);
+    }
     if (z1 <= cam.depth * 0.5 || p2.y >= p1.y || p2.y >= maxY) continue;
 
     // Distance fades everything fully into the haze, and stripe contrast fades
@@ -286,7 +308,7 @@ export function buildDrawList(
     // thin strips of near ground poking out. Stripes flatten out early, by
     // distance, because thin alternating stripes are what shimmer.
     const d = n / DRAW_SEGMENTS;
-    const fog = Math.min(FOG_MAX, d ** 1.7 * FOG_MAX);
+    const fog = Math.min(1, d / FOG_REACH) ** 1.7 * FOG_MAX;
     const flat = Math.min(1, d * 3.5);
     const tint = (c: number) => mix(light < 1 ? mix(0x05060f, c, light) : c, haze, fog);
     const s = seg.stripe ? 0 : 1;
@@ -333,9 +355,6 @@ export function buildDrawList(
       (GROUND_R - c2) / 2,
       band(g.right),
     );
-    farLeft = tint(band(g.left));
-    farRight = tint(band(g.right));
-    farX = c2;
     if (g.verge) {
       const k = 1.125 + g.verge.width;
       if (g.verge.sides === 'both') quad(p1.x, p1.w * k, p2.x, p2.w * k, band(g.verge.color));
@@ -450,7 +469,13 @@ export function buildDrawList(
     car: carDraw(player),
   });
 
-  // Fill the backing with the farthest ground's colours, split where its road was.
+  // Fill the backing with the far ground's colours, split where its road was.
+  const dim = (sum: number[]) => {
+    const c = rgb(sum.map((v) => v / FAR_BLEND));
+    return mix(light < 1 ? mix(0x05060f, c, light) : c, haze, FOG_MAX);
+  };
+  const farLeft = dim(farL);
+  const farRight = dim(farR);
   const split = Math.max(0, Math.min(SCREEN_W, farX));
   Object.assign(back, {
     x1: split / 2,
