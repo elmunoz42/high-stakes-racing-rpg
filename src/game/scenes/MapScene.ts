@@ -6,15 +6,7 @@ import { prizeFor, UNLOCK_POSITION, usd } from '../../rpg/economy.ts';
 import { findTrack } from '../../race/tracks.ts';
 import { store } from '../../save/store.ts';
 import { h, mount, toast, typing } from '../../ui/dom.ts';
-import {
-  drawLabel,
-  drawWorldMap,
-  legPoints,
-  MAP_ART,
-  MAP_H,
-  MAP_NODES,
-  MAP_W,
-} from '../art/map.ts';
+import { drawWorldMap, legPoints, MAP_ART, MAP_H, MAP_NODES, MAP_W } from '../art/map.ts';
 import { canvasTexture, carSideTexture, mipFor } from '../art/textures.ts';
 import { goto } from '../flow.ts';
 import { registerHook } from '../testHooks.ts';
@@ -69,7 +61,8 @@ export class MapScene extends Phaser.Scene {
 
     for (const [key, [w, ht, draw]] of Object.entries(MAP_ART))
       canvasTexture(this, key, w, ht, draw);
-    canvasTexture(this, 'map-world', MAP_W, MAP_H, drawWorldMap);
+    const names = Object.fromEntries(this.places.map((l) => [l.id, l.name]));
+    canvasTexture(this, 'map-world', MAP_W, MAP_H, (c) => drawWorldMap(c, names));
     this.add.image(0, 0, 'map-world').setOrigin(0, 0);
 
     // The road: bright up to every open place, faint dots beyond.
@@ -85,11 +78,9 @@ export class MapScene extends Phaser.Scene {
       });
     }
 
-    // Names are drawn once into their own texture, under each node.
-    canvasTexture(this, 'map-labels', MAP_W, MAP_H, () => undefined);
-    const labels = this.textures.get('map-labels') as Phaser.Textures.CanvasTexture;
-    const lc = labels.getContext();
-    lc.clearRect(0, 0, MAP_W, MAP_H);
+    // Names sit in the page overlay, not the canvas: at the game's 384 px
+    // resolution small text blurs to grey.
+    const labels: HTMLElement[] = [];
     for (const loc of this.places) {
       const n = MAP_NODES[loc.id];
       if (!n) continue;
@@ -102,10 +93,18 @@ export class MapScene extends Phaser.Scene {
           .setOrigin(0, 1)
           .setDepth(6);
       if (st === 'locked') this.add.image(n.x, n.y - 6, 'map-lock').setDepth(6);
-      drawLabel(lc, loc.name, n.x, n.y + 11, st === 'locked' ? '#b8bcc8' : '#fff6d8');
+      labels.push(
+        h(
+          'span',
+          {
+            class: 'map-name',
+            style: `left:${((n.x / MAP_W) * 100).toFixed(2)}%;top:${(((n.y + 6) / MAP_H) * 100).toFixed(2)}%`,
+          },
+          loc.name,
+        ),
+      );
     }
-    labels.refresh();
-    this.add.image(0, 0, 'map-labels').setOrigin(0, 0).setDepth(7);
+    mount('map-names', h('div', { class: 'map-names', 'aria-hidden': 'true' }, labels));
 
     // Your own car sits on the place you are at.
     const myCar = findCar(cat, state.carId);

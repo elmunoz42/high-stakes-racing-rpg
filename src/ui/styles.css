@@ -797,3 +797,20 @@ img.portrait {
   border-radius: 4px;
   padding: 0.5em 0.7em;
 }
+
+/* Place names on the world map, crisp at any screen size. */
+.map-names .map-name {
+  position: absolute;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  font-weight: bold;
+  font-size: 0.9em;
+  color: #fffaf0;
+  text-shadow:
+    -1px -1px 0 #141826,
+    1px -1px 0 #141826,
+    -1px 1px 0 #141826,
+    1px 1px 0 #141826,
+    0 0 3px #141826,
+    0 1px 4px #141826;
+}
