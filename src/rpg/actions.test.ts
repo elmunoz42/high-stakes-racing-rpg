@@ -286,6 +286,14 @@ describe('travel (US-012 AC4)', () => {
       'insufficient_funds',
     );
   });
+  it('records the unlock on the first podium only (US-012 AC7)', () => {
+    let s = run(start(), { type: 'recordRace', result: result(5) });
+    expect(s.lastRace?.unlocked).toBeUndefined();
+    s = run(s, { type: 'recordRace', result: result(2) });
+    expect(s.lastRace?.unlocked).toBe('away');
+    s = run(s, { type: 'recordRace', result: result(1) });
+    expect(s.lastRace?.unlocked).toBeUndefined();
+  });
   it('pays bigger prizes at higher tiers', () => {
     let s = run(
       start(),

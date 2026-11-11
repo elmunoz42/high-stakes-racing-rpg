@@ -84,6 +84,12 @@ export function tradeInValue(cat: Catalogue, state: GameState): number {
   return Math.round((car?.price_usd ?? 0) * TRADE_IN_CAR + parts * TRADE_IN_PARTS);
 }
 
+/** The location one tier above this one, if there is one. */
+export function nextLocation(cat: Catalogue, locationId: string) {
+  const loc = cat.locations.find((l) => l.id === locationId);
+  return loc ? cat.locations.find((l) => l.tier === loc.tier + 1) : undefined;
+}
+
 /** A location is open if it is the first, or the player has a podium at the one before it. */
 export function isUnlocked(cat: Catalogue, state: GameState, locationId: string): boolean {
   const loc = cat.locations.find((l) => l.id === locationId);
@@ -285,6 +291,9 @@ export function applyAction(state: GameState, action: GameAction, cat: Catalogue
         s.sponsor.earnedUsd += payout;
       }
       s.money = cents(s.money + prize + payout);
+      const next = nextLocation(cat, s.location);
+      const wasOpen = !next || isUnlocked(cat, s, next.id);
+      s.bestFinish[s.location] = Math.min(s.bestFinish[s.location] ?? 99, r.position);
       const record: RaceRecord = {
         ...r,
         prizeUsd: prize,
@@ -292,11 +301,11 @@ export function applyAction(state: GameState, action: GameAction, cat: Catalogue
         objectiveMet: met,
         sponsorId,
         balanceAfter: s.money,
+        ...(next && !wasOpen && isUnlocked(cat, s, next.id) ? { unlocked: next.id } : {}),
       };
       s.lastRace = record;
       s.raceCount += 1;
       s.nitrous = Math.max(0, s.nitrous - (r.nitrousUsed ?? 0));
-      s.bestFinish[s.location] = Math.min(s.bestFinish[s.location] ?? 99, r.position);
       if (s.sponsor && s.sponsor.racesLeft === 0) s.sponsor = null;
       return { ok: true, state: s };
     }

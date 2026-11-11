@@ -52,6 +52,8 @@ export const RaceRecord = RaceResult.extend({
   objectiveMet: z.boolean().nullable(),
   sponsorId: z.string().nullable().default(null),
   balanceAfter: z.number(),
+  /** Location this race opened up, if it was the first podium at the one before. */
+  unlocked: z.string().optional(),
 });
 export type RaceRecord = z.infer<typeof RaceRecord>;
 

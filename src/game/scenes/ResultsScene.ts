@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { findRacer, RIVALS } from '../../data/rivals.ts';
 import { findSponsor } from '../../data/catalogue.ts';
+import { findLocation } from '../../data/locations.ts';
 import { findTrack } from '../../race/tracks.ts';
 import { usd } from '../../rpg/economy.ts';
 import { store } from '../../save/store.ts';
@@ -38,6 +39,7 @@ export class ResultsScene extends Phaser.Scene {
       r.position,
       r.order.map((o) => o.name),
     );
+    const opened = r.unlocked ? findLocation(r.unlocked) : null;
     const back = h(
       'button',
       { class: 'primary', onclick: () => goto('Town', { from: 'race' }) },
@@ -101,6 +103,13 @@ export class ResultsScene extends Phaser.Scene {
           h('strong', {}, 'New balance'),
           h('strong', { class: 'money', 'data-testid': 'balance' }, usd(r.balanceAfter)),
         ),
+        opened &&
+          h(
+            'p',
+            { class: 'unlock', role: 'status', 'data-testid': 'unlock-notice' },
+            h('strong', {}, `${opened.name} is open!`),
+            ` Your podium earned you a ride out of town. Use the Travel board at the west end of the street (trip ${usd(opened.travelCostUsd)}).`,
+          ),
         banter && h('p', { class: 'muted' }, banter),
         h('footer', {}, back),
       ),

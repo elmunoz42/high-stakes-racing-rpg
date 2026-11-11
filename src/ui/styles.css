@@ -770,3 +770,29 @@ img.portrait {
 .duel-result h1 {
   font-size: 1.8em;
 }
+
+/* Points the way to the travel board once the next location is open. */
+.travel-hint {
+  position: absolute;
+  top: 3.2em;
+  left: 0.6em;
+  font-size: 0.8em;
+  border-color: var(--accent);
+  animation: hint-pulse 1.6s ease-in-out infinite;
+}
+@keyframes hint-pulse {
+  50% {
+    opacity: 0.65;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .travel-hint {
+    animation: none;
+  }
+}
+
+.results .unlock {
+  border: 2px solid var(--accent);
+  border-radius: 4px;
+  padding: 0.5em 0.7em;
+}

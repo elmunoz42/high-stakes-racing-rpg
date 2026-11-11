@@ -8,7 +8,7 @@ tags: [travel, career]
 sets: [demo, production]
 verify: [browser, unit]
 tests:
-  e2e: [tests/e2e/stories/US-012.spec.ts]
+  e2e: [tests/e2e/stories/US-012.spec.ts, tests/e2e/stories/US-012-unlock.spec.ts]
   unit: [src/rpg/actions.test.ts, src/save/store.test.ts, src/race/feel.test.ts, src/data/catalogue.test.ts]
 verified_level: demo
 last_verified: 2026-11-10
@@ -23,6 +23,8 @@ As a player, I want to travel to new race locations as I prove myself, so that t
 - AC3: Given I am at another location, when I race and finish, then the results name that location's track and the prize is larger than the same position pays at the first location.
 - AC4 (unit): A location is locked until I have finished on the podium at the one before it, and travel to a locked location or one I cannot afford is rejected.
 - AC5 (unit): A version 1 save is migrated to version 2 with no nitrous and only the first location's progress.
+- AC6: Given my first podium at a location, when the results show, then they tell me the next location is open and to use the Travel board; back in town, a pointer shows which way the Travel board is until I reach it.
+- AC7 (unit): The race that first opens a location records which one; later races there do not.
 
 ## Test data
 

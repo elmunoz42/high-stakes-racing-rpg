@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { findCar } from '../../data/catalogue.ts';
 import { findLocation, type Building } from '../../data/locations.ts';
 import { findTrack } from '../../race/tracks.ts';
+import { isUnlocked, nextLocation } from '../../rpg/actions.ts';
 import { store } from '../../save/store.ts';
 import { clear, h, mount, typing } from '../../ui/dom.ts';
 import { mountTownHud } from '../../ui/hud.ts';
@@ -187,6 +188,15 @@ export class TownScene extends Phaser.Scene {
       kb.addKey(K.UP, false),
     ];
 
+    // Once the next location is open, point the way to the travel board.
+    const next = nextLocation(store.catalogue, loc.id);
+    this.travelX = loc.buildings.find((b) => b.kind === 'travel')?.x ?? null;
+    this.travelHint =
+      next && this.travelX !== null && isUnlocked(store.catalogue, state, next.id)
+        ? next.name
+        : null;
+    this.hintDir = '';
+
     const unsub = mountTownHud(loc.name);
     registerHook('town', {
       snapshot: () => ({
@@ -202,8 +212,35 @@ export class TownScene extends Phaser.Scene {
     });
     this.events.once('shutdown', () => {
       unsub();
+      clear('travel-hint');
       registerHook('town', null);
     });
+  }
+
+  private travelHint: string | null = null;
+  private travelX: number | null = null;
+  private hintDir = '';
+
+  /** A chip saying which way the travel board is, hidden once you are at it. */
+  private updateTravelHint(near: Building | null): void {
+    if (!this.travelHint || this.travelX === null) return;
+    const dir = near?.kind === 'travel' ? 'here' : this.travelX < this.walker.x ? '←' : '→';
+    if (dir === this.hintDir) return;
+    this.hintDir = dir;
+    if (dir === 'here') {
+      clear('travel-hint');
+      return;
+    }
+    mount(
+      'travel-hint',
+      h(
+        'div',
+        { class: 'chip travel-hint', role: 'status', 'data-testid': 'travel-hint' },
+        dir === '←'
+          ? `← Travel board: ${this.travelHint} is open`
+          : `Travel board: ${this.travelHint} is open →`,
+      ),
+    );
   }
 
   private promptFor(b: Building): string {
@@ -242,6 +279,7 @@ export class TownScene extends Phaser.Scene {
         );
       else clear('prompt');
     }
+    this.updateTravelHint(near);
     this.arrow.setVisible(!!near);
     if (near)
       this.arrow.setPosition(near.x, GROUND_Y - 52 + Math.round(Math.sin(this.clock * 6) * 2));
