@@ -10,6 +10,7 @@ import {
   HORIZON_Y,
   SCREEN_H,
   SCREEN_W,
+  type DrawList,
   type SpriteDraw,
 } from '../../race/projection.ts';
 import { findRacer } from '../../data/rivals.ts';
@@ -25,10 +26,9 @@ import { hexInt } from '../art/pixel.ts';
 import { type LookId, LOOKS } from '../art/race.ts';
 import {
   carRearTexture,
-  CAR_H,
-  CAR_W,
   generateLookTextures,
   generateRaceTextures,
+  mipFor,
   steerFrame,
 } from '../art/textures.ts';
 import { goto } from '../flow.ts';
@@ -58,7 +58,7 @@ export class RaceScene extends Phaser.Scene {
   private road!: Phaser.GameObjects.Graphics;
   private fx!: Phaser.GameObjects.Graphics;
   private sun!: Phaser.GameObjects.Image;
-  private clouds!: Phaser.GameObjects.TileSprite;
+  private clouds!: Parallax;
   private sky!: Phaser.GameObjects.Image;
   private haze = 0;
   private skyAlpha = 1;
@@ -68,8 +68,8 @@ export class RaceScene extends Phaser.Scene {
   private lineCount = new Map<string, number>();
   private lastLine: { who: string; text: string } | null = null;
   private bubbleUntil = 0;
-  private mountains!: Phaser.GameObjects.TileSprite;
-  private city!: Phaser.GameObjects.TileSprite;
+  private mountains!: Parallax;
+  private city!: Parallax;
   private pool: Phaser.GameObjects.Image[] = [];
   private particles: Particle[] = [];
   private accumulator = 0;
@@ -86,6 +86,7 @@ export class RaceScene extends Phaser.Scene {
   private lastGear = 1;
   private lastContacts = 0;
   private playerSprite: SpriteDraw | null = null;
+  private lastList: DrawList | null = null;
   private hud!: {
     speed: HTMLElement;
     lap: HTMLElement;
@@ -143,14 +144,10 @@ export class RaceScene extends Phaser.Scene {
       .setOrigin(0, 0)
       .setDisplaySize(SCREEN_W, HORIZON_Y + 8);
     this.sun = this.add.image(250, HORIZON_Y - (look === 'dusk' ? 22 : 56), `bg-body-${look}`);
-    this.clouds = this.add.tileSprite(0, 14, SCREEN_W, 46, `bg-clouds-${look}`).setOrigin(0, 0);
-    this.mountains = this.add
-      .tileSprite(0, HORIZON_Y - 40, SCREEN_W, 44, `bg-mountains-${look}`)
-      .setOrigin(0, 0);
-    this.city = this.add
-      .tileSprite(0, HORIZON_Y - 41, SCREEN_W, 46, 'bg-city')
-      .setOrigin(0, 0)
-      .setVisible(LOOKS[look].city);
+    this.clouds = new Parallax(this, `bg-clouds-${look}`, 14);
+    this.mountains = new Parallax(this, `bg-mountains-${look}`, HORIZON_Y - 40);
+    this.city = new Parallax(this, 'bg-city', HORIZON_Y - 41);
+    this.city.setVisible(LOOKS[look].city);
     this.road = this.add.graphics().setDepth(1);
     this.fx = this.add.graphics().setDepth(900);
 
@@ -175,6 +172,7 @@ export class RaceScene extends Phaser.Scene {
       fastForward: ({ finishPosition }: { finishPosition: number }) =>
         this.finish(fastForward(this.sim, finishPosition)),
       autopilot: (on: boolean) => this.sim.setPlayerAutopilot(on),
+      drawList: () => this.lastList,
       snapshot: () => {
         const p = this.sim.player!;
         return {
@@ -341,6 +339,7 @@ export class RaceScene extends Phaser.Scene {
     );
 
     const list = buildDrawList(this.sim, cam, this.haze, this.light);
+    this.lastList = list;
 
     // In a tunnel the sky goes dark.
     const under = segmentAt(this.sim.track, p.z).theme === 'tunnel' ? 0.08 : 1;
@@ -365,11 +364,13 @@ export class RaceScene extends Phaser.Scene {
     // The sky turns as the road does.
     this.heading += segmentAt(this.sim.track, p.z).kappa * p.v * dt;
     const turn = this.heading * PX_PER_RAD;
-    this.clouds.tilePositionX = turn * 0.5 + this.clock * 1.5;
-    this.mountains.tilePositionX = turn * 0.8;
-    this.city.tilePositionX = turn;
+    // Whole pixels only: at fractional offsets the one-pixel windows and ridge
+    // lines in these layers blink on and off as the road turns.
+    this.clouds.scrollTo(turn * 0.5 + this.clock * 1.5);
+    this.mountains.scrollTo(turn * 0.8);
+    this.city.scrollTo(turn);
     const lapPx = Math.PI * 2 * PX_PER_RAD * 0.5;
-    this.sun.x = ((((250 - turn * 0.5) % lapPx) + lapPx) % lapPx) - 48;
+    this.sun.x = Math.round(((((250 - turn * 0.5) % lapPx) + lapPx) % lapPx) - 48);
 
     let i = 0;
     for (const s of list.sprites) this.drawSprite(i++, s);
@@ -405,17 +406,18 @@ export class RaceScene extends Phaser.Scene {
       return;
     }
     let img = this.pool[i];
-    const key = s.car
+    const base = s.car
       ? carRearTexture(this, s.car.body, s.car.color, steerFrame(s.car.steer), s.car.braking)
       : s.key;
+    const key = mipFor(this, base, s.w);
     if (!img) {
       img = this.add.image(0, 0, key).setOrigin(0.5, 1);
       this.pool.push(img);
     } else if (img.texture.key !== key) {
       img.setTexture(key);
     }
-    const frameW = s.car ? CAR_W : img.frame.width;
-    const frameH = s.car ? CAR_H : img.frame.height;
+    const frameW = img.frame.width;
+    const frameH = img.frame.height;
     let y = s.y;
     if (s.car && s.car.surface !== 'road') y += Math.round(Math.sin(this.clock * 53 + s.x) * 1.2);
     img
@@ -659,5 +661,37 @@ function seedFromUrl(): number | undefined {
     return v ? Number(v) : undefined;
   } catch {
     return undefined;
+  }
+}
+
+/**
+ * A repeating backdrop strip drawn as two plain images at whole-pixel x, so
+ * every texel lands on exactly one screen pixel. (A tiling sprite samples at
+ * texel boundaries, where rounding flips from frame to frame and makes
+ * one-pixel windows and ridge lines blink.)
+ */
+class Parallax {
+  private parts: Phaser.GameObjects.Image[];
+  private width: number;
+
+  constructor(scene: Phaser.Scene, key: string, y: number) {
+    this.parts = [0, 1, 2].map(() => scene.add.image(0, y, key).setOrigin(0, 0));
+    this.width = this.parts[0]!.width;
+  }
+
+  scrollTo(offset: number): void {
+    const w = this.width;
+    const start = -(((Math.round(offset) % w) + w) % w);
+    this.parts.forEach((p, i) => p.setX(start + i * w));
+  }
+
+  setVisible(on: boolean): this {
+    for (const p of this.parts) p.setVisible(on);
+    return this;
+  }
+
+  setAlpha(a: number): this {
+    for (const p of this.parts) p.setAlpha(a);
+    return this;
   }
 }

@@ -1,4 +1,4 @@
-import type Phaser from 'phaser';
+import Phaser from 'phaser';
 import { type Body, CAR_H, CAR_W, SIDE_H, SIDE_W, drawCarRear, drawCarSide } from './cars.ts';
 import { drawPerson, type Look, PERSON_H, PERSON_W, type Style } from './people.ts';
 import type { Ctx } from './pixel.ts';
@@ -32,6 +32,74 @@ export function canvasTexture(
   draw(ctx);
   tex.refresh();
   return key;
+}
+
+const mipLevels = new Map<string, number>();
+const MAX_LEVELS = 6;
+
+/**
+ * Builds smoothly downscaled copies of a texture: `${key}@0` (same size,
+ * smoothed), `${key}@1` (half), `${key}@2` (quarter) and so on.
+ * Returns how many levels below the original exist.
+ */
+function ensureMips(scene: Phaser.Scene, key: string): number {
+  const known = mipLevels.get(key);
+  if (known !== undefined) return known;
+  const tex = scene.textures.get(key);
+  const src = tex.getSourceImage() as HTMLCanvasElement | HTMLImageElement;
+  let w = src.width;
+  let h = src.height;
+  let prev: HTMLCanvasElement | HTMLImageElement = src;
+  let level = 0;
+  const add = (canvas: HTMLCanvasElement, l: number) => {
+    const t = scene.textures.addCanvas(`${key}@${l}`, canvas);
+    t?.setFilter(Phaser.Textures.FilterMode.LINEAR);
+  };
+  const copy = document.createElement('canvas');
+  copy.width = w;
+  copy.height = h;
+  copy.getContext('2d')!.drawImage(prev, 0, 0);
+  add(copy, 0);
+  prev = copy;
+  while (level < MAX_LEVELS && w > 2 && h > 2) {
+    level += 1;
+    w = Math.max(1, Math.ceil(w / 2));
+    h = Math.max(1, Math.ceil(h / 2));
+    const c = document.createElement('canvas');
+    c.width = w;
+    c.height = h;
+    const ctx = c.getContext('2d')!;
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(prev, 0, 0, w, h);
+    add(c, level);
+    prev = c;
+  }
+  mipLevels.set(key, level);
+  return level;
+}
+
+/**
+ * The texture to draw `key` with at `displayW` pixels wide. Drawn at full
+ * size or larger, the crisp original. Drawn smaller, a pre-shrunk smooth copy
+ * no more than twice the display size: pixel art shrunk with nearest-neighbour
+ * sampling picks different texels every frame, so small sprites shimmer.
+ */
+export function mipFor(scene: Phaser.Scene, key: string, displayW: number): string {
+  const base = scene.textures.get(key).getSourceImage() as { width: number };
+  // Big on screen: crisp pixel art. Between 1x and 2x, nearest-neighbour turns
+  // single texels into one- or two-pixel blocks that swap as the sprite grows,
+  // so use the smooth copy there too.
+  if (displayW >= base.width * 2) return key;
+  const top = ensureMips(scene, key);
+  if (displayW >= base.width) return `${key}@0`;
+  // Round up: a copy no wider than the display, gently enlarged, never shrunk.
+  // Shrinking even a little lets fine detail (crowds, windows) shimmer.
+  const level = Math.max(
+    0,
+    Math.min(top, Math.ceil(Math.log2(base.width / Math.max(0.5, displayW)))),
+  );
+  return `${key}@${level}`;
 }
 
 /** Steering frame (-2..2) for a yaw value from the simulation. */

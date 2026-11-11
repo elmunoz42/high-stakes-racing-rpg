@@ -31,8 +31,10 @@ export const PLAYER_DISTANCE = 5.4;
 export const CAR_SPRITE_SCALE = 1.35;
 /** Colour the distance fades to (dusk haze). */
 export const HAZE = 0xe8987a;
-/** Fraction of the draw distance at which the ground is fully haze. */
+/** Fraction of the draw distance at which scenery has faded out. */
 export const FOG_FULL = 0.62;
+/** Most the ground ever fades towards the haze: enough for depth, not enough to change its colour. */
+export const FOG_MAX = 0.3;
 
 export interface Camera {
   /** Projection depth: smaller is a wider field of view. */
@@ -89,6 +91,8 @@ export interface Quad {
   y2: number;
   w2: number;
   color: number;
+  /** How many segments ahead of the camera this strip is (-1 for the haze band). */
+  seg?: number;
 }
 
 export interface CarDraw {
@@ -204,7 +208,15 @@ function project(cam: Camera, camX: number, camY: number, camZ: number): Project
   };
 }
 
-const clampX = (x: number) => Math.max(0, Math.min(SCREEN_W, x));
+/**
+ * The ground on each side of the road reaches well past the screen edges. If
+ * it stopped exactly at an edge, a strip whose road centre had drifted off
+ * screen collapsed to a shape with two identical corners, and the polygon
+ * filler silently skipped it, letting the haze behind show through.
+ */
+const GROUND_L = -SCREEN_W;
+const GROUND_R = SCREEN_W * 2;
+const clampX = (x: number) => Math.max(GROUND_L + 1, Math.min(GROUND_R - 1, x));
 
 export function buildDrawList(
   sim: RaceSim,
@@ -224,19 +236,24 @@ export function buildDrawList(
   const lapBase = Math.floor(cameraZ / L) * L;
   const basePercent = (cameraZ - lapBase - base.z) / SEGMENT_LENGTH;
 
-  // A solid band of haze from the horizon down sits behind all ground, so the
-  // seam where the road meets the sky never shows gaps or flicker.
-  const quads: Quad[] = [
-    {
-      x1: SCREEN_W / 2,
-      y1: SCREEN_H,
-      w1: SCREEN_W,
-      x2: SCREEN_W / 2,
-      y2: HORIZON_Y - 2,
-      w2: SCREEN_W,
-      color: haze,
-    },
-  ];
+  // Behind all ground, from just above the horizon down: a backing in the
+  // colour of the farthest ground drawn, left and right of the road, so any row
+  // the ground does not reach looks like more of the same ground. (A single
+  // haze colour here read as an orange strip under the skyline.)
+  const back: Quad = {
+    x1: 0,
+    y1: SCREEN_H,
+    w1: SCREEN_W,
+    x2: 0,
+    y2: HORIZON_Y - 2,
+    w2: SCREEN_W,
+    color: haze,
+  };
+  const backRight: Quad = { ...back };
+  const quads: Quad[] = [back, backRight];
+  let farLeft = haze;
+  let farRight = haze;
+  let farX = SCREEN_W / 2;
   const sprites: SpriteDraw[] = [];
   const rows: { seg: Segment; p1: Projected; p2: Projected; clip: number; z1: number }[] = [];
 
@@ -264,32 +281,61 @@ export function buildDrawList(
     // A plain distance fade that reaches full haze well before the far end, so
     // every strip thin enough to shimmer is already one flat colour. (Fading by
     // screen position instead made strips at hill crests flip colour.)
-    const fog = Math.min(1, (n / (DRAW_SEGMENTS * FOG_FULL)) ** 1.5);
-    const flat = Math.min(1, fog * 2.4);
+    // Gentle fog: far ground keeps a share of its own colour, so the view over
+    // a crest looks like more ground in the haze rather than a flat wall with
+    // thin strips of near ground poking out. Stripes flatten out early, by
+    // distance, because thin alternating stripes are what shimmer.
+    const d = n / DRAW_SEGMENTS;
+    const fog = Math.min(FOG_MAX, d ** 1.7 * FOG_MAX);
+    const flat = Math.min(1, d * 3.5);
     const tint = (c: number) => mix(light < 1 ? mix(0x05060f, c, light) : c, haze, fog);
     const s = seg.stripe ? 0 : 1;
     const band = (pair: readonly number[]) => mix(pair[s]!, mix(pair[0]!, pair[1]!, 0.5), flat);
-    const y1 = Math.round(p1.y);
+    // Draw only the rows not already covered by nearer ground. Beyond a crest,
+    // the bottom of a strip lies behind road that is already drawn; painting
+    // it anyway made those rows swap between near and far colours each frame.
     const y2 = Math.round(p2.y);
+    const y1 = Math.min(Math.round(p1.y), Math.round(maxY));
     if (y1 <= y2) {
-      maxY = p2.y;
+      maxY = Math.min(maxY, p2.y);
       continue;
     }
+    // How far up the strip its visible bottom edge sits (0 = not clipped).
+    const cut = p1.y - p2.y > 0 ? Math.max(0, (p1.y - y1) / (p1.y - p2.y)) : 0;
+    const at = (a: number, b: number) => a + (b - a) * cut;
     const g = GROUND[seg.theme];
     const quad = (cx1: number, w1: number, cx2: number, w2: number, color: number) =>
-      quads.push({ x1: cx1, y1, w1, x2: cx2, y2, w2, color: tint(color) });
+      quads.push({
+        x1: at(cx1, cx2),
+        y1,
+        w1: at(w1, w2),
+        x2: cx2,
+        y2,
+        w2,
+        color: tint(color),
+        seg: n,
+      });
 
     // Ground either side of the road centre.
     const c1 = clampX(p1.x);
     const c2 = clampX(p2.x);
-    quad(c1 / 2, c1 / 2, c2 / 2, c2 / 2, band(g.left));
     quad(
-      (c1 + SCREEN_W) / 2,
-      (SCREEN_W - c1) / 2,
-      (c2 + SCREEN_W) / 2,
-      (SCREEN_W - c2) / 2,
+      (GROUND_L + c1) / 2,
+      (c1 - GROUND_L) / 2,
+      (GROUND_L + c2) / 2,
+      (c2 - GROUND_L) / 2,
+      band(g.left),
+    );
+    quad(
+      (c1 + GROUND_R) / 2,
+      (GROUND_R - c1) / 2,
+      (c2 + GROUND_R) / 2,
+      (GROUND_R - c2) / 2,
       band(g.right),
     );
+    farLeft = tint(band(g.left));
+    farRight = tint(band(g.right));
+    farX = c2;
     if (g.verge) {
       const k = 1.125 + g.verge.width;
       if (g.verge.sides === 'both') quad(p1.x, p1.w * k, p2.x, p2.w * k, band(g.verge.color));
@@ -320,7 +366,7 @@ export function buildDrawList(
         }
       }
     }
-    maxY = p2.y;
+    maxY = Math.min(maxY, p2.y);
   }
 
   // Scenery, far to near.
@@ -402,6 +448,23 @@ export function buildDrawList(
     depth: DRAW_SEGMENTS + 10,
     fog: 0,
     car: carDraw(player),
+  });
+
+  // Fill the backing with the farthest ground's colours, split where its road was.
+  const split = Math.max(0, Math.min(SCREEN_W, farX));
+  Object.assign(back, {
+    x1: split / 2,
+    w1: split / 2 + 1,
+    x2: split / 2,
+    w2: split / 2 + 1,
+    color: farLeft,
+  });
+  Object.assign(backRight, {
+    x1: (split + SCREEN_W) / 2,
+    w1: (SCREEN_W - split) / 2 + 1,
+    x2: (split + SCREEN_W) / 2,
+    w2: (SCREEN_W - split) / 2 + 1,
+    color: farRight,
   });
 
   sprites.sort((a, b) => a.depth - b.depth);

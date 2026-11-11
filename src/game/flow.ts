@@ -21,6 +21,11 @@ export function goto(key: SceneKey, data?: object): void {
   for (const fn of listeners) fn(key);
 }
 
+/** The running game (test hooks and debugging only). */
+export function getGame(): Phaser.Game | null {
+  return game;
+}
+
 export function currentScene(): SceneKey {
   return current;
 }

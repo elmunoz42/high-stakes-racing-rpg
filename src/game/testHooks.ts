@@ -1,5 +1,6 @@
 import { store } from '../save/store.ts';
-import { currentScene, goto, type SceneKey } from './flow.ts';
+import type Phaser from 'phaser';
+import { currentScene, getGame, goto, type SceneKey } from './flow.ts';
 
 /**
  * Test hooks (dev and test builds only; Vite strips them from production
@@ -19,6 +20,8 @@ export interface GameHooks {
   newCareer(carId: string, seed?: number): void;
   goto(scene: SceneKey, params?: object): void;
   scene(): SceneKey;
+  /** The running Phaser game, for pixel-level checks. */
+  readonly game: Phaser.Game | null;
   readonly race: unknown;
   readonly town: unknown;
   readonly dialogue: unknown;
@@ -42,6 +45,9 @@ export function installTestHooks(): void {
     },
     goto: (scene, params) => goto(scene, params),
     scene: () => currentScene(),
+    get game() {
+      return getGame();
+    },
     get race() {
       return hooks.race;
     },

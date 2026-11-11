@@ -218,10 +218,10 @@ export class TownScene extends Phaser.Scene {
     if (this.busy) return;
     this.walker.update(dt);
     const scroll = this.cameras.main.scrollX;
-    this.mid.tilePositionX = scroll * 0.1 + (this.gulls.length ? this.clock * 4 : 0);
-    this.clouds.tilePositionX = scroll * 0.04 + this.clock * 2;
+    this.mid.tilePositionX = Math.round(scroll * 0.1 + (this.gulls.length ? this.clock * 4 : 0));
+    this.clouds.tilePositionX = Math.round(scroll * 0.04 + this.clock * 2);
     const hills = this.children.getByName('hills') as Phaser.GameObjects.TileSprite | null;
-    if (hills) hills.tilePositionX = scroll * 0.05;
+    if (hills) hills.tilePositionX = Math.round(scroll * 0.05);
     this.gulls.forEach((g, i) => {
       g.x = ((this.clock * (14 + i * 5) + i * 140) % 440) - 28;
       g.y = 38 + i * 14 + Math.sin(this.clock * 1.3 + i) * 5;
