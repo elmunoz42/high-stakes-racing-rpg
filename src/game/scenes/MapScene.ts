@@ -8,7 +8,7 @@ import { findTrack } from '../../race/tracks.ts';
 import { store } from '../../save/store.ts';
 import { h, mount, toast, typing } from '../../ui/dom.ts';
 import { drawWorldMap, legPoints, MAP_ART, MAP_H, MAP_NODES, MAP_W } from '../art/map.ts';
-import { canvasTexture, carSideTexture, mipFor } from '../art/textures.ts';
+import { canvasTexture, carSideTexture, HI, mipFor } from '../art/textures.ts';
 import { goto } from '../flow.ts';
 import { registerHook } from '../testHooks.ts';
 
@@ -62,10 +62,13 @@ export class MapScene extends Phaser.Scene {
     this.clock = 0;
 
     for (const [key, [w, ht, draw]] of Object.entries(MAP_ART))
-      canvasTexture(this, key, w, ht, draw);
+      canvasTexture(this, key, w, ht, draw, HI);
     const names = Object.fromEntries(this.places.map((l) => [l.id, l.name]));
-    canvasTexture(this, 'map-world', MAP_W, MAP_H, (c) => drawWorldMap(c, names));
-    this.add.image(0, 0, 'map-world').setOrigin(0, 0);
+    canvasTexture(this, 'map-world', MAP_W, MAP_H, (c) => drawWorldMap(c, names), HI);
+    this.add
+      .image(0, 0, 'map-world')
+      .setOrigin(0, 0)
+      .setScale(1 / HI);
 
     // The road: bright up to every open place, faint dots beyond.
     const road = this.add.graphics();
@@ -88,13 +91,21 @@ export class MapScene extends Phaser.Scene {
       if (!n) continue;
       const st = placeStatus(cat, state, loc.id);
       const status = st === 'locked' ? 'map-pad-locked' : PAD[st];
-      this.add.image(n.x, n.y, status).setDepth(5);
+      this.add
+        .image(n.x, n.y, status)
+        .setScale(1 / HI)
+        .setDepth(5);
       if (st === 'cleared')
         this.add
           .image(n.x + 6, n.y - 2, 'map-flag')
+          .setScale(1 / HI)
           .setOrigin(0, 1)
           .setDepth(6);
-      if (st === 'locked') this.add.image(n.x, n.y - 6, 'map-lock').setDepth(6);
+      if (st === 'locked')
+        this.add
+          .image(n.x, n.y - 6, 'map-lock')
+          .setScale(1 / HI)
+          .setDepth(6);
       labels.push(
         h(
           'span',
@@ -118,11 +129,16 @@ export class MapScene extends Phaser.Scene {
       .setDisplaySize(CAR_W, Math.round((CAR_W * 30) / 84))
       .setDepth(10);
 
-    this.cursor = this.add.image(0, 0, 'map-cursor').setOrigin(0.5, 1).setDepth(12);
+    this.cursor = this.add
+      .image(0, 0, 'map-cursor')
+      .setOrigin(0.5, 1)
+      .setScale(1 / HI)
+      .setDepth(12);
 
     this.clouds = [0, 1, 2].map((i) =>
       this.add
         .image(60 + i * 140, 20 + i * 52, 'map-cloud')
+        .setScale(1 / HI)
         .setDepth(20)
         .setAlpha(0.75),
     );

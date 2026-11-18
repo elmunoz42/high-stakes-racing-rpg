@@ -20,8 +20,10 @@ OpenAI GPT-6 Luna for character dialogue.
   with every camera zoomed 2x (`src/game/view.ts`). The target look is 90s
   arcade hardware (NeoGeo-class): retro, but finer than 16-bit. Cars, people,
   roadside scenery, buildings, rooms, signs and the title art are generated at
-  2x (`canvasTexture(..., HI)`), and the drawing helpers in `pixel.ts` round to
-  that finer grid. Shapes are shaded in tone ramps (warm highlights, cool
+  2x (`canvasTexture(..., HI)`), as are the sky, clouds, mountains, skylines,
+  town backdrops and the world map; the drawing helpers in `pixel.ts` round to
+  that finer grid. Tile sprites scroll in texture pixels, so their positions
+  are multiplied by HI; parallax strips move in whole device pixels. Shapes are shaded in tone ramps (warm highlights, cool
   shadows), rim-lit, and outlined in a dark tone of their own colour (`finish`).
   Race cars are a small 3D model projected with the race camera; people are
   drawn from angled shapes. `scripts/shots.ts` takes the same review shots

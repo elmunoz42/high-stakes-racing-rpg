@@ -151,18 +151,18 @@ export function generateRaceTextures(scene: Phaser.Scene): void {
   // Roadside sprites are always given a display size, so they can be finer.
   for (const [key, [w, h, draw]] of Object.entries({ ...SCENERY, ...SCENERY_AWAY }))
     canvasTexture(scene, key, w, h, draw, HI);
+  // Backdrops too; the smoke puff stays soft at 1x.
   for (const [key, [w, h, draw]] of Object.entries(BACKDROPS))
-    canvasTexture(scene, key, w, h, draw);
+    canvasTexture(scene, key, w, h, draw, key === 'fx-smoke' ? 1 : HI);
 }
 
 /**
  * Buildings, props and rooms are drawn at 2x so their painted signs read
- * cleanly; they are shown at half scale. The sea strip scrolls by texture
- * pixels, so it stays at 1x.
+ * cleanly; they are shown at half scale.
  */
 export function generateTownTextures(scene: Phaser.Scene): void {
   for (const [key, [w, h, draw]] of Object.entries({ ...TOWN, ...PADDOCK, ...INTERIORS }))
-    canvasTexture(scene, key, w, h, draw, key === 'town-sea' ? 1 : HI);
+    canvasTexture(scene, key, w, h, draw, HI);
 }
 
 /**
@@ -186,11 +186,16 @@ export function personTextures(scene: Phaser.Scene, key: string, look: Look, sty
 /** Sky, sun or moon, clouds and mountains for a look. Keys: bg-sky-<id> and so on. */
 export function generateLookTextures(scene: Phaser.Scene, id: LookId): void {
   for (const [key, [w, h, draw]] of Object.entries(lookArt(id)))
-    canvasTexture(scene, key, w, h, draw);
-  canvasTexture(scene, `town-sky-${id}`, 384, 216, (c) =>
-    bands(c, 0, 0, 384, 150, LOOKS[id].sky, 40),
+    canvasTexture(scene, key, w, h, draw, HI);
+  canvasTexture(
+    scene,
+    `town-sky-${id}`,
+    384,
+    216,
+    (c) => bands(c, 0, 0, 384, 150, LOOKS[id].sky, 80),
+    HI,
   );
-  canvasTexture(scene, `town-mid-${id}`, 128, 64, (c) => drawTownMid(c, id));
+  canvasTexture(scene, `town-mid-${id}`, 128, 64, (c) => drawTownMid(c, id), HI);
 }
 
 /** Outside and inside of a generated local business. */

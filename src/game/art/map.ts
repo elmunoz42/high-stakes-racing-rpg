@@ -1,4 +1,4 @@
-import { ellipse, hash, line, type Ctx, rect, shade, text, trap } from './pixel.ts';
+import { ellipse, getRes, hash, line, type Ctx, rect, shade, text, trap } from './pixel.ts';
 
 /**
  * The world map: one island, six places joined by a winding road. Original
@@ -357,7 +357,11 @@ const height = (x: number, y: number) =>
  * as a darker contour line, like a relief map. Land rises inland.
  */
 function terraces(c: Ctx): void {
-  const img = c.getImageData(0, 0, MAP_W, MAP_H);
+  // Works on the canvas's real pixels (R per map unit), so contours are fine lines.
+  const R = getRes();
+  const W = c.canvas.width;
+  const H = c.canvas.height;
+  const img = c.getImageData(0, 0, W, H);
   const d = img.data;
   const band = (x: number, y: number) => {
     let inland = 0;
@@ -365,15 +369,19 @@ function terraces(c: Ctx): void {
     const v = height(x, y) * 0.75 + inland * 0.09;
     return Math.max(0, Math.min(TERRACE.length - 1, Math.floor(v * TERRACE.length)));
   };
-  const bands = new Int8Array(MAP_W * MAP_H).fill(-1);
-  for (let y = 0; y < MAP_H; y++)
-    for (let x = 0; x < MAP_W; x++) if (onLand(x, y)) bands[y * MAP_W + x] = band(x, y);
-  for (let y = 0; y < MAP_H; y++)
-    for (let x = 0; x < MAP_W; x++) {
-      const b = bands[y * MAP_W + x]!;
+  const bands = new Int8Array(W * H).fill(-1);
+  for (let y = 0; y < H; y++)
+    for (let x = 0; x < W; x++) {
+      const ux = (x + 0.5) / R;
+      const uy = (y + 0.5) / R;
+      if (onLand(ux, uy)) bands[y * W + x] = band(ux, uy);
+    }
+  for (let y = 0; y < H; y++)
+    for (let x = 0; x < W; x++) {
+      const b = bands[y * W + x]!;
       if (b < 0) continue;
-      const right = x + 1 < MAP_W ? bands[y * MAP_W + x + 1]! : b;
-      const below = y + 1 < MAP_H ? bands[(y + 1) * MAP_W + x]! : b;
+      const right = x + 1 < W ? bands[y * W + x + 1]! : b;
+      const below = y + 1 < H ? bands[(y + 1) * W + x]! : b;
       let col = TERRACE[b]!;
       // Contour where the ground steps up; the step's lower side is in shadow.
       if ((right >= 0 && right !== b) || (below >= 0 && below !== b))
@@ -381,7 +389,7 @@ function terraces(c: Ctx): void {
       else if (hash(x * 131 + y * 977) > 0.93) col = shade(col, 0.9);
       else if (hash(x * 73 + y * 311) > 0.97) col = shade(col, 1.12);
       const n = parseInt(col.slice(1), 16);
-      const o = (y * MAP_W + x) * 4;
+      const o = (y * W + x) * 4;
       d[o] = n >> 16;
       d[o + 1] = (n >> 8) & 255;
       d[o + 2] = n & 255;
@@ -391,10 +399,14 @@ function terraces(c: Ctx): void {
 
 /** Surf along the beach and rocks in the shallows. */
 function coast(c: Ctx): void {
-  for (let y = 1; y < MAP_H - 1; y += 1)
-    for (let x = 1; x < MAP_W - 1; x += 1) {
+  // Surf, one device pixel at a time.
+  const R = getRes();
+  for (let py = R; py < (MAP_H - 1) * R; py++)
+    for (let px = R; px < (MAP_W - 1) * R; px++) {
+      const x = px / R;
+      const y = py / R;
       if (onLand(x, y, -3) || !onLand(x, y, -6)) continue;
-      if (hash(x * 17 + y * 61) > 0.55) rect(c, '#d8ecf8', x, y, 1, 1, 0.8);
+      if (hash(px * 17 + py * 61) > 0.55) rect(c, '#d8ecf8', x, y, 1 / R, 1 / R, 0.8);
     }
   for (let i = 0; i < 18; i++) {
     const x = Math.floor(hash(i * 41 + 7) * MAP_W);

@@ -28,6 +28,7 @@ import {
   CAR_H,
   CAR_W,
   carRearTexture,
+  HI,
   generateLookTextures,
   generateRaceTextures,
   mipFor,
@@ -152,7 +153,9 @@ export class RaceScene extends Phaser.Scene {
       .image(0, 0, `bg-sky-${look}`)
       .setOrigin(0, 0)
       .setDisplaySize(SCREEN_W, HORIZON_Y + 8);
-    this.sun = this.add.image(250, HORIZON_Y - (look === 'dusk' ? 22 : 56), `bg-body-${look}`);
+    this.sun = this.add
+      .image(250, HORIZON_Y - (look === 'dusk' ? 22 : 56), `bg-body-${look}`)
+      .setScale(1 / HI);
     this.clouds = new Parallax(this, `bg-clouds-${look}`, 14);
     this.mountains = new Parallax(this, `bg-mountains-${look}`, HORIZON_Y - 40);
     this.city = new Parallax(this, `bg-city-${look}`, HORIZON_Y - 41);
@@ -709,13 +712,22 @@ class Parallax {
   private width: number;
 
   constructor(scene: Phaser.Scene, key: string, y: number) {
-    this.parts = [0, 1, 2].map(() => scene.add.image(0, y, key).setOrigin(0, 0));
-    this.width = this.parts[0]!.width;
+    // Strips are 2x textures shown at half scale; width is in world units.
+    this.parts = [0, 1, 2].map(() =>
+      scene.add
+        .image(0, y, key)
+        .setOrigin(0, 0)
+        .setScale(1 / HI),
+    );
+    this.width = this.parts[0]!.displayWidth;
   }
 
   scrollTo(offset: number): void {
     const w = this.width;
-    const start = -(((Math.round(offset) % w) + w) % w);
+    // Whole device pixels only (1/HI of a unit): fractional offsets make the
+    // one-pixel windows and ridge lines blink as the road turns.
+    const snapped = Math.round(offset * HI) / HI;
+    const start = -(((snapped % w) + w) % w);
     this.parts.forEach((p, i) => p.setX(start + i * w));
   }
 

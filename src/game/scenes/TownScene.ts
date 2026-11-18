@@ -73,9 +73,19 @@ export class TownScene extends Phaser.Scene {
       o.y = shiftY(o.y);
       return o.setScrollFactor(0);
     };
-    fixed(this.add.image(0, 0, `town-sky-${look}`).setOrigin(0, 0));
-    fixed(this.add.image(292, seaside ? 108 : 58, `bg-body-${look}`));
-    this.clouds = fixed(this.add.tileSprite(0, 16, 384, 46, `bg-clouds-${look}`).setOrigin(0, 0));
+    fixed(
+      this.add
+        .image(0, 0, `town-sky-${look}`)
+        .setOrigin(0, 0)
+        .setScale(1 / HI),
+    );
+    fixed(this.add.image(292, seaside ? 108 : 58, `bg-body-${look}`).setScale(1 / HI));
+    this.clouds = fixed(
+      this.add
+        .tileSprite(0, 16, 384, 46, `bg-clouds-${look}`)
+        .setOrigin(0, 0)
+        .setTileScale(1 / HI),
+    );
     if (seaside) {
       fixed(
         this.add
@@ -83,7 +93,12 @@ export class TownScene extends Phaser.Scene {
           .setOrigin(0, 0)
           .setScale(1 / HI),
       );
-      this.mid = fixed(this.add.tileSprite(0, SEA_Y, 384, 64, 'town-sea').setOrigin(0, 0));
+      this.mid = fixed(
+        this.add
+          .tileSprite(0, SEA_Y, 384, 64, 'town-sea')
+          .setOrigin(0, 0)
+          .setTileScale(1 / HI),
+      );
       const glint = fixed(
         this.add
           .image(292, SEA_Y, 'town-glint')
@@ -138,11 +153,24 @@ export class TownScene extends Phaser.Scene {
         .setDepth(4);
     } else {
       fixed(
-        this.add.tileSprite(0, SEA_Y - 42, 384, 44, `bg-mountains-${look}`).setOrigin(0, 0),
+        this.add
+          .tileSprite(0, SEA_Y - 42, 384, 44, `bg-mountains-${look}`)
+          .setOrigin(0, 0)
+          .setTileScale(1 / HI),
       ).setName('hills');
       if (LOOKS[look].city)
-        fixed(this.add.tileSprite(0, SEA_Y - 44, 384, 46, 'bg-city').setOrigin(0, 0));
-      this.mid = fixed(this.add.tileSprite(0, SEA_Y, 384, 64, `town-mid-${look}`).setOrigin(0, 0));
+        fixed(
+          this.add
+            .tileSprite(0, SEA_Y - 44, 384, 46, `bg-city-${look}`)
+            .setOrigin(0, 0)
+            .setTileScale(1 / HI),
+        );
+      this.mid = fixed(
+        this.add
+          .tileSprite(0, SEA_Y, 384, 64, `town-mid-${look}`)
+          .setOrigin(0, 0)
+          .setTileScale(1 / HI),
+      );
     }
     this.add
       .tileSprite(0, GROUND_Y - 6, W, 48, 'town-ground')
@@ -302,10 +330,13 @@ export class TownScene extends Phaser.Scene {
     if (this.busy) return;
     this.walker.update(dt);
     const scroll = this.cameras.main.scrollX + OX; // world x at the left edge
-    this.mid.tilePositionX = Math.round(scroll * 0.1 + (this.gulls.length ? this.clock * 4 : 0));
-    this.clouds.tilePositionX = Math.round(scroll * 0.04 + this.clock * 2);
+    // Tile positions are in texture pixels (HI per unit): whole device pixels.
+    this.mid.tilePositionX = Math.round(
+      (scroll * 0.1 + (this.gulls.length ? this.clock * 4 : 0)) * HI,
+    );
+    this.clouds.tilePositionX = Math.round((scroll * 0.04 + this.clock * 2) * HI);
     const hills = this.children.getByName('hills') as Phaser.GameObjects.TileSprite | null;
-    if (hills) hills.tilePositionX = Math.round(scroll * 0.05);
+    if (hills) hills.tilePositionX = Math.round(scroll * 0.05 * HI);
     this.gulls.forEach((g, i) => {
       g.x = shiftX(((this.clock * (14 + i * 5) + i * 140) % 440) - 28);
       g.y = shiftY(38 + i * 14 + Math.sin(this.clock * 1.3 + i) * 5);
