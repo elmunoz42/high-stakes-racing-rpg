@@ -614,7 +614,7 @@ export function drawPortrait(c: Ctx, look: Look, style: Style, bg: string): void
 
   portraitHair(f, look, hair, P);
   finish(f, S, S);
-  c.drawImage(fig.canvas, 0, 0);
+  c.drawImage(fig.canvas, 0, 0, S, S);
   // Cool rim light down the shadow edge of the head.
   rect(c, tone(bg, 1.6), 18, 22, 1, 10, 0.6);
 

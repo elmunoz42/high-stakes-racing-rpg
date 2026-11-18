@@ -10,13 +10,14 @@ import { PLAYER_LOOK } from '../art/people.ts';
 import { LOOKS } from '../art/race.ts';
 import {
   carSideTexture,
+  HI,
   generateLookTextures,
   generateTownTextures,
   localTextures,
   personTextures,
 } from '../art/textures.ts';
 import { goto } from '../flow.ts';
-import { OX, shiftX, shiftY } from '../view.ts';
+import { OX, fitCamera, shiftX, shiftY } from '../view.ts';
 import { registerHook } from '../testHooks.ts';
 import { Walker } from '../walker.ts';
 
@@ -42,6 +43,7 @@ export class TownScene extends Phaser.Scene {
   }
 
   create(data: { from?: string } = {}): void {
+    fitCamera(this);
     const state = store.require();
     const loc = findLocation(state.location);
     const look = loc.look;
@@ -75,13 +77,24 @@ export class TownScene extends Phaser.Scene {
     fixed(this.add.image(292, seaside ? 108 : 58, `bg-body-${look}`));
     this.clouds = fixed(this.add.tileSprite(0, 16, 384, 46, `bg-clouds-${look}`).setOrigin(0, 0));
     if (seaside) {
-      fixed(this.add.image(0, SEA_Y - 38, 'town-headland').setOrigin(0, 0));
+      fixed(
+        this.add
+          .image(0, SEA_Y - 38, 'town-headland')
+          .setOrigin(0, 0)
+          .setScale(1 / HI),
+      );
       this.mid = fixed(this.add.tileSprite(0, SEA_Y, 384, 64, 'town-sea').setOrigin(0, 0));
-      const glint = fixed(this.add.image(292, SEA_Y, 'town-glint').setOrigin(0.5, 0).setAlpha(0.8));
+      const glint = fixed(
+        this.add
+          .image(292, SEA_Y, 'town-glint')
+          .setOrigin(0.5, 0)
+          .setAlpha(0.8)
+          .setScale(1 / HI),
+      );
       this.tweens.add({
         targets: glint,
         alpha: 0.45,
-        scaleX: 1.15,
+        scaleX: 1.15 / HI,
         duration: 900,
         yoyo: true,
         repeat: -1,
@@ -101,7 +114,7 @@ export class TownScene extends Phaser.Scene {
           .image(shiftX(x, 0.08), shiftY(y, 0.08), 'sailboat')
           .setScrollFactor(0.08)
           .setFlipX(flip)
-          .setScale(y > 145 ? 0.8 : 0.5);
+          .setScale((y > 145 ? 0.8 : 0.5) / HI);
         this.tweens.add({
           targets: boat,
           y: shiftY(y, 0.08) + 1.5,
@@ -113,9 +126,14 @@ export class TownScene extends Phaser.Scene {
         });
       }
       for (let i = 0; i < 3; i++)
-        this.gulls.push(fixed(this.add.image(60 + i * 130, 40 + i * 14, 'gull-0')).setAlpha(0.9));
+        this.gulls.push(
+          fixed(this.add.image(60 + i * 130, 40 + i * 14, 'gull-0'))
+            .setAlpha(0.9)
+            .setScale(1 / HI),
+        );
       this.add
         .tileSprite(0, GROUND_Y - 22, W, 16, 'town-rail')
+        .setTileScale(1 / HI)
         .setOrigin(0, 0)
         .setDepth(4);
     } else {
@@ -128,12 +146,14 @@ export class TownScene extends Phaser.Scene {
     }
     this.add
       .tileSprite(0, GROUND_Y - 6, W, 48, 'town-ground')
+      .setTileScale(1 / HI)
       .setOrigin(0, 0)
       .setDepth(5);
 
     for (const b of loc.buildings) {
       this.add
         .image(b.x, GROUND_Y + 1, b.art)
+        .setScale(1 / HI)
         .setOrigin(0.5, 1)
         .setDepth(b.kind === 'gate' ? 60 : 10);
     }
@@ -144,26 +164,42 @@ export class TownScene extends Phaser.Scene {
       const x = Math.round((xs[i]! + xs[i + 1]!) / 2);
       this.add
         .image(x, GROUND_Y + 1, 'town-lamp')
+        .setScale(1 / HI)
         .setOrigin(0.5, 1)
         .setDepth(20);
       if (dark)
         this.add
           .image(x, GROUND_Y + 6, 'town-lightpool')
+          .setScale(1 / HI)
           .setDepth(6)
           .setBlendMode(Phaser.BlendModes.ADD);
     }
     if (seaside) {
       for (const x of [585, 858, 1128])
-        this.add.image(x, GROUND_Y, 'palm').setOrigin(0.5, 1).setDepth(8);
-      this.add.image(1120, GROUND_Y, 'town-bench').setOrigin(0.5, 1).setDepth(12);
-      this.add.image(346, GROUND_Y, 'town-crate').setOrigin(0.5, 1).setDepth(12);
+        this.add
+          .image(x, GROUND_Y, 'palm')
+          .setScale(1 / HI)
+          .setOrigin(0.5, 1)
+          .setDepth(8);
+      this.add
+        .image(1120, GROUND_Y, 'town-bench')
+        .setScale(1 / HI)
+        .setOrigin(0.5, 1)
+        .setDepth(12);
+      this.add
+        .image(346, GROUND_Y, 'town-crate')
+        .setScale(1 / HI)
+        .setOrigin(0.5, 1)
+        .setDepth(12);
       this.add
         .image(586, GROUND_Y + 14, carSideTexture(this, 'coupe', '#1c1c24'))
+        .setScale(1 / HI)
         .setOrigin(0.5, 1)
         .setDepth(30)
         .setFlipX(true);
       this.add
         .image(848, GROUND_Y + 14, carSideTexture(this, 'hatch', '#2e8b57'))
+        .setScale(1 / HI)
         .setOrigin(0.5, 1)
         .setDepth(30);
     }
@@ -174,15 +210,20 @@ export class TownScene extends Phaser.Scene {
     if (car && garage)
       this.add
         .image(garage.x + 134, GROUND_Y + 14, carSideTexture(this, car.game.body, car.game.color))
+        .setScale(1 / HI)
         .setOrigin(0.5, 1)
         .setDepth(30);
 
-    this.arrow = this.add.image(0, 0, 'town-arrow').setDepth(70).setVisible(false);
+    this.arrow = this.add
+      .image(0, 0, 'town-arrow')
+      .setScale(1 / HI)
+      .setDepth(70)
+      .setVisible(false);
 
     const start =
       loc.buildings.find((b) => b.id === data.from) ??
       (data.from === 'race' ? loc.buildings.find((b) => b.kind === 'gate') : undefined);
-    this.walker = new Walker(this, 'player', start?.x ?? 100, GROUND_Y + 6, 12, W - 12);
+    this.walker = new Walker(this, 'player@2', start?.x ?? 100, GROUND_Y + 6, 12, W - 12, 1, 2);
     this.cameras.main.startFollow(this.walker.sprite, true, 0.15, 1, 0, 60);
 
     const kb = this.input.keyboard!;

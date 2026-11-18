@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { fitCamera } from '../view.ts';
 import { carName } from '../../data/catalogue.ts';
 import type { Car } from '../../data/schema.ts';
 import { performance } from '../../rpg/carStats.ts';
@@ -8,7 +9,7 @@ import { store } from '../../save/store.ts';
 import { resetConversations } from '../../ui/dialogue.ts';
 import { h, mount } from '../../ui/dom.ts';
 import { drawCarSide, SIDE_H, SIDE_W } from '../art/cars.ts';
-import { makeCanvas } from '../art/pixel.ts';
+import { makeCanvas, withRes } from '../art/pixel.ts';
 import { goto } from '../flow.ts';
 
 export class CarPickScene extends Phaser.Scene {
@@ -17,6 +18,7 @@ export class CarPickScene extends Phaser.Scene {
   }
 
   create(): void {
+    fitCamera(this);
     this.add.image(0, 0, 'bg-sky').setOrigin(0, 0).setDisplaySize(384, 216);
     const cars = store.catalogue.cars.filter((c) => c.starter);
     let chosen: Car | null = null;
@@ -94,7 +96,9 @@ export class CarPickScene extends Phaser.Scene {
 }
 
 function carSideUrl(body: Car['game']['body'], color: string): string {
-  const { canvas, ctx } = makeCanvas(SIDE_W, SIDE_H);
-  drawCarSide(ctx, body, color);
-  return canvas.toDataURL();
+  return withRes(2, () => {
+    const { canvas, ctx } = makeCanvas(SIDE_W, SIDE_H);
+    drawCarSide(ctx, body, color);
+    return canvas.toDataURL();
+  });
 }

@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { ZOOM, fitCamera } from '../view.ts';
 import { findCar } from '../../data/catalogue.ts';
 import type { Location } from '../../data/locations.ts';
 import { placeStatus, type PlaceStatus } from '../../rpg/actions.ts';
@@ -48,6 +49,7 @@ export class MapScene extends Phaser.Scene {
   }
 
   create(): void {
+    fitCamera(this);
     const state = store.require();
     const cat = store.catalogue;
     this.places = [...cat.locations].sort((a, b) => a.tier - b.tier);
@@ -111,7 +113,7 @@ export class MapScene extends Phaser.Scene {
     const side = myCar ? carSideTexture(this, myCar.game.body, myCar.game.color) : 'map-pad-here';
     const start = MAP_NODES[state.location] ?? { x: 0, y: 0 };
     this.car = this.add
-      .image(start.x, start.y - 2, mipFor(this, side, CAR_W))
+      .image(start.x, start.y - 2, mipFor(this, side, CAR_W * ZOOM))
       .setOrigin(0.5, 1)
       .setDisplaySize(CAR_W, Math.round((CAR_W * 30) / 84))
       .setDepth(10);

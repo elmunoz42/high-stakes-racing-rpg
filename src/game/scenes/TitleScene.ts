@@ -1,7 +1,8 @@
 import Phaser from 'phaser';
+import { fitCamera } from '../view.ts';
 import { store } from '../../save/store.ts';
 import { h, mount } from '../../ui/dom.ts';
-import { carRearTexture, canvasTexture } from '../art/textures.ts';
+import { carRearTexture, canvasTexture, HI } from '../art/textures.ts';
 import {
   drawTitleCity,
   drawTitleLogo,
@@ -34,20 +35,28 @@ export class TitleScene extends Phaser.Scene {
   }
 
   create(): void {
+    fitCamera(this);
     this.clock = 0;
     this.puffs = [];
-    canvasTexture(this, 'title-sky', TITLE_W, TITLE_HORIZON, drawTitleSky);
-    canvasTexture(this, 'title-city', TITLE_W, 72, drawTitleCity);
-    canvasTexture(this, 'title-logo', LOGO_W, LOGO_H, (c) => drawTitleLogo(c, LOGO_W, LOGO_H));
+    canvasTexture(this, 'title-sky', TITLE_W, TITLE_HORIZON, drawTitleSky, HI);
+    canvasTexture(this, 'title-city', TITLE_W, 72, drawTitleCity, HI);
+    canvasTexture(this, 'title-logo', LOGO_W, LOGO_H, (c) => drawTitleLogo(c, LOGO_W, LOGO_H), HI);
 
-    this.add.image(0, 0, 'title-sky').setOrigin(0, 0);
+    this.add
+      .image(0, 0, 'title-sky')
+      .setOrigin(0, 0)
+      .setScale(1 / HI);
     this.beams = this.add.graphics().setBlendMode(Phaser.BlendModes.ADD);
-    this.add.image(0, TITLE_HORIZON - 72, 'title-city').setOrigin(0, 0);
+    this.add
+      .image(0, TITLE_HORIZON - 72, 'title-city')
+      .setOrigin(0, 0)
+      .setScale(1 / HI);
     this.road = this.add.graphics();
     this.car = this.add
       .image(CX, TITLE_H - 6, carRearTexture(this, 'coupe', '#c81e1e', 0, true))
+      .setScale(1 / HI)
       .setOrigin(0.5, 1);
-    this.logo = this.add.image(TITLE_W / 2, 46, 'title-logo');
+    this.logo = this.add.image(TITLE_W / 2, 46, 'title-logo').setScale(1 / HI);
 
     const hasSave = store.hasSave();
     const newCareer = h(

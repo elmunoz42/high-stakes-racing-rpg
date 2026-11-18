@@ -1,4 +1,4 @@
-import { type Ctx, bands, glow, hash, makeCanvas, rect, tone } from './pixel.ts';
+import { type Ctx, bands, getRes, glow, hash, makeCanvas, rect, tone } from './pixel.ts';
 
 /**
  * Title screen art: the "HIGH STAKES" logo, a night sky and a city skyline.
@@ -76,23 +76,29 @@ export function drawTitleCity(c: Ctx): void {
  * red banner below. Text is drawn large and thresholded, so edges stay crisp.
  */
 export function drawTitleLogo(c: Ctx, w: number, h: number): void {
+  // Worked in device pixels (R per unit), painted back in units.
+  const R = getRes();
   const word = makeCanvas(w, h);
   const wc = word.ctx;
   wc.font = '900 40px "Arial Black", "Helvetica Neue", Impact, sans-serif';
   wc.textAlign = 'center';
   wc.textBaseline = 'alphabetic';
-  wc.setTransform(1, 0, -0.22, 1, 10, 0); // italic lean, for speed
+  wc.setTransform(R, 0, -0.22 * R, R, 10 * R, 0); // italic lean, for speed
   wc.fillStyle = '#ffffff';
   wc.fillText('HIGH STAKES', w / 2, 46, w - 24);
   wc.setTransform(1, 0, 0, 1, 0, 0);
 
-  const src = wc.getImageData(0, 0, w, h).data;
+  const W = word.canvas.width;
+  const H = word.canvas.height;
+  const src = wc.getImageData(0, 0, W, H).data;
   const on = (x: number, y: number) =>
-    x >= 0 && y >= 0 && x < w && y < h && src[(y * w + x) * 4 + 3]! > 120;
-  let top = h;
+    x >= 0 && y >= 0 && x < W && y < H && src[(y * W + x) * 4 + 3]! > 120;
+  const dot = (col: string, x: number, y: number, a = 1) =>
+    rect(c, col, x / R, y / R, 1 / R, 1 / R, a);
+  let top = H;
   let bottom = 0;
-  for (let y = 0; y < h; y++)
-    for (let x = 0; x < w; x++)
+  for (let y = 0; y < H; y++)
+    for (let x = 0; x < W; x++)
       if (on(x, y)) {
         top = Math.min(top, y);
         bottom = Math.max(bottom, y);
@@ -112,35 +118,38 @@ export function drawTitleLogo(c: Ctx, w: number, h: number): void {
   };
 
   // Shadow, then a thick outline, then the fill.
-  for (let y = 0; y < h; y++)
-    for (let x = 0; x < w; x++) if (on(x - 3, y - 3)) rect(c, '#05030f', x, y, 1, 1, 0.75);
-  for (let y = 0; y < h; y++)
-    for (let x = 0; x < w; x++) {
+  const sh = 3 * R;
+  const ol = 2 * R;
+  for (let y = 0; y < H; y++)
+    for (let x = 0; x < W; x++) if (on(x - sh, y - sh)) dot('#05030f', x, y, 0.75);
+  for (let y = 0; y < H; y++)
+    for (let x = 0; x < W; x++) {
       if (on(x, y)) continue;
       let near = false;
-      for (let dy = -2; dy <= 2 && !near; dy++)
-        for (let dx = -2; dx <= 2 && !near; dx++) if (on(x + dx, y + dy)) near = true;
-      if (near) rect(c, '#140a24', x, y, 1, 1);
+      for (let dy = -ol; dy <= ol && !near; dy++)
+        for (let dx = -ol; dx <= ol && !near; dx++)
+          if (dx * dx + dy * dy <= ol * ol + 1 && on(x + dx, y + dy)) near = true;
+      if (near) dot('#140a24', x, y);
     }
-  for (let y = 0; y < h; y++)
-    for (let x = 0; x < w; x++) {
+  for (let y = 0; y < H; y++)
+    for (let x = 0; x < W; x++) {
       if (!on(x, y)) continue;
-      rect(c, fill(y), x, y, 1, 1);
+      dot(fill(y), x, y);
       // A lit rim on the top-left of each stroke.
-      if (!on(x, y - 1) || !on(x - 1, y)) rect(c, '#ffffff', x, y, 1, 1, 0.6);
+      if (!on(x, y - 1) || !on(x - 1, y)) dot('#ffffff', x, y, 0.6);
     }
 
   // "RACING RPG" banner.
-  const by = bottom + 7;
+  const by = Math.round(bottom / R) + 7;
   const bw = 150;
   const bx = (w - bw) / 2;
   // Outline first, then the red, so no row covers the one above.
   for (let i = -1; i < 16; i++) {
-    const skew = Math.round((15 - i) * 0.25);
+    const skew = (15 - i) * 0.25;
     rect(c, '#140a24', bx - 2 + skew, by + i, bw + 4, 1);
   }
   for (let i = 0; i < 15; i++) {
-    const skew = Math.round((15 - i) * 0.25);
+    const skew = (15 - i) * 0.25;
     rect(
       c,
       i < 2 ? '#ff8a7a' : i < 5 ? '#f04048' : i < 10 ? '#d7263d' : '#9a1428',
@@ -157,10 +166,12 @@ export function drawTitleLogo(c: Ctx, w: number, h: number): void {
   tag.ctx.textBaseline = 'middle';
   tag.ctx.fillStyle = '#ffffff';
   tag.ctx.fillText('R A C I N G   R P G', w / 2 + 2, 10);
-  const td = tag.ctx.getImageData(0, 0, w, 20).data;
-  for (let y = 0; y < 20; y++)
-    for (let x = 0; x < w; x++)
-      if (td[(y * w + x) * 4 + 3]! > 110) rect(c, '#fff4e0', x, by - 3 + y, 1, 1);
+  const TW = tag.canvas.width;
+  const TH = tag.canvas.height;
+  const td = tag.ctx.getImageData(0, 0, TW, TH).data;
+  for (let y = 0; y < TH; y++)
+    for (let x = 0; x < TW; x++)
+      if (td[(y * TW + x) * 4 + 3]! > 110) rect(c, '#fff4e0', x / R, by - 3 + y / R, 1 / R, 1 / R);
 }
 
 /** Size of the logo texture. */

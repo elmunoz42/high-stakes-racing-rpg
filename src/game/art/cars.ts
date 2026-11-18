@@ -5,6 +5,7 @@ import {
   type FinishOptions,
   glow,
   makeCanvas,
+  poly,
   rect,
   shade,
   tone,
@@ -60,7 +61,7 @@ export function drawCarRear(
     c.save();
     c.translate(CAR_W, 0);
     c.scale(-1, 1);
-    c.drawImage(m.canvas, 0, 0);
+    c.drawImage(m.canvas, 0, 0, CAR_W, CAR_H);
     c.restore();
   }
   finish(c, CAR_W, CAR_H, { volume: false });
@@ -120,28 +121,8 @@ function facing(n: V3, p: V3, yaw: number): boolean {
   return nx * px + n[1] * (p[1] - CAM.height) + nz * (pz + CAM.dist) < 0;
 }
 
-/** Crisp scanline polygon fill. */
-function fillPoly(c: Ctx, pts: P2[], color: string, alpha = 1): void {
-  const ys = pts.map((p) => p[1]);
-  const y0 = Math.ceil(Math.min(...ys) - 0.5);
-  const y1 = Math.floor(Math.max(...ys) - 0.5);
-  for (let y = y0; y <= y1; y++) {
-    const yc = y + 0.5;
-    const xs: number[] = [];
-    for (let i = 0; i < pts.length; i++) {
-      const [ax, ay] = pts[i]!;
-      const [bx, by] = pts[(i + 1) % pts.length]!;
-      if ((ay <= yc && by > yc) || (by <= yc && ay > yc))
-        xs.push(ax + ((yc - ay) * (bx - ax)) / (by - ay));
-    }
-    xs.sort((p, q) => p - q);
-    for (let i = 0; i + 1 < xs.length; i += 2) {
-      const l = Math.round(xs[i]!);
-      const r = Math.round(xs[i + 1]!);
-      if (r > l) rect(c, color, l, y, r - l, 1, alpha);
-    }
-  }
-}
+/** Crisp polygon fill at the texture's resolution. */
+const fillPoly = (c: Ctx, pts: P2[], color: string, alpha = 1) => poly(c, pts, color, alpha);
 
 const lerp3 = (a: V3, b: V3, t: number): V3 => [
   a[0] + (b[0] - a[0]) * t,

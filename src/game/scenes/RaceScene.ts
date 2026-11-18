@@ -34,7 +34,7 @@ import {
   steerFrame,
 } from '../art/textures.ts';
 import { goto } from '../flow.ts';
-import { OX, OY } from '../view.ts';
+import { OX, OY, ZOOM, fitCamera } from '../view.ts';
 import { registerHook } from '../testHooks.ts';
 
 const COUNTDOWN_SECONDS = 3;
@@ -108,6 +108,7 @@ export class RaceScene extends Phaser.Scene {
   }
 
   create(data: { seed?: number; duel?: { rivalId: string; wagerUsd: number } } = {}): void {
+    fitCamera(this);
     this.duel = data.duel ?? null;
     this.lineCount = new Map();
     this.lastLine = null;
@@ -415,7 +416,7 @@ export class RaceScene extends Phaser.Scene {
     // Your own car is always about texture size: draw it exactly 1:1, crisp,
     // rather than from a slightly enlarged smoothed copy.
     const native = !!s.car?.isPlayer && s.w > CAR_W * 0.8 && s.w < CAR_W * 1.3;
-    const key = native ? base : mipFor(this, base, s.w);
+    const key = native ? base : mipFor(this, base, s.w * ZOOM);
     if (!img) {
       img = this.add.image(0, 0, key).setOrigin(0.5, 1);
       this.pool.push(img);

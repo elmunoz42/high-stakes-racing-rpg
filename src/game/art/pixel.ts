@@ -33,6 +33,25 @@ export function mix(a: string, b: string, t: number): string {
 
 export const hexInt = (hex: string) => parseInt(hex.slice(1), 16);
 
+/**
+ * Resolution of the texture being drawn: art is written in 384x216 world
+ * units, and a texture made at RES 2 has two device pixels per unit. Shapes
+ * round to device pixels, so diagonals, curves and text come out finer.
+ */
+let RES = 1;
+export const getRes = () => RES;
+/** Draws `fn` with shapes rounded to 1/res of a unit (the context must already be scaled). */
+export function withRes<T>(res: number, fn: () => T): T {
+  const prev = RES;
+  RES = res;
+  try {
+    return fn();
+  } finally {
+    RES = prev;
+  }
+}
+const q = (v: number) => Math.round(v * RES) / RES;
+
 export function rect(
   c: Ctx,
   color: string,
@@ -43,9 +62,14 @@ export function rect(
   alpha = 1,
 ): void {
   if (w <= 0 || h <= 0) return;
+  const x0 = q(x);
+  const y0 = q(y);
+  const ww = q(w);
+  const hh = q(h);
+  if (ww <= 0 || hh <= 0) return;
   c.globalAlpha = alpha;
   c.fillStyle = color;
-  c.fillRect(Math.round(x), Math.round(y), Math.round(w), Math.round(h));
+  c.fillRect(x0, y0, ww, hh);
   c.globalAlpha = 1;
 }
 
@@ -61,16 +85,17 @@ export function trap(
   r1: number,
   alpha = 1,
 ): void {
-  const n = Math.max(1, Math.round(y1 - y0));
+  const n = Math.max(1, Math.round((y1 - y0) * RES));
+  const row = 1 / RES;
   for (let i = 0; i < n; i++) {
     const t = n === 1 ? 0 : i / (n - 1);
     const l = l0 + (l1 - l0) * t;
     const r = r0 + (r1 - r0) * t;
-    rect(c, color, l, y0 + i, r - l, 1, alpha);
+    rect(c, color, l, y0 + i * row, r - l, row, alpha);
   }
 }
 
-/** Filled ellipse from 1px rows. */
+/** Filled ellipse from rows one device pixel tall. */
 export function ellipse(
   c: Ctx,
   color: string,
@@ -80,9 +105,12 @@ export function ellipse(
   ry: number,
   alpha = 1,
 ): void {
-  for (let y = -ry; y <= ry; y++) {
-    const w = rx * Math.sqrt(Math.max(0, 1 - (y * y) / (ry * ry || 1)));
-    rect(c, color, cx - w, cy + y, w * 2, 1, alpha);
+  const row = 1 / RES;
+  const extra = row === 1 ? 0 : (1 - row) / 2;
+  for (let y = -ry - extra; y <= ry + extra + 1e-9; y += row) {
+    const yy = Math.max(-ry, Math.min(ry, y));
+    const w = rx * Math.sqrt(Math.max(0, 1 - (yy * yy) / (ry * ry || 1)));
+    rect(c, color, cx - w, cy + y, w * 2, row, alpha);
   }
 }
 
@@ -95,7 +123,7 @@ export function line(
   y1: number,
   thick = 1,
 ): void {
-  const steps = Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0), 1);
+  const steps = Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0), 1) * RES;
   for (let i = 0; i <= steps; i++) {
     const t = i / steps;
     rect(
@@ -174,12 +202,17 @@ export function hash(n: number): number {
   return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
 }
 
+/**
+ * A scratch canvas `w` x `h` units at the current resolution, its context
+ * scaled to units. Composite it back with drawImage(canvas, x, y, w, h).
+ */
 export function makeCanvas(w: number, h: number): { canvas: HTMLCanvasElement; ctx: Ctx } {
   const canvas = document.createElement('canvas');
-  canvas.width = w;
-  canvas.height = h;
+  canvas.width = Math.round(w * RES);
+  canvas.height = Math.round(h * RES);
   const ctx = canvas.getContext('2d')!;
   ctx.imageSmoothingEnabled = false;
+  ctx.setTransform(RES, 0, 0, RES, 0, 0);
   return { canvas, ctx };
 }
 
@@ -253,7 +286,10 @@ export interface FinishOptions {
  * and a coloured outline. For sprites only: skies and rooms keep their own
  * hand-placed gradients.
  */
-export function finish(c: Ctx, w: number, h: number, opts: FinishOptions = {}): void {
+export function finish(c: Ctx, _w: number, _h: number, opts: FinishOptions = {}): void {
+  // Works on the canvas's real pixels, whatever its resolution.
+  const w = c.canvas.width;
+  const h = c.canvas.height;
   const { volume = false, rim = true, outline = true, minRun = 4 } = opts;
   const img = c.getImageData(0, 0, w, h);
   const d = img.data;
@@ -334,14 +370,14 @@ export function finish(c: Ctx, w: number, h: number, opts: FinishOptions = {}): 
   c.putImageData(img, 0, 0);
 }
 
-/** Crisp scanline polygon fill (no anti-aliasing), points in pixels. */
+/** Crisp scanline polygon fill (no anti-aliasing), points in units. */
 export function poly(c: Ctx, pts: [number, number][], color: string, alpha = 1): void {
   if (pts.length < 3) return;
-  const ys = pts.map((p) => p[1]);
+  const ys = pts.map((p) => p[1] * RES);
   const y0 = Math.ceil(Math.min(...ys) - 0.5);
   const y1 = Math.floor(Math.max(...ys) - 0.5);
   for (let y = y0; y <= y1; y++) {
-    const yc = y + 0.5;
+    const yc = (y + 0.5) / RES;
     const xs: number[] = [];
     for (let i = 0; i < pts.length; i++) {
       const [ax, ay] = pts[i]!;
@@ -349,11 +385,11 @@ export function poly(c: Ctx, pts: [number, number][], color: string, alpha = 1):
       if ((ay <= yc && by > yc) || (by <= yc && ay > yc))
         xs.push(ax + ((yc - ay) * (bx - ax)) / (by - ay));
     }
-    xs.sort((p, q) => p - q);
+    xs.sort((p, q2) => p - q2);
     for (let i = 0; i + 1 < xs.length; i += 2) {
-      const l = Math.round(xs[i]!);
-      const r = Math.round(xs[i + 1]!);
-      if (r > l) rect(c, color, l, y, r - l, 1, alpha);
+      const l = Math.round(xs[i]! * RES) / RES;
+      const r = Math.round(xs[i + 1]! * RES) / RES;
+      if (r > l) rect(c, color, l, y / RES, r - l, 1 / RES, alpha);
     }
   }
 }

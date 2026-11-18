@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { fitCamera } from '../view.ts';
 import { findCar, findCharacter } from '../../data/catalogue.ts';
 import { findLocation } from '../../data/locations.ts';
 import { findRacer } from '../../data/rivals.ts';
@@ -9,6 +10,7 @@ import { mountTownHud } from '../../ui/hud.ts';
 import { PLAYER_LOOK, styleForRole } from '../art/people.ts';
 import {
   carSideTexture,
+  HI,
   generateTownTextures,
   localTextures,
   personTextures,
@@ -43,6 +45,7 @@ export class InteriorScene extends Phaser.Scene {
   }
 
   create(data: { buildingId: string; talk?: boolean | string }): void {
+    fitCamera(this);
     const state = store.require();
     const loc = findLocation(state.location);
     const building = loc.buildings.find((b) => b.id === data.buildingId);
@@ -59,14 +62,17 @@ export class InteriorScene extends Phaser.Scene {
     personTextures(this, 'player', PLAYER_LOOK, 'player');
     if (building.sign && building.room)
       localTextures(this, building.art, building.room, building.sign, building.kind === 'bar');
-    this.add.image(0, 0, building.room ?? 'room-garage').setOrigin(0, 0);
+    this.add
+      .image(0, 0, building.room ?? 'room-garage')
+      .setOrigin(0, 0)
+      .setScale(1 / HI);
     if (building.kind === 'garage') {
       const car = findCar(store.catalogue, state.carId);
       if (car)
         this.add
           .image(171, 139, carSideTexture(this, car.game.body, car.game.color))
           .setOrigin(0.5, 1)
-          .setScale(1.45);
+          .setScale(1.45 / HI);
     }
 
     const tags: HTMLElement[] = [];
@@ -76,13 +82,14 @@ export class InteriorScene extends Phaser.Scene {
       const x = crowd ? Math.round(104 + (i * (344 - 104)) / (ids.length - 1)) : SOLO_X;
       personTextures(this, `npc-${id}`, persona.look, styleForRole(persona.role));
       const sprite = this.add
-        .image(x, FLOOR_Y, `npc-${id}@2-0`)
+        .image(x, FLOOR_Y, `npc-${id}@4-0`)
         .setOrigin(0.5, 1)
+        .setScale(0.5)
         .setFlipX(i % 2 === 0)
         .setDepth(40);
       this.tweens.add({
         targets: sprite,
-        scaleY: 1.02,
+        scaleY: 0.51,
         duration: 800 + i * 70,
         yoyo: true,
         repeat: -1,
@@ -105,7 +112,7 @@ export class InteriorScene extends Phaser.Scene {
     });
 
     mount('room-tags', h('div', { class: 'room-tags', 'aria-hidden': 'true' }, tags));
-    this.walker = new Walker(this, 'player@2', 60, FLOOR_Y, 16, 368, 2, 2);
+    this.walker = new Walker(this, 'player@4', 60, FLOOR_Y, 16, 368, 2, 4);
     const kb = this.input.keyboard!;
     const K = Phaser.Input.Keyboard.KeyCodes;
     this.interactKeys = [

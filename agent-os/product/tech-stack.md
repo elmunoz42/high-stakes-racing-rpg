@@ -16,7 +16,16 @@ OpenAI GPT-6 Luna for character dialogue.
   a thin Phaser scene draws it. No Three.js / real 3D in scope. The race engine
   sits behind an interface so a 3D renderer could replace it later without
   touching the RPG side.
-- **Pixel art** at a fixed internal resolution (target 384x216, integer scaled).
+- **Pixel art**, laid out in a 384x216 world but drawn on a 768x432 canvas
+  with every camera zoomed 2x (`src/game/view.ts`). The target look is 90s
+  arcade hardware (NeoGeo-class): retro, but finer than 16-bit. Cars, people,
+  roadside scenery, buildings, rooms, signs and the title art are generated at
+  2x (`canvasTexture(..., HI)`), and the drawing helpers in `pixel.ts` round to
+  that finer grid. Shapes are shaded in tone ramps (warm highlights, cool
+  shadows), rim-lit, and outlined in a dark tone of their own colour (`finish`).
+  Race cars are a small 3D model projected with the race camera; people are
+  drawn from angled shapes. `scripts/shots.ts` takes the same review shots
+  every time for before/after comparisons.
   Placeholder art is acceptable until the art milestone; keep art swappable
   via an asset manifest.
 - UI for dialogue, shop and garage: HTML/CSS overlay on top of the canvas

@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import { type Body, CAR_H, CAR_W, SIDE_H, SIDE_W, drawCarRear, drawCarSide } from './cars.ts';
 import { drawPerson, type Look, PERSON_H, PERSON_W, type Style } from './people.ts';
-import type { Ctx } from './pixel.ts';
+import { type Ctx, withRes } from './pixel.ts';
 import {
   drawBarRoom,
   drawLocalBuilding,
@@ -16,23 +16,33 @@ import { bands } from './pixel.ts';
 import { LOOKS } from './race.ts';
 import { BACKDROPS, lookArt, type LookId, SCENERY, SCENERY_AWAY } from './race.ts';
 
-/** Creates a canvas texture once; later calls with the same key are free. */
+/**
+ * Creates a canvas texture once; later calls with the same key are free.
+ * `res` draws it with that many pixels per unit (see withRes): a texture at
+ * res 2 must be displayed at half scale, or given an explicit display size.
+ */
 export function canvasTexture(
   scene: Phaser.Scene,
   key: string,
   w: number,
   h: number,
   draw: (c: Ctx) => void,
+  res = 1,
 ): string {
   if (scene.textures.exists(key)) return key;
-  const tex = scene.textures.createCanvas(key, w, h);
+  const tex = scene.textures.createCanvas(key, Math.round(w * res), Math.round(h * res));
   if (!tex) return key;
   const ctx = tex.getContext();
   ctx.imageSmoothingEnabled = false;
-  draw(ctx);
+  ctx.setTransform(res, 0, 0, res, 0, 0);
+  withRes(res, () => draw(ctx));
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
   tex.refresh();
   return key;
 }
+
+/** Resolution of the finer textures: cars, people, scenery, title art. */
+export const HI = 2;
 
 const mipLevels = new Map<string, number>();
 const MAX_LEVELS = 6;
@@ -116,38 +126,60 @@ export function carRearTexture(
   braking: boolean,
 ): string {
   const key = `car-${body}-${color.slice(1)}-${frame}-${braking ? 'b' : 'n'}`;
-  return canvasTexture(scene, key, CAR_W, CAR_H, (c) =>
-    drawCarRear(c, body, color, frame, braking),
+  return canvasTexture(
+    scene,
+    key,
+    CAR_W,
+    CAR_H,
+    (c) => drawCarRear(c, body, color, frame, braking),
+    HI,
   );
 }
 
 export function carSideTexture(scene: Phaser.Scene, body: Body, color: string): string {
-  return canvasTexture(scene, `carside-${body}-${color.slice(1)}`, SIDE_W, SIDE_H, (c) =>
-    drawCarSide(c, body, color),
+  return canvasTexture(
+    scene,
+    `carside-${body}-${color.slice(1)}`,
+    SIDE_W,
+    SIDE_H,
+    (c) => drawCarSide(c, body, color),
+    HI,
   );
 }
 
 export function generateRaceTextures(scene: Phaser.Scene): void {
-  for (const [key, [w, h, draw]] of Object.entries({ ...SCENERY, ...SCENERY_AWAY, ...BACKDROPS }))
-    canvasTexture(scene, key, w, h, draw);
-}
-
-export function generateTownTextures(scene: Phaser.Scene): void {
-  for (const [key, [w, h, draw]] of Object.entries({ ...TOWN, ...PADDOCK, ...INTERIORS }))
+  // Roadside sprites are always given a display size, so they can be finer.
+  for (const [key, [w, h, draw]] of Object.entries({ ...SCENERY, ...SCENERY_AWAY }))
+    canvasTexture(scene, key, w, h, draw, HI);
+  for (const [key, [w, h, draw]] of Object.entries(BACKDROPS))
     canvasTexture(scene, key, w, h, draw);
 }
 
 /**
+ * Buildings, props and rooms are drawn at 2x so their painted signs read
+ * cleanly; they are shown at half scale. The sea strip scrolls by texture
+ * pixels, so it stays at 1x.
+ */
+export function generateTownTextures(scene: Phaser.Scene): void {
+  for (const [key, [w, h, draw]] of Object.entries({ ...TOWN, ...PADDOCK, ...INTERIORS }))
+    canvasTexture(scene, key, w, h, draw, key === 'town-sea' ? 1 : HI);
+}
+
+/**
  * Five frames per person: `${key}-0` standing, `${key}-1..4` walking. Rooms
- * use `${key}@2-*`, drawn natively at twice the resolution.
+ * `${key}@2-*` and `${key}@4-*` are drawn natively at 2x and 4x: the street
+ * shows @2 at half scale, rooms show @4 at half scale.
  */
 export function personTextures(scene: Phaser.Scene, key: string, look: Look, style: Style): string {
-  for (let f = 0; f < 5; f++) {
-    canvasTexture(scene, `${key}-${f}`, PERSON_W, PERSON_H, (c) => drawPerson(c, look, style, f));
-    canvasTexture(scene, `${key}@2-${f}`, PERSON_W * 2, PERSON_H * 2, (c) =>
-      drawPerson(c, look, style, f, 2),
-    );
-  }
+  for (let f = 0; f < 5; f++)
+    for (const k of [1, 2, 4])
+      canvasTexture(
+        scene,
+        k === 1 ? `${key}-${f}` : `${key}@${k}-${f}`,
+        PERSON_W * k,
+        PERSON_H * k,
+        (c) => drawPerson(c, look, style, f, k),
+      );
   return key;
 }
 
@@ -169,9 +201,14 @@ export function localTextures(
   sign: Sign,
   isBar = false,
 ): void {
-  canvasTexture(scene, art, 190, 116, (c) => drawLocalBuilding(c, sign));
-  canvasTexture(scene, room, 384, 216, (c) =>
-    isBar ? drawBarRoom(c, sign) : drawLocalRoom(c, sign),
+  canvasTexture(scene, art, 190, 116, (c) => drawLocalBuilding(c, sign), HI);
+  canvasTexture(
+    scene,
+    room,
+    384,
+    216,
+    (c) => (isBar ? drawBarRoom(c, sign) : drawLocalRoom(c, sign)),
+    HI,
   );
 }
 

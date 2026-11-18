@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { fitCamera } from '../view.ts';
 import { findRacer, RIVALS } from '../../data/rivals.ts';
 import { findSponsor } from '../../data/catalogue.ts';
 import { findLocation } from '../../data/locations.ts';
@@ -19,6 +20,7 @@ export class ResultsScene extends Phaser.Scene {
       duel?: { rivalId: string; wagerUsd: number; won: boolean; timeMs: number; trackName: string };
     } = {},
   ): void {
+    fitCamera(this);
     if (data.duel) {
       this.duelResult(data.duel);
       return;
