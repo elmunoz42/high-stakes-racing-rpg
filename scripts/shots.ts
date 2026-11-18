@@ -114,6 +114,6 @@ await page.screenshot({ path: `${out}/interior-bar.png` });
 await raceAt('harbour', undefined, [2, 9]);
 await raceAt('pinewood', 'pinewood', [9]);
 await raceAt('neon', 'neon-city', [9]);
-await raceAt('duel', undefined, [8], 'kenji');
+await raceAt('duel', undefined, [8], 'nyx-calloway');
 await browser.close();
 console.log('saved to', out);

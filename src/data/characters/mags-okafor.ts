@@ -10,7 +10,14 @@ export const MAGS_OKAFOR: Persona = {
   pitch:
     'Ex-rally co-driver who still talks in pace notes. Brutally honest about your driving and secretly keeps a scrapbook of your results.',
   portraitColor: '#f2a541',
-  look: { skin: '#7a4a2c', hair: '#d9d9d9', top: '#f2a541', legs: '#2b2b33' },
+  look: {
+    skin: '#7a4a2c',
+    hair: '#d9d9d9',
+    top: '#f2a541',
+    legs: '#2b2b33',
+    build: 'slim',
+    cut: 'cap',
+  },
   voice: [
     'Short, clipped sentences. Often slips into pace-note shorthand: "Three left, tightens, don\'t cut." "Crest, keep it flat." "Brake at the board, not after it."',
     'Gives exactly one thing to work on at a time, then stops talking.',

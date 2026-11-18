@@ -26,7 +26,14 @@ export const RACER_PERSONAS: Persona[] = [
     pitch:
       'The fastest of the regulars and the most fragile. Immaculate car, loud mouth, and an excuse loaded for every result.',
     portraitColor: '#3a3a4a',
-    look: { skin: '#e2b48c', hair: '#101014', top: '#1c1c24', legs: '#2a2a33' },
+    look: {
+      skin: '#e2b48c',
+      hair: '#101014',
+      top: '#1c1c24',
+      legs: '#2a2a33',
+      build: 'lean',
+      cut: 'spiky',
+    },
     voice: [
       'Trash talk delivered like a press conference. Refers to himself as "Static" in the third person when winning.',
       'Every loss has a cause that is not him: cold tyres, bad fuel, the moon.',
@@ -76,7 +83,14 @@ export const RACER_PERSONAS: Persona[] = [
     pitch:
       'The smoothest driver on the grid and the real threat. Patient, precise, generous with advice and merciless on track.',
     portraitColor: '#f2c230',
-    look: { skin: '#a8703e', hair: '#1a1210', top: '#f2c230', legs: '#2a3550' },
+    look: {
+      skin: '#a8703e',
+      hair: '#1a1210',
+      top: '#f2c230',
+      legs: '#2a3550',
+      build: 'slim',
+      cut: 'long',
+    },
     voice: [
       'Calm and exact. Explains things once, clearly, with a small dry smile.',
       'Thinks in momentum and load transfer and says so.',
@@ -122,7 +136,14 @@ export const RACER_PERSONAS: Persona[] = [
     pitch:
       "A huge, joyful baker who races a hot hatch for the love of it. Everyone's uncle. Faster than he looks.",
     portraitColor: '#2e8b57',
-    look: { skin: '#d9a47a', hair: '#5a4a3a', top: '#2e8b57', legs: '#3a3a42' },
+    look: {
+      skin: '#d9a47a',
+      hair: '#5a4a3a',
+      top: '#2e8b57',
+      legs: '#3a3a42',
+      build: 'broad',
+      cut: 'buzz',
+    },
     voice: [
       'Loud, warm, laughs at his own jokes before finishing them. Calls the player "kid".',
       'Everything comes back to food. A good lap is "well proofed".',
@@ -172,7 +193,14 @@ export const RACER_PERSONAS: Persona[] = [
     pitch:
       'Local kid, quick tongue, quicker reflexes. Races the car she rebuilt with money from her taco stand.',
     portraitColor: '#ff7a2f',
-    look: { skin: '#c68a5c', hair: '#3a1f14', top: '#ff7a2f', legs: '#1f2a44' },
+    look: {
+      skin: '#c68a5c',
+      hair: '#3a1f14',
+      top: '#ff7a2f',
+      legs: '#1f2a44',
+      build: 'slim',
+      cut: 'ponytail',
+    },
     voice: [
       'Teasing, fast, affectionate. Everything is a dare.',
       'Settles arguments with "loser buys tacos".',
@@ -219,7 +247,14 @@ export const RACER_PERSONAS: Persona[] = [
     pitch:
       'Believes sideways is the only honest direction. Finishes last, wins every argument about who looked best doing it.',
     portraitColor: '#8a2be2',
-    look: { skin: '#f0d0b8', hair: '#d8d0c0', top: '#8a2be2', legs: '#15151b' },
+    look: {
+      skin: '#f0d0b8',
+      hair: '#d8d0c0',
+      top: '#8a2be2',
+      legs: '#15151b',
+      build: 'lean',
+      cut: 'slick',
+    },
     voice: [
       'Philosophical, intense, deadpan. Speaks of angle and smoke the way monks speak of silence.',
       'Judges everything by style: "Fast, yes. But was it beautiful?"',
@@ -270,7 +305,14 @@ export const RACER_PERSONAS: Persona[] = [
     pitch:
       'A legend who only races after dark, one on one, for money. Quiet, unhurried, and almost never beaten.',
     portraitColor: '#3a4a8a',
-    look: { skin: '#b08a6a', hair: '#0e0e16', top: '#3a4a8a', legs: '#101018' },
+    look: {
+      skin: '#b08a6a',
+      hair: '#0e0e16',
+      top: '#3a4a8a',
+      legs: '#101018',
+      build: 'slim',
+      cut: 'long',
+    },
     voice: [
       'Few words, low and even. Lets silences sit.',
       'Speaks about the night as if it were a person who owes her favours.',

@@ -69,43 +69,43 @@ export class InteriorScene extends Phaser.Scene {
           .setScale(1.45);
     }
 
+    const tags: HTMLElement[] = [];
     this.npcs = ids.flatMap((id, i) => {
       const persona = findCharacter(store.catalogue, id);
       if (!persona) return [];
       const x = crowd ? Math.round(104 + (i * (344 - 104)) / (ids.length - 1)) : SOLO_X;
       personTextures(this, `npc-${id}`, persona.look, styleForRole(persona.role));
       const sprite = this.add
-        .image(x, FLOOR_Y, `npc-${id}-0`)
+        .image(x, FLOOR_Y, `npc-${id}@2-0`)
         .setOrigin(0.5, 1)
-        .setScale(2)
         .setFlipX(i % 2 === 0)
         .setDepth(40);
       this.tweens.add({
         targets: sprite,
-        scaleY: 2.04,
+        scaleY: 1.02,
         duration: 800 + i * 70,
         yoyo: true,
         repeat: -1,
         ease: 'Sine.inOut',
       });
       const name = findRacer(id)?.short ?? persona.name;
-      const label = this.add
-        .text(x, FLOOR_Y - 76, name, {
-          fontFamily: 'monospace',
-          fontSize: '8px',
-          color: '#ffffff',
-          backgroundColor: '#0b0d17cc',
-          padding: { x: 2, y: 1 },
-        })
-        .setOrigin(0, 1)
-        .setResolution(4)
-        .setDepth(41);
-      // Whole-pixel position keeps the small text sharp.
-      label.setX(Math.round(x - label.width / 2));
+      // Name tags sit in the page overlay: at the game's 384 px resolution
+      // small text breaks up.
+      tags.push(
+        h(
+          'span',
+          {
+            class: 'room-tag',
+            style: `left:${((x / 384) * 100).toFixed(2)}%;top:${(((FLOOR_Y - 88) / 216) * 100).toFixed(2)}%`,
+          },
+          name,
+        ),
+      );
       return [{ id, x, name: persona.name }];
     });
 
-    this.walker = new Walker(this, 'player', 60, FLOOR_Y, 16, 368, 2);
+    mount('room-tags', h('div', { class: 'room-tags', 'aria-hidden': 'true' }, tags));
+    this.walker = new Walker(this, 'player@2', 60, FLOOR_Y, 16, 368, 2, 2);
     const kb = this.input.keyboard!;
     const K = Phaser.Input.Keyboard.KeyCodes;
     this.interactKeys = [

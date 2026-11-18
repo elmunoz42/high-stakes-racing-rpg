@@ -128,6 +128,12 @@ export const PersonaSchema = z.object({
     hair: z.string().regex(/^#[0-9a-f]{6}$/i),
     top: z.string().regex(/^#[0-9a-f]{6}$/i),
     legs: z.string().regex(/^#[0-9a-f]{6}$/i),
+    /** Frame of the drawn figure. */
+    build: z.enum(['broad', 'lean', 'slim']).optional(),
+    /** Haircut of the drawn figure. */
+    cut: z
+      .enum(['short', 'slick', 'spiky', 'ponytail', 'long', 'bob', 'bun', 'buzz', 'cap'])
+      .optional(),
   }),
   voice: z.array(z.string()).min(1),
   neverSays: z.array(z.string()),

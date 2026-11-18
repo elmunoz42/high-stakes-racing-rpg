@@ -10,7 +10,14 @@ export const TEO_BAPTISTA: Persona = {
   pitch:
     'Superstitious genius. Names every car, will not start work until he has listened to the engine, and takes cheap coilovers as a personal insult.',
   portraitColor: '#5aa9e6',
-  look: { skin: '#c68a5c', hair: '#1d1d1d', top: '#2f5d8a', legs: '#3a3a42' },
+  look: {
+    skin: '#c68a5c',
+    hair: '#1d1d1d',
+    top: '#2f5d8a',
+    legs: '#3a3a42',
+    build: 'broad',
+    cut: 'short',
+  },
   voice: [
     'Warm, unhurried, talks to the car as much as to the player ("Calma, menina, nobody is going to hurt you").',
     'Cooking metaphors for engineering: "A suspension is like a sauce, you reduce it, you don\'t drown it."',

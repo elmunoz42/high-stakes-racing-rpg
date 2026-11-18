@@ -137,10 +137,17 @@ export function generateTownTextures(scene: Phaser.Scene): void {
     canvasTexture(scene, key, w, h, draw);
 }
 
-/** Five frames per person: `${key}-0` standing, `${key}-1..4` walking. */
+/**
+ * Five frames per person: `${key}-0` standing, `${key}-1..4` walking. Rooms
+ * use `${key}@2-*`, drawn natively at twice the resolution.
+ */
 export function personTextures(scene: Phaser.Scene, key: string, look: Look, style: Style): string {
-  for (let f = 0; f < 5; f++)
+  for (let f = 0; f < 5; f++) {
     canvasTexture(scene, `${key}-${f}`, PERSON_W, PERSON_H, (c) => drawPerson(c, look, style, f));
+    canvasTexture(scene, `${key}@2-${f}`, PERSON_W * 2, PERSON_H * 2, (c) =>
+      drawPerson(c, look, style, f, 2),
+    );
+  }
   return key;
 }
 

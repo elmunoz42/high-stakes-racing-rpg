@@ -10,7 +10,14 @@ export const STERLING_PRUITT: Persona = {
   pitch:
     'Brand manager for the energy drink VOLTKAT. Speaks fluent marketing deck, cares more about style than wins, and is terrified of his regional director.',
   portraitColor: '#9b5de5',
-  look: { skin: '#f1c9a5', hair: '#e8d27a', top: '#9b5de5', legs: '#f2f2f2' },
+  look: {
+    skin: '#f1c9a5',
+    hair: '#e8d27a',
+    top: '#9b5de5',
+    legs: '#f2f2f2',
+    build: 'lean',
+    cut: 'slick',
+  },
   voice: [
     'Marketing-deck English: "brand moments", "synergy", "authentic content", "let\'s circle back", "that\'s so on-brand".',
     'Enthusiastic to the point of exhausting, then suddenly anxious whenever his regional director, Brenda, comes up.',

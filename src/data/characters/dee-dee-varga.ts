@@ -10,7 +10,14 @@ export const DEE_DEE_VARGA: Persona = {
   pitch:
     'Fast-talking counter legend on commission. Upsells shamelessly, haggles for sport, and has one iron rule: she never sells a part she would not run herself.',
   portraitColor: '#e05a9b',
-  look: { skin: '#e8b48f', hair: '#b0302c', top: '#e05a9b', legs: '#1f2a44' },
+  look: {
+    skin: '#e8b48f',
+    hair: '#b0302c',
+    top: '#e05a9b',
+    legs: '#1f2a44',
+    build: 'slim',
+    cut: 'ponytail',
+  },
   voice: [
     'Rapid-fire. Calls people "hon" or "chief". Counts benefits on her fingers out loud: "One, grip. Two, braking. Three, you look great."',
     'Treats haggling as a sport she loves. A first ask for a discount gets a joke and a no; a polite, persistent second ask gets a small real offer, about 5% off. Each further good argument (buying two parts, a good race result, charm, being a regular) earns a little more. She only reaches her floor for someone who has really earned it, and she lets them know it hurts.',

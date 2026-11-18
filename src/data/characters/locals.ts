@@ -12,7 +12,14 @@ export const BIRDIE_LINDQVIST: Persona = {
   pitch:
     'Runs the diner under the pass and insists she is "just a waitress". She is in fact the fastest person ever to drive the mountain, and she talks about corners the way other people talk about pie.',
   portraitColor: '#e8c15a',
-  look: { skin: '#e9c0a0', hair: '#c9c9c9', top: '#c0392b', legs: '#3a3a42' },
+  look: {
+    skin: '#e9c0a0',
+    hair: '#c9c9c9',
+    top: '#c0392b',
+    legs: '#3a3a42',
+    build: 'slim',
+    cut: 'bun',
+  },
   voice: [
     'Folksy, unhurried, refills your coffee mid-sentence. Calls everyone "sweet pea".',
     'Explains driving through baking: "A hairpin is a pie crust. Rush it and it cracks."',
@@ -66,7 +73,14 @@ export const LUPE_ZAMORA: Persona = {
   pitch:
     'A used-performance dealer who is honest to a fault. She will list every flaw of a car in loving detail and then sell it to you anyway, because she knows you want it.',
   portraitColor: '#d7263d',
-  look: { skin: '#c68a5c', hair: '#2a1a12', top: '#f4f4f4', legs: '#1f3f8f' },
+  look: {
+    skin: '#c68a5c',
+    hair: '#2a1a12',
+    top: '#f4f4f4',
+    legs: '#1f3f8f',
+    build: 'slim',
+    cut: 'long',
+  },
   voice: [
     'Dry, quick, affectionate about machines. Introduces every car by its worst habit first: "She leaks, she drinks, she bites. You will love her."',
     'Quotes exact prices and trade-in values and never rounds in her own favour.',
@@ -127,7 +141,14 @@ export const JUNO_PARK: Persona = {
   pitch:
     'Arcade owner by day, pirate-radio race commentator by night. Narrates real life like a live broadcast and scores everything in combos.',
   portraitColor: '#39e6ff',
-  look: { skin: '#e6c4a0', hair: '#ff4fa3', top: '#39e6ff', legs: '#15151b' },
+  look: {
+    skin: '#e6c4a0',
+    hair: '#ff4fa3',
+    top: '#39e6ff',
+    legs: '#15151b',
+    build: 'lean',
+    cut: 'bob',
+  },
   voice: [
     'Talks like live commentary: "And they walk in, cool as you like, ladies and gentlemen!"',
     'Arcade slang: combos, high scores, extra lives, "insert coin". Hype, but sharp.',
@@ -178,7 +199,14 @@ export const OLAV_FROST: Persona = {
   pitch:
     'A retired ice-road trucker who makes waffles at the top of a frozen mountain. Completely calm about things that should not be calm.',
   portraitColor: '#9fd0ff',
-  look: { skin: '#f0c8b0', hair: '#f4f4f4', top: '#2a6fb0', legs: '#3a3a42' },
+  look: {
+    skin: '#f0c8b0',
+    hair: '#f4f4f4',
+    top: '#2a6fb0',
+    legs: '#3a3a42',
+    build: 'broad',
+    cut: 'short',
+  },
   voice: [
     'Slow, deadpan, very few words. Long pauses are part of the sentence.',
     'Treats a slide as a polite conversation: "The car is asking a question. Answer gently."',
@@ -225,7 +253,14 @@ export const RENATA_VOSS: Persona = {
   pitch:
     'A three-time champion who now presides over the clubhouse at the Grand Autodrome. Imperious, exact, and quietly generous to anyone who has earned it.',
   portraitColor: '#ffcc33',
-  look: { skin: '#b97a56', hair: '#e8e4d8', top: '#23324a', legs: '#15151b' },
+  look: {
+    skin: '#b97a56',
+    hair: '#e8e4d8',
+    top: '#23324a',
+    legs: '#15151b',
+    build: 'slim',
+    cut: 'bun',
+  },
   voice: [
     'Precise, formal, a little grand. Speaks as if every sentence were going in a biography.',
     'Tests people before helping them: asks what they did wrong in their last race and waits.',

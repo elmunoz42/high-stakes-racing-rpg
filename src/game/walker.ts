@@ -20,12 +20,14 @@ export class Walker {
     private minX: number,
     private maxX: number,
     private scale = 1,
+    /** How many times larger than street size the texture is drawn. */
+    textureScale = 1,
   ) {
     this.sprite = scene.add
       .image(x, groundY, `${textureKey}-0`)
       .setOrigin(0.5, 1)
       .setDepth(50)
-      .setScale(scale);
+      .setScale(scale / textureScale);
     const kb = scene.input.keyboard!;
     const K = Phaser.Input.Keyboard.KeyCodes;
     this.keys = {
