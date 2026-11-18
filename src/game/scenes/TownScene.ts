@@ -16,6 +16,7 @@ import {
   personTextures,
 } from '../art/textures.ts';
 import { goto } from '../flow.ts';
+import { OX, shiftX, shiftY } from '../view.ts';
 import { registerHook } from '../testHooks.ts';
 import { Walker } from '../walker.ts';
 
@@ -62,8 +63,14 @@ export class TownScene extends Phaser.Scene {
     this.cameras.main.setBounds(0, 0, W, 216);
 
     // Backdrop: sky, sun or moon, clouds, hills, then sea or land behind the street.
-    const fixed = <T extends Phaser.GameObjects.Components.ScrollFactor>(o: T) =>
-      o.setScrollFactor(0);
+    // Fixed to the screen: placed for the 2x camera (see view.ts).
+    const fixed = <T extends Phaser.GameObjects.Components.ScrollFactor & { x: number; y: number }>(
+      o: T,
+    ) => {
+      o.x = shiftX(o.x);
+      o.y = shiftY(o.y);
+      return o.setScrollFactor(0);
+    };
     fixed(this.add.image(0, 0, `town-sky-${look}`).setOrigin(0, 0));
     fixed(this.add.image(292, seaside ? 108 : 58, `bg-body-${look}`));
     this.clouds = fixed(this.add.tileSprite(0, 16, 384, 46, `bg-clouds-${look}`).setOrigin(0, 0));
@@ -91,13 +98,13 @@ export class TownScene extends Phaser.Scene {
         [210, 140, true],
       ] as [number, number, boolean][]) {
         const boat = this.add
-          .image(x, y, 'sailboat')
+          .image(shiftX(x, 0.08), shiftY(y, 0.08), 'sailboat')
           .setScrollFactor(0.08)
           .setFlipX(flip)
           .setScale(y > 145 ? 0.8 : 0.5);
         this.tweens.add({
           targets: boat,
-          y: y + 1.5,
+          y: shiftY(y, 0.08) + 1.5,
           angle: flip ? -2 : 2,
           duration: 1600,
           yoyo: true,
@@ -253,14 +260,14 @@ export class TownScene extends Phaser.Scene {
     this.clock += dt;
     if (this.busy) return;
     this.walker.update(dt);
-    const scroll = this.cameras.main.scrollX;
+    const scroll = this.cameras.main.scrollX + OX; // world x at the left edge
     this.mid.tilePositionX = Math.round(scroll * 0.1 + (this.gulls.length ? this.clock * 4 : 0));
     this.clouds.tilePositionX = Math.round(scroll * 0.04 + this.clock * 2);
     const hills = this.children.getByName('hills') as Phaser.GameObjects.TileSprite | null;
     if (hills) hills.tilePositionX = Math.round(scroll * 0.05);
     this.gulls.forEach((g, i) => {
-      g.x = ((this.clock * (14 + i * 5) + i * 140) % 440) - 28;
-      g.y = 38 + i * 14 + Math.sin(this.clock * 1.3 + i) * 5;
+      g.x = shiftX(((this.clock * (14 + i * 5) + i * 140) % 440) - 28);
+      g.y = shiftY(38 + i * 14 + Math.sin(this.clock * 1.3 + i) * 5);
       g.setTexture(Math.floor(this.clock * 4 + i) % 2 ? 'gull-1' : 'gull-0');
     });
 

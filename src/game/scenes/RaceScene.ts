@@ -34,6 +34,7 @@ import {
   steerFrame,
 } from '../art/textures.ts';
 import { goto } from '../flow.ts';
+import { OX, OY } from '../view.ts';
 import { registerHook } from '../testHooks.ts';
 
 const COUNTDOWN_SECONDS = 3;
@@ -336,8 +337,8 @@ export class RaceScene extends Phaser.Scene {
     const rough = p.surface === 'grass' ? 1.6 : p.surface === 'rumble' ? 0.8 : p.slide * 0.5;
     const amp = rough * Math.min(1, p.v / 20);
     this.cameras.main.setScroll(
-      Math.round(Math.sin(this.clock * 61) * amp * 0.6),
-      Math.round(Math.sin(this.clock * 47) * amp),
+      Math.round(Math.sin(this.clock * 61) * amp * 0.6) - OX,
+      Math.round(Math.sin(this.clock * 47) * amp) - OY,
     );
 
     const list = buildDrawList(this.sim, cam, this.haze, this.light);
@@ -666,7 +667,7 @@ export class RaceScene extends Phaser.Scene {
   private finish(result: RaceResult): void {
     if (this.done) return;
     this.done = true;
-    this.cameras.main.setScroll(0, 0);
+    this.cameras.main.setScroll(-OX, -OY);
     if (this.duel) {
       const won = result.position === 1;
       const r = store.dispatch({ type: 'recordDuel', ...this.duel, won });

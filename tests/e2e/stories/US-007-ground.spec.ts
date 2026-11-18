@@ -45,6 +45,8 @@ test.describe('US-007 Race against AI rivals', () => {
       const gl = (g.renderer as unknown as { gl: WebGLRenderingContext }).gl;
       const W = gl.drawingBufferWidth;
       const H = gl.drawingBufferHeight;
+      // The canvas is drawn at a multiple of the 384x216 world.
+      const F = W / 384;
       const cam = g.scene.getScene('Race').cameras.main;
       const COLUMNS = [6, 40, 90, 140, 245, 300, 345, 378];
       const TOP = 86;
@@ -66,10 +68,11 @@ test.describe('US-007 Race against AI rivals', () => {
       const onFrame = () => {
         const l = race.drawList();
         // Skip frames where the camera is shaking: the picture is offset.
-        if (!l || cam.scrollX !== 0 || cam.scrollY !== 0) return;
+        if (!l || cam.worldView.x !== 0 || cam.worldView.y !== 0) return;
         frames += 1;
-        const buf = new Uint8Array(W * (BOTTOM - TOP) * 4);
-        gl.readPixels(0, H - BOTTOM, W, BOTTOM - TOP, gl.RGBA, gl.UNSIGNED_BYTE, buf);
+        const rows = (BOTTOM - TOP) * F;
+        const buf = new Uint8Array(W * rows * 4);
+        gl.readPixels(0, H - BOTTOM * F, W, rows, gl.RGBA, gl.UNSIGNED_BYTE, buf);
         for (const x of COLUMNS)
           for (let y = TOP; y < BOTTOM; y++) {
             // Scenery and cars are drawn over the ground; leave those pixels out.
@@ -81,7 +84,10 @@ test.describe('US-007 Race against AI rivals', () => {
                 y <= s.y + 3,
             );
             if (covered || colourAt(l, x + 0.5, y + 0.5) < 0) continue;
-            const o = ((BOTTOM - 1 - y) * W + x) * 4;
+            // The device pixel at the centre of this world pixel.
+            const px = Math.floor((x + 0.5) * F);
+            const py = Math.floor((y + 0.5) * F);
+            const o = ((BOTTOM * F - 1 - py) * W + px) * 4;
             const got = (buf[o]! << 16) | (buf[o + 1]! << 8) | buf[o + 2]!;
             // Allow the neighbouring pixel's colour: edges may land a pixel either way.
             const ok = [
