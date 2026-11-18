@@ -82,7 +82,9 @@ export const SPRITE_METERS: Record<string, { w: number; h: number }> = {
   snowbank: { w: 5.2, h: 1.4 },
   flag: { w: 2.2, h: 7 },
   'pit-building': { w: 30, h: 9 },
-  car: { w: 1.8 * CAR_SPRITE_SCALE, h: 1.35 * CAR_SPRITE_SCALE },
+  // The car texture is 152x48 with an 80 px wide rear (1.9 m) at its centre;
+  // turned cars use the spare width for their flank.
+  car: { w: ((1.9 * 152) / 80) * CAR_SPRITE_SCALE, h: ((1.9 * 48) / 80) * CAR_SPRITE_SCALE },
 };
 
 export interface Quad {

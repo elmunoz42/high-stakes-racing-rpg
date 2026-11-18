@@ -182,3 +182,154 @@ export function makeCanvas(w: number, h: number): { canvas: HTMLCanvasElement; c
   ctx.imageSmoothingEnabled = false;
   return { canvas, ctx };
 }
+
+// ---------------------------------------------------------------------------
+// Shading toolkit. Flat colour reads as 8-bit; arcade hardware of the 90s had
+// the colour budget for every surface to carry a ramp of tones, lit from the
+// top left, with warm highlights and cool, slightly purple shadows.
+
+const WARM: [number, number, number] = [255, 246, 220];
+const COOL: [number, number, number] = [26, 16, 52];
+
+/**
+ * One colour lit (f > 1) or shaded (f < 1). Highlights drift warm, shadows
+ * drift cool, rather than just going white or black.
+ */
+export function tone(hex: string, f: number): string {
+  const [r, g, b] = rgb(hex);
+  const [R, G, B] = toneRgb(r, g, b, f);
+  return hexOf(R, G, B);
+}
+
+function toneRgb(r: number, g: number, b: number, f: number): [number, number, number] {
+  if (f >= 1) {
+    const t = Math.min(1, (f - 1) * 1.4);
+    return [r + (WARM[0] - r) * t, g + (WARM[1] - g) * t, b + (WARM[2] - b) * t];
+  }
+  const t = Math.min(1, 1 - f);
+  return [r + (COOL[0] - r) * t, g + (COOL[1] - g) * t, b + (COOL[2] - b) * t];
+}
+
+/** `n` tones of one colour from deep shadow (index 0) to highlight (n - 1). */
+export function ramp(hex: string, n = 6): string[] {
+  return Array.from({ length: n }, (_, i) => tone(hex, 0.45 + (0.75 * i) / (n - 1)));
+}
+
+/**
+ * A panel lit from above: bands of tone from `top` (light) to `bottom` (dark).
+ * Bands are whole rows, so the gradient stays crisp pixel art.
+ */
+export function panel(
+  c: Ctx,
+  hex: string,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  top = 1.15,
+  bottom = 0.75,
+): void {
+  const rows = Math.max(1, Math.round(h));
+  const steps = Math.max(2, Math.min(6, Math.round(rows / 3)));
+  for (let i = 0; i < rows; i++) {
+    const s = Math.floor((i / rows) * steps) / (steps - 1);
+    rect(c, tone(hex, top + (bottom - top) * s), x, y + i, w, 1);
+  }
+}
+
+export interface FinishOptions {
+  /** Banded light-to-shadow shading down each flat area. */
+  volume?: boolean;
+  /** Lit top and left edges, shaded bottom and right edges. */
+  rim?: boolean;
+  /** Outline in a dark tone of the colour it borders, instead of black. */
+  outline?: boolean;
+  /** Shortest run of one colour that gets volume shading, px. */
+  minRun?: number;
+}
+
+/**
+ * Turns a flat-coloured sprite into a shaded one, in place: volume, rim light
+ * and a coloured outline. For sprites only: skies and rooms keep their own
+ * hand-placed gradients.
+ */
+export function finish(c: Ctx, w: number, h: number, opts: FinishOptions = {}): void {
+  const { volume = true, rim = true, outline = true, minRun = 4 } = opts;
+  const img = c.getImageData(0, 0, w, h);
+  const d = img.data;
+  const src = new Uint8ClampedArray(d);
+  const at = (x: number, y: number) => (y * w + x) * 4;
+  const solid = (x: number, y: number) =>
+    x >= 0 && y >= 0 && x < w && y < h && src[at(x, y) + 3]! >= 250;
+  const same = (a: number, b: number) =>
+    src[a] === src[b] &&
+    src[a + 1] === src[b + 1] &&
+    src[a + 2] === src[b + 2] &&
+    src[b + 3]! >= 250;
+  const factor = new Float32Array(w * h).fill(1);
+
+  if (volume)
+    for (let x = 0; x < w; x++) {
+      let y = 0;
+      while (y < h) {
+        if (!solid(x, y)) {
+          y++;
+          continue;
+        }
+        let end = y + 1;
+        while (end < h && same(at(x, y), at(x, end))) end++;
+        const len = end - y;
+        if (len >= minRun) {
+          const bands = len >= 14 ? 4 : 3;
+          for (let i = 0; i < len; i++) {
+            const step = Math.floor((i / len) * bands) / (bands - 1);
+            factor[(y + i) * w + x]! *= 1.1 - 0.26 * step;
+          }
+        }
+        y = end;
+      }
+    }
+
+  if (rim)
+    for (let y = 0; y < h; y++)
+      for (let x = 0; x < w; x++) {
+        if (!solid(x, y)) continue;
+        const i = y * w + x;
+        if (!solid(x, y - 1)) factor[i]! *= 1.2;
+        else if (!solid(x - 1, y)) factor[i]! *= 1.08;
+        if (!solid(x, y + 1)) factor[i]! *= 0.8;
+        else if (!solid(x + 1, y)) factor[i]! *= 0.88;
+      }
+
+  for (let i = 0; i < w * h; i++) {
+    const f = factor[i]!;
+    if (f === 1 || src[i * 4 + 3]! < 250) continue;
+    const [r, g, b] = toneRgb(src[i * 4]!, src[i * 4 + 1]!, src[i * 4 + 2]!, f);
+    d[i * 4] = r;
+    d[i * 4 + 1] = g;
+    d[i * 4 + 2] = b;
+  }
+
+  if (outline)
+    for (let y = 0; y < h; y++)
+      for (let x = 0; x < w; x++) {
+        if (src[at(x, y) + 3] !== 0) continue;
+        // Prefer the colour below, then beside, then above: outlines under a
+        // shape read as its shadow.
+        const n = [
+          [x, y + 1],
+          [x - 1, y],
+          [x + 1, y],
+          [x, y - 1],
+        ].find(([nx, ny]) => solid(nx!, ny!));
+        if (!n) continue;
+        const o = at(n[0]!, n[1]!);
+        const [r, g, b] = toneRgb(src[o]!, src[o + 1]!, src[o + 2]!, 0.28);
+        const k = at(x, y);
+        d[k] = r;
+        d[k + 1] = g;
+        d[k + 2] = b;
+        d[k + 3] = 255;
+      }
+  c.putImageData(img, 0, 0);
+}

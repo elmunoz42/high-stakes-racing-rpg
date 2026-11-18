@@ -25,6 +25,8 @@ import { formatTime } from '../../ui/format.ts';
 import { hexInt } from '../art/pixel.ts';
 import { type LookId, LOOKS } from '../art/race.ts';
 import {
+  CAR_H,
+  CAR_W,
   carRearTexture,
   generateLookTextures,
   generateRaceTextures,
@@ -388,8 +390,8 @@ export class RaceScene extends Phaser.Scene {
       for (const spread of [1, 0.6])
         g.fillPoints(
           [
-            { x: s.x - s.w * 0.3, y: s.y - s.h * 0.5 },
-            { x: s.x + s.w * 0.3, y: s.y - s.h * 0.5 },
+            { x: s.x - s.w * 0.16, y: s.y - s.h * 0.5 },
+            { x: s.x + s.w * 0.16, y: s.y - s.h * 0.5 },
             { x: SCREEN_W / 2 + 70 * spread, y: top },
             { x: SCREEN_W / 2 - 70 * spread, y: top },
           ] as Phaser.Math.Vector2[],
@@ -409,7 +411,10 @@ export class RaceScene extends Phaser.Scene {
     const base = s.car
       ? carRearTexture(this, s.car.body, s.car.color, steerFrame(s.car.steer), s.car.braking)
       : s.key;
-    const key = mipFor(this, base, s.w);
+    // Your own car is always about texture size: draw it exactly 1:1, crisp,
+    // rather than from a slightly enlarged smoothed copy.
+    const native = !!s.car?.isPlayer && s.w > CAR_W * 0.8 && s.w < CAR_W * 1.3;
+    const key = native ? base : mipFor(this, base, s.w);
     if (!img) {
       img = this.add.image(0, 0, key).setOrigin(0.5, 1);
       this.pool.push(img);
@@ -430,10 +435,12 @@ export class RaceScene extends Phaser.Scene {
     else img.clearTint();
     // Snap the sprite's box to whole pixels as one rectangle. Rounding position
     // and size separately made edges shimmer back and forth as sprites grew.
-    const left = Math.round(s.x - s.w / 2);
-    const right = Math.max(left + 1, Math.round(s.x + s.w / 2));
+    const sw = native ? CAR_W : s.w;
+    const sh = native ? CAR_H : s.h;
+    const left = Math.round(s.x - sw / 2);
+    const right = Math.max(left + 1, Math.round(s.x + sw / 2));
     const bottom = Math.round(y);
-    const height = Math.max(1, Math.round(s.h));
+    const height = Math.max(1, Math.round(sh));
     img.setPosition((left + right) / 2, bottom);
     img.setDisplaySize(right - left, height);
     if (s.y > s.clipY) {
@@ -454,7 +461,8 @@ export class RaceScene extends Phaser.Scene {
     const s = this.playerSprite;
     if (!s || dt === 0) return;
     const rnd = Math.random;
-    const wheels = [s.x - s.w * 0.31, s.x + s.w * 0.31];
+    // Rear wheels and exhaust, as fractions of the car texture (see drawCarRear).
+    const wheels = [s.x - s.w * 0.21, s.x + s.w * 0.21];
     const drift = -Math.sign(p.steerVisual || 1) * 22;
 
     if (p.slide > 0.25 && p.v > 8 && p.surface !== 'grass') {
@@ -472,6 +480,25 @@ export class RaceScene extends Phaser.Scene {
           alpha: 0.42 * p.slide,
           kind: 'smoke',
         });
+    }
+    // Turning hard at speed: lighter puffs from the outside rear tyre,
+    // heavier the harder the turn.
+    const turn = Math.abs(p.steerVisual);
+    if (turn > 0.3 && p.v > 14 && p.surface !== 'grass' && p.slide <= 0.25 && rnd() < turn) {
+      const outer = p.steerVisual > 0 ? wheels[0]! : wheels[1]!;
+      this.spawn({
+        x: outer + (rnd() - 0.5) * 3,
+        y: s.y - 2,
+        vx: -Math.sign(p.steerVisual) * 16 + (rnd() - 0.5) * 10,
+        vy: -8 - rnd() * 12,
+        life: 0,
+        max: 0.45 + rnd() * 0.25,
+        r0: 2,
+        r1: 6 + turn * 5,
+        color: 0xdedee4,
+        alpha: 0.18 + turn * 0.3,
+        kind: 'smoke',
+      });
     }
     if (p.surface === 'grass' && p.v > 5) {
       for (const wx of wheels)
@@ -492,8 +519,8 @@ export class RaceScene extends Phaser.Scene {
     if (p.gear > this.lastGear && pct > 0.2) {
       for (let k = 0; k < 4; k++)
         this.spawn({
-          x: s.x + s.w * 0.2,
-          y: s.y - s.h * 0.16,
+          x: s.x + s.w * 0.16,
+          y: s.y - s.h * 0.26,
           vx: 10 + rnd() * 20,
           vy: -4 - rnd() * 8,
           life: 0,
@@ -510,8 +537,8 @@ export class RaceScene extends Phaser.Scene {
       // Nitrous: a blue-white flame from the exhaust.
       for (let k = 0; k < 3; k++)
         this.spawn({
-          x: s.x + s.w * 0.2 + (rnd() - 0.5) * 3,
-          y: s.y - s.h * 0.15,
+          x: s.x + s.w * 0.16 + (rnd() - 0.5) * 3,
+          y: s.y - s.h * 0.26,
           vx: (rnd() - 0.5) * 30,
           vy: 10 + rnd() * 50,
           life: 0,
@@ -527,8 +554,8 @@ export class RaceScene extends Phaser.Scene {
       this.cameras.main.shake(160, 0.008);
       for (let k = 0; k < 14; k++)
         this.spawn({
-          x: s.x + (rnd() - 0.5) * s.w,
-          y: s.y - s.h * 0.4,
+          x: s.x + (rnd() - 0.5) * s.w * 0.55,
+          y: s.y - s.h * 0.5,
           vx: (rnd() - 0.5) * 160,
           vy: -rnd() * 120,
           life: 0,
