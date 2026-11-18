@@ -254,7 +254,7 @@ export interface FinishOptions {
  * hand-placed gradients.
  */
 export function finish(c: Ctx, w: number, h: number, opts: FinishOptions = {}): void {
-  const { volume = true, rim = true, outline = true, minRun = 4 } = opts;
+  const { volume = false, rim = true, outline = true, minRun = 4 } = opts;
   const img = c.getImageData(0, 0, w, h);
   const d = img.data;
   const src = new Uint8ClampedArray(d);

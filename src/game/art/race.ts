@@ -10,6 +10,7 @@ import {
   rect,
   shade,
   text,
+  tone,
   trap,
 } from './pixel.ts';
 
@@ -468,30 +469,7 @@ export const BACKDROPS: Record<string, Art> = {
       rect(c, HAZE, 0, 38, 512, 6, 0.35);
     },
   ],
-  'bg-city': [
-    512,
-    46,
-    (c) => {
-      let x = 0;
-      let k = 0;
-      while (x < 512) {
-        const w = 10 + Math.floor(hash(k * 9 + 4) * 18);
-        const h = 10 + Math.floor(hash(k * 5 + 9) * 30);
-        const col = mix('#2a2152', '#3c2c66', hash(k));
-        rect(c, col, x, 46 - h, w, h);
-        for (let wy = 46 - h + 3; wy < 44; wy += 4)
-          for (let wx = x + 2; wx < x + w - 2; wx += 3)
-            if (hash(wx * 17 + wy * 29) > 0.6) rect(c, WINDOW, wx, wy, 1, 2);
-        if (hash(k * 2 + 77) > 0.8) {
-          rect(c, col, x + w / 2, 46 - h - 6, 1, 6);
-          rect(c, '#ff4030', x + w / 2, 46 - h - 7, 1, 1);
-        }
-        x += w + (hash(k + 50) > 0.7 ? 6 : 1);
-        k++;
-      }
-      rect(c, HAZE, 0, 40, 512, 6, 0.3);
-    },
-  ],
+  'bg-city': [512, 46, (c) => skyline(c, 512, 46, HAZE)],
   'fx-smoke': [
     16,
     16,
@@ -600,7 +578,7 @@ export function lookArt(id: LookId): Record<string, Art> {
       384,
       100,
       (c) => {
-        bands(c, 0, 0, 384, 100, L.sky, 30);
+        bands(c, 0, 0, 384, 100, L.sky, 56);
         if (L.stars)
           for (let k = 0; k < 90; k++)
             rect(
@@ -634,33 +612,11 @@ export function lookArt(id: LookId): Record<string, Art> {
       512,
       46,
       (c) => {
-        if (!L.clouds) return;
-        for (let k = 0; k < 9; k++) {
-          const x = Math.floor(hash(k * 3 + 1) * 480);
-          const y = 6 + Math.floor(hash(k * 5 + 2) * 26);
-          const w = 40 + Math.floor(hash(k * 7 + 3) * 60);
-          rect(c, L.clouds[0], x, y + 3, w, 3, 0.85);
-          rect(c, L.clouds[1], x + 6, y + 1, w - 14, 2, 0.9);
-          rect(c, L.clouds[2], x + 4, y + 6, w - 10, 2, 0.6);
-        }
+        if (L.clouds) cumulus(c, L.clouds, 512, 46);
       },
     ],
-    [`bg-mountains-${id}`]: [
-      512,
-      44,
-      (c) => {
-        for (let x = 0; x < 512; x++) {
-          const t = (x / 512) * Math.PI;
-          const h =
-            id === 'desert'
-              ? 8 + (Math.sin(t * 6) > 0.3 ? 16 + 4 * Math.sin(t * 22) : 3 * Math.sin(t * 40))
-              : 14 + 10 * Math.sin(t * 4) + 7 * Math.sin(t * 14 + 1) + 3 * Math.sin(t * 38);
-          rect(c, L.mountains[0], x, 44 - h, 1, h);
-          rect(c, L.mountains[1], x, 44 - h, 1, id === 'snow' ? Math.max(2, h * 0.4) : 2);
-        }
-        rect(c, L.haze, 0, 38, 512, 6, 0.4);
-      },
-    ],
+    [`bg-mountains-${id}`]: [512, 44, (c) => ranges(c, id, L)],
+    [`bg-city-${id}`]: [512, 46, (c) => skyline(c, 512, 46, L.haze)],
   };
 }
 
@@ -840,3 +796,116 @@ export const SCENERY_AWAY: Record<string, Art> = {
     },
   ],
 };
+
+// ---------- Backdrop painting ----------
+
+/**
+ * Cumulus: puffs of overlapping ellipses with a shaded underside, a body and
+ * a sunlit crown, in the look's three cloud colours [body, lit, shadow].
+ */
+function cumulus(
+  c: Ctx,
+  [body, lit, shadow]: [string, string, string],
+  w: number,
+  h: number,
+): void {
+  for (let k = 0; k < 7; k++) {
+    const cx = Math.floor(hash(k * 3 + 1) * (w - 70)) + 35;
+    const cy = 14 + Math.floor(hash(k * 5 + 2) * (h - 26));
+    const span = 26 + Math.floor(hash(k * 7 + 3) * 34);
+    const puffs: [number, number, number][] = [];
+    const n = 4 + Math.floor(hash(k * 11) * 4);
+    for (let i = 0; i < n; i++) {
+      const u = n === 1 ? 0.5 : i / (n - 1);
+      const r = 4 + Math.round(hash(k * 13 + i) * 5 + Math.sin(u * Math.PI) * 4);
+      puffs.push([cx - span / 2 + u * span, cy - Math.sin(u * Math.PI) * 4, r]);
+    }
+    // Flat base, shaded.
+    rect(c, shadow, cx - span / 2 - 3, cy + 2, span + 6, 3, 0.9);
+    for (const [x, y, r] of puffs) ellipse(c, shadow, x + 1, y + 2, r, r * 0.75, 0.95);
+    for (const [x, y, r] of puffs) ellipse(c, body, x, y, r, r * 0.72);
+    for (const [x, y, r] of puffs) ellipse(c, lit, x - r * 0.25, y - r * 0.3, r * 0.6, r * 0.42);
+    for (const [x, y, r] of puffs) rect(c, tone(lit, 1.25), x - r * 0.5, y - r * 0.62, r * 0.6, 1);
+  }
+}
+
+/** Two mountain ranges, lit on the slopes that face the sun, with per-look detail. */
+function ranges(c: Ctx, id: LookId, L: Look): void {
+  const W = 512;
+  const H = 44;
+  const [base, light] = L.mountains;
+  const height = (x: number, far: boolean) => {
+    const t = (x / W) * Math.PI;
+    if (id === 'desert')
+      return far
+        ? 18 + 6 * Math.sin(t * 3 + 2) + 2 * Math.sin(t * 17)
+        : 6 + (Math.sin(t * 6) > 0.35 ? 16 + 2 * Math.sin(t * 22) : 2 * Math.sin(t * 40));
+    return far
+      ? 26 + 9 * Math.sin(t * 5 + 1.3) + 5 * Math.sin(t * 13) + 2 * Math.sin(t * 41)
+      : 12 + 9 * Math.sin(t * 4) + 6 * Math.sin(t * 14 + 1) + 3 * Math.sin(t * 38);
+  };
+  for (const far of [true, false]) {
+    const col = far ? mix(base, L.haze, 0.55) : base;
+    const lit = far ? mix(light, L.haze, 0.5) : light;
+    for (let x = 0; x < W; x++) {
+      const hh = Math.round(height(x, far));
+      const slope = height(x + 1, far) - height(x - 1, far);
+      const top = H - hh;
+      // Sun-side slopes (rising to the right) catch the light.
+      const face = slope > 0.15 ? lit : slope < -0.15 ? tone(col, 0.85) : col;
+      for (let y = top; y < H; y++) {
+        const v = (y - top) / Math.max(1, hh);
+        let px = v < 0.18 ? face : v < 0.5 ? mix(face, col, 0.5) : col;
+        if (id === 'desert' && !far && Math.floor(y / 3) % 2 === 0) px = tone(px, 0.88); // strata
+        if (id === 'snow' && v < 0.45 && hh > (far ? 30 : 16))
+          px = slope > -0.15 ? '#ffffff' : '#c8d6e6'; // snow, shaded on the far side
+        rect(c, px, x, y, 1, 1);
+      }
+      rect(c, tone(face, 1.2), x, top, 1, 1); // ridge highlight
+      if (id === 'forest' && !far && x % 3 === 0) {
+        // Pines along the near ridge.
+        const ph = 3 + Math.round(hash(x) * 3);
+        for (let i = 0; i < ph; i++)
+          rect(c, tone(base, 0.75), x - Math.floor(i / 2), top - ph + i, 1 + i, 1);
+      }
+    }
+    if (far) rect(c, L.haze, 0, 0, W, H, 0.35); // aerial perspective
+  }
+  rect(c, L.haze, 0, 38, W, 6, 0.4);
+}
+
+/** Two rows of towers: hazy behind, lit in front, with windows, antennas and neon. */
+function skyline(c: Ctx, W: number, H: number, haze: string): void {
+  const hazeCol = haze;
+  const row = (seed: number, baseCol: string, lit: number, maxH: number, haze: number) => {
+    let x = -4;
+    let k = 0;
+    while (x < W) {
+      const w = 10 + Math.floor(hash(seed + k * 9) * 18);
+      const h = 10 + Math.floor(hash(seed + k * 5 + 1) * maxH);
+      const col = tone(baseCol, 0.88 + hash(seed + k) * 0.24);
+      rect(c, col, x, H - h, w, h);
+      rect(c, tone(col, 1.2), x, H - h, 1, h);
+      rect(c, tone(col, 0.8), x + w - 1, H - h, 1, h);
+      rect(c, tone(col, 1.3), x, H - h, w, 1);
+      for (let wy = H - h + 3; wy < H - 2; wy += 4)
+        for (let wx = x + 2; wx < x + w - 2; wx += 3)
+          if (hash(seed + wx * 17 + wy * 29) < lit)
+            rect(c, hash(wx + wy * 7) > 0.88 ? '#7af0ff' : WINDOW, wx, wy, 1, 2);
+      if (hash(seed + k * 2 + 77) > 0.75) {
+        rect(c, col, x + Math.floor(w / 2), H - h - 6, 1, 6);
+        rect(c, '#ff4030', x + Math.floor(w / 2), H - h - 7, 1, 1);
+      }
+      if (hash(seed + k * 3 + 5) > 0.9) {
+        rect(c, '#ff3d8b', x + 2, H - h + 5, w - 4, 2);
+        rect(c, '#ffd0e4', x + 3, H - h + 5, w - 6, 1);
+      }
+      x += w + (hash(seed + k + 50) > 0.75 ? 5 : 0);
+      k++;
+    }
+    rect(c, hazeCol, 0, 0, W, H, haze);
+  };
+  row(100, '#3a2c66', 0.22, 26, 0.28);
+  row(300, '#241c48', 0.4, 22, 0);
+  rect(c, hazeCol, 0, 40, W, 6, 0.3);
+}

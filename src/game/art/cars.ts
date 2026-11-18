@@ -340,7 +340,7 @@ function drawModel(c: Ctx, body: Body, color: string, yaw: number, braking: bool
       [hw, y0, 0],
       [-hw, y0, 0],
     ],
-    (v) => t(1.25 - v * 0.55),
+    (v) => t(1.14 - v * 0.5),
     6,
   );
   // Top of the body: boot lid and bonnet catch the sky.
@@ -353,12 +353,12 @@ function drawModel(c: Ctx, body: Body, color: string, yaw: number, braking: bool
       [hw, y1, 0],
       [-hw, y1, 0],
     ],
-    (v) => t(1.2 + v * 0.2),
+    (v) => t(1.12 + v * 0.18),
     3,
   );
 
   // Rear decals.
-  decal(c, yaw, -hw, hw, 0.76, y1, t(1.45));
+  decal(c, yaw, -hw, hw, 0.76, y1, t(1.3));
   decal(c, yaw, -0.7, -0.05, 0.73, 0.75, '#fff0f4', false, 1, 0.35); // sky glint
   decal(c, yaw, -hw, hw, 0.53, 0.545, t(0.55)); // crease
   decal(c, yaw, -hw, hw, 0.515, 0.53, t(1.2));
@@ -657,29 +657,40 @@ function roadsterCockpit(c: Ctx, yaw: number, t: (k: number) => string): void {
     () => t(0.45),
   );
   for (const x of [-0.36, 0.36]) {
-    // Roll hoop, then headrest.
+    // Roll hoop (a dark bar behind the seat), then the headrest.
     quad(
       c,
       yaw,
       [
-        [x - 0.2, 1.1, 1.05],
-        [x + 0.2, 1.1, 1.05],
-        [x + 0.2, y, 1.05],
-        [x - 0.2, y, 1.05],
+        [x - 0.18, 1.0, 1.02],
+        [x + 0.18, 1.0, 1.02],
+        [x + 0.18, 0.97, 1.02],
+        [x - 0.18, 0.97, 1.02],
       ],
-      (v) => tone('#b8b8c8', 1.3 - v * 0.5),
-      3,
+      () => '#6a6a78',
     );
+    for (const e of [-0.18, 0.15])
+      quad(
+        c,
+        yaw,
+        [
+          [x + e, 1.0, 1.02],
+          [x + e + 0.03, 1.0, 1.02],
+          [x + e + 0.03, y, 1.02],
+          [x + e, y, 1.02],
+        ],
+        () => '#4a4a56',
+      );
     quad(
       c,
       yaw,
       [
-        [x - 0.14, 1.08, 1.15],
-        [x + 0.14, 1.08, 1.15],
-        [x + 0.14, y, 1.15],
-        [x - 0.14, y, 1.15],
+        [x - 0.13, 1.0, 1.15],
+        [x + 0.13, 1.0, 1.15],
+        [x + 0.13, y, 1.15],
+        [x - 0.13, y, 1.15],
       ],
-      (v) => tone('#2a2a34', 1.2 - v * 0.4),
+      (v) => tone('#2a2a34', 1.15 - v * 0.4),
       2,
     );
   }

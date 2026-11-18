@@ -148,7 +148,7 @@ export class RaceScene extends Phaser.Scene {
     this.sun = this.add.image(250, HORIZON_Y - (look === 'dusk' ? 22 : 56), `bg-body-${look}`);
     this.clouds = new Parallax(this, `bg-clouds-${look}`, 14);
     this.mountains = new Parallax(this, `bg-mountains-${look}`, HORIZON_Y - 40);
-    this.city = new Parallax(this, 'bg-city', HORIZON_Y - 41);
+    this.city = new Parallax(this, `bg-city-${look}`, HORIZON_Y - 41);
     this.city.setVisible(LOOKS[look].city);
     this.road = this.add.graphics().setDepth(1);
     this.fx = this.add.graphics().setDepth(900);
