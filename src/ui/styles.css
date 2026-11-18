@@ -848,3 +848,9 @@ img.portrait {
   background: rgba(11, 13, 23, 0.78);
   border: 1px solid rgba(255, 255, 255, 0.15);
 }
+
+/* Control hints: keyboard by default, controller buttons once a pad is used. */
+body.pad .kb,
+body:not(.pad) .gp {
+  display: none;
+}

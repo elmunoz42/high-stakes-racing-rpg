@@ -42,7 +42,8 @@ export function mountTownHud(place: string): () => void {
         class: 'chip',
         style: 'position:absolute;bottom:0.6em;left:0.6em;font-size:0.75em;opacity:0.8',
       },
-      '← → walk · E interact · Esc leave',
+      h('span', { class: 'kb' }, '← → walk · E interact · Esc leave'),
+      h('span', { class: 'gp' }, '◀ ▶ walk · A interact · B leave'),
     ),
   );
   return store.subscribe(render);

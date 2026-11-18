@@ -137,3 +137,11 @@ US-017:
   tags: [race, racers]
   sets: [demo, production]
   source: spec:2026-11-10-0900-bars-duels-race-lines
+
+US-018:
+  file: US-018-play-with-a-gamepad.md
+  title: Play with a gamepad
+  status: verified
+  tags: [input, race, town, ui]
+  sets: [demo, production]
+  source: request:2026-11-18

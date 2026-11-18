@@ -238,7 +238,12 @@ export class MapScene extends Phaser.Scene {
         ),
       ),
       h('div', { class: 'chip map-title' }, 'World map'),
-      h('div', { class: 'chip map-keys' }, '← → choose · Enter travel · Esc back to town'),
+      h(
+        'div',
+        { class: 'chip map-keys' },
+        h('span', { class: 'kb' }, '← → choose · Enter travel · Esc back to town'),
+        h('span', { class: 'gp' }, '◀ ▶ choose · A travel · B back to town'),
+      ),
     );
   }
 

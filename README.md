@@ -48,6 +48,23 @@ Open http://localhost:5173. The API runs on port 8787 and Vite proxies
 | Conversations | Type and press Enter, or click a suggested line. Esc to leave |
 | Race | ↑ or W accelerate, ↓ or S brake, ← → or A D steer, Space handbrake (slides the car), N or Shift nitrous |
 
+### Gamepad
+
+An Xbox controller on Windows, or any controller your browser recognises on
+Mac or Windows (PlayStation, Switch Pro, most USB and Bluetooth pads), works
+through the browser's Gamepad API. Connect it and press any button; the
+on-screen hints switch to controller buttons.
+
+| Where | Controller |
+|---|---|
+| Menus, shops, conversations | D-pad or left stick to move between buttons, A to press, B to back out |
+| Town and interiors | Left stick or D-pad to walk, A to interact, B to leave a building |
+| World map | Left and right to choose a place, A to travel, B back to town |
+| Race | Left stick (analog) or D-pad to steer, RT (analog) or A gas, LT (analog) or X brake, B handbrake, Y or RB nitrous |
+
+Typing in a conversation still needs the keyboard; the suggested lines work
+from the controller.
+
 ## Develop
 
 ```bash

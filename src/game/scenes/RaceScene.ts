@@ -35,6 +35,7 @@ import {
   steerFrame,
 } from '../art/textures.ts';
 import { goto } from '../flow.ts';
+import { padControls, rumble } from '../gamepad.ts';
 import { OX, OY, ZOOM, fitCamera } from '../view.ts';
 import { registerHook } from '../testHooks.ts';
 
@@ -255,7 +256,12 @@ export class RaceScene extends Phaser.Scene {
         h('div', { class: 'cluster' }, tach, gear, speed),
         h('div', { class: 'nitro-box' }, h('span', {}, 'NITROUS'), nitro),
         tow,
-        h('div', { class: 'keys' }, '↑ gas · ↓ brake · ← → steer · Space handbrake · N nitrous'),
+        h(
+          'div',
+          { class: 'keys' },
+          h('span', { class: 'kb' }, '↑ gas · ↓ brake · ← → steer · Space handbrake · N nitrous'),
+          h('span', { class: 'gp' }, 'RT gas · LT brake · stick steer · B handbrake · Y nitrous'),
+        ),
         count,
       ),
     );
@@ -319,18 +325,21 @@ export class RaceScene extends Phaser.Scene {
   private readInput(dt: number): DriverInput {
     if (!this.sim.started || this.sim.playerFinished) return { steer: 0, throttle: 0, brake: 0 };
     const k = this.keys;
+    const pad = padControls();
     const left = k.left.isDown || k.a.isDown;
     const right = k.right.isDown || k.d.isDown;
-    const target = (right ? 1 : 0) - (left ? 1 : 0);
-    // Smooth keyboard steering so taps are small corrections.
-    const rate = target === 0 ? 8 : 5;
+    const keyTarget = (right ? 1 : 0) - (left ? 1 : 0);
+    // A stick is already analog: follow it closely. Keys are on/off, so they
+    // are smoothed into small corrections.
+    const target = keyTarget !== 0 ? keyTarget : pad.steer;
+    const rate = keyTarget === 0 && pad.steer !== 0 ? 14 : target === 0 ? 8 : 5;
     this.steer += Math.max(-rate * dt, Math.min(rate * dt, target - this.steer));
     return {
       steer: this.steer,
-      throttle: k.up.isDown || k.w.isDown ? 1 : 0,
-      brake: k.down.isDown || k.s.isDown ? 1 : 0,
-      handbrake: k.space.isDown,
-      nitro: k.n.isDown || k.shift.isDown,
+      throttle: Math.max(k.up.isDown || k.w.isDown ? 1 : 0, pad.throttle),
+      brake: Math.max(k.down.isDown || k.s.isDown ? 1 : 0, pad.brake),
+      handbrake: k.space.isDown || pad.handbrake,
+      nitro: k.n.isDown || k.shift.isDown || pad.nitro,
     };
   }
 
@@ -562,6 +571,7 @@ export class RaceScene extends Phaser.Scene {
     }
     if (p.collisions > this.lastContacts) {
       this.cameras.main.shake(160, 0.008);
+      rumble(0.7, 160);
       for (let k = 0; k < 14; k++)
         this.spawn({
           x: s.x + (rnd() - 0.5) * s.w * 0.55,

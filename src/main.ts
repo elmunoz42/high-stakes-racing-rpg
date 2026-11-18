@@ -9,6 +9,7 @@ import { MapScene } from './game/scenes/MapScene.ts';
 import { ResultsScene } from './game/scenes/ResultsScene.ts';
 import { TitleScene } from './game/scenes/TitleScene.ts';
 import { installTestHooks } from './game/testHooks.ts';
+import { installGamepad } from './game/gamepad.ts';
 import { CANVAS_H, CANVAS_W } from './game/view.ts';
 
 const game = new Phaser.Game({
@@ -37,5 +38,6 @@ const game = new Phaser.Game({
 
 initFlow(game);
 installTestHooks();
+installGamepad();
 
 export default game;
