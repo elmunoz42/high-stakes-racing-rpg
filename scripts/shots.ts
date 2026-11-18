@@ -85,6 +85,15 @@ async function turning(name: string, dir: 'ArrowRight' | 'ArrowLeft') {
 }
 
 const only = process.env.ONLY;
+if (only === 'title') {
+  await page.goto(`http://localhost:${port}/`);
+  await page.waitForFunction(() => !!window.__game && window.__game.scene() === 'Title');
+  await wait(1200);
+  await page.screenshot({ path: `${out}/title.png` });
+  await browser.close();
+  console.log('saved to', out);
+  process.exit(0);
+}
 if (only === 'turn') {
   await turning('right', 'ArrowRight');
   await turning('left', 'ArrowLeft');
