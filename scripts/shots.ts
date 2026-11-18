@@ -85,6 +85,47 @@ async function turning(name: string, dir: 'ArrowRight' | 'ArrowLeft') {
 }
 
 const only = process.env.ONLY;
+if (only === 'check') {
+  // The Browser pane is about 673 px wide; check at 1x and 2x screen density.
+  for (const dsf of [1, 2]) {
+    const p2 = await browser.newPage({
+      viewport: { width: 673, height: 379 },
+      deviceScaleFactor: dsf,
+    });
+    const go = async (fixture: string, scene: string, params?: object, name?: string) => {
+      await p2.goto(`http://localhost:${port}/?seed=42`);
+      await p2.waitForFunction(() => !!window.__game && window.__game.scene() !== 'Boot');
+      await p2.evaluate(
+        ([sv, sc, pr]) => {
+          window.__game!.loadSave(sv);
+          window.__game!.goto(sc as never, pr as object | undefined);
+        },
+        [save(fixture), scene, params] as const,
+      );
+      await p2.waitForTimeout(1500);
+      await p2.screenshot({ path: `${out}/pane${dsf}x-${name ?? scene.toLowerCase()}.png` });
+    };
+    await go('fresh-career', 'Interior', { buildingId: 'teos-garage', talk: true }, 'dialogue');
+    await go('fresh-career', 'Town', undefined, 'town');
+    await go('podium-at-harbour', 'Map', undefined, 'map');
+    const away = save('rich-at-dustbowl');
+    await p2.goto(`http://localhost:${port}/?seed=42`);
+    await p2.waitForFunction(() => !!window.__game && window.__game.scene() !== 'Boot');
+    await p2.evaluate((sv) => {
+      window.__game!.loadSave(sv);
+      window.__game!.goto('Town');
+    }, away);
+    await p2.waitForTimeout(1500);
+    await p2.screenshot({ path: `${out}/pane${dsf}x-away-town.png` });
+    await p2.evaluate(() => window.__game!.goto('CarPick'));
+    await p2.waitForTimeout(800);
+    await p2.screenshot({ path: `${out}/pane${dsf}x-carpick.png` });
+    await p2.close();
+  }
+  await browser.close();
+  console.log('saved to', out);
+  process.exit(0);
+}
 if (only === 'title') {
   await page.goto(`http://localhost:${port}/`);
   await page.waitForFunction(() => !!window.__game && window.__game.scene() === 'Title');
