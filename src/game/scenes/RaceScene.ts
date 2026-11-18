@@ -141,6 +141,11 @@ export class RaceScene extends Phaser.Scene {
     this.pool = [];
     this.particles = [];
     generateRaceTextures(this);
+    // Build every car's frames now (five yaws, braking or not): made on first
+    // use mid-race, the 2x textures could stutter.
+    for (const car of this.sim.cars)
+      for (let f = -2; f <= 2; f++)
+        for (const braking of [false, true]) carRearTexture(this, car.body, car.color, f, braking);
     generateLookTextures(this, look);
 
     this.sky = this.add
