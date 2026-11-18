@@ -1,15 +1,17 @@
 ---
 id: US-001
 title: Start a career and pick a starter car
-status: draft
+status: verified
 priority: must
 source: spec:2026-11-09-2300-m1-vertical-slice
 tags: [career, garage]
 sets: [demo, production]
 verify: [browser, unit]
 tests:
-  e2e: []
-  unit: []
+  e2e: [tests/e2e/stories/US-001.spec.ts]
+  unit: [src/data/catalogue.test.ts]
+verified_level: demo
+last_verified: 2026-11-10
 ---
 
 As a new player, I want to start a career and choose a real starter car, so that I have a car and a budget to begin with.

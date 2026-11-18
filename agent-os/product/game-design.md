@@ -24,7 +24,10 @@ town and time on track should be roughly equal.
 
 - Sprite-scaled pseudo-3D road: curves, hills, roadside scenery, traffic of AI
   rivals. Fixed timestep simulation (60 Hz), seeded RNG, pure TypeScript.
-- Controls: steer, throttle, brake, (M2) handbrake/drift. Keyboard first.
+- Controls: steer, throttle, brake, handbrake (Space) for slides. Keyboard first.
+- Handling: the car answers the wheel with a little lag; past the grip limit it
+  pushes wide and scrubs speed; rear-drive cars can power-slide, front-drive
+  cars push on the throttle; a tow behind another car adds speed.
 - Car stats that parts change and the race reads:
   `power_hp`, `weight_kg`, `grip`, `braking`, `aero`, `gearing`, `reliability`.
   Derived: acceleration, top speed, cornering limit, braking distance.
@@ -115,6 +118,38 @@ invented brands.
   `data/real-world-catalogue` standard.
 - Names and specs are used factually. No logos, badges, liveries or official
   imagery. Sprites are original pixel art that reads as the body style.
+
+## World and progression
+
+- Six locations in tiers: Harbour District, Pinewood, Dustbowl, Neon City,
+  Glacier Ridge, Grand Autodrome. A top-three finish at one opens the next.
+  Travel costs money; prize money and the rivals' cars step up with the tier.
+- The paddock travels: Mags, Teo, Dee Dee and Sterling are at every location
+  (trailer, truck, van, tent). Each away location adds one local character:
+  Birdie Lindqvist (Pinewood diner), Lupe Zamora (Dustbowl car dealer), Juno
+  Park (Neon City arcade and pirate radio), Olav "Grandpa Frost" Henriksen
+  (Glacier Ridge waffle hut), Dame Renata Voss (Autodrome clubhouse).
+- Faster cars (Mustang GT, Corvette, Viper RT/10) are bought from Lupe with a
+  trade-in: 70% of the current car's price plus half the list price of fitted
+  parts, which go with the old car.
+- Nitrous is an arcade boost: up to three shots, bought from Dee Dee at an
+  invented house price, fired with N for a few seconds of extra shove. Glacier
+  Ridge is icy: grip there is well below dry asphalt.
+
+## The bar and the racers
+
+- Every location has a bar where the six racers drink: Kenji "Static" Morrow,
+  Priya Nandakumar, "Big" Lou Ferreira, Rosa "Ro" Esposito, Dmitri Volk and
+  Nyx Calloway. They are LLM characters like everyone else. Nyx never enters
+  the day race.
+- Any of them will race you one on one at night for money: two laps of the
+  local track, winner takes the wager. Wagers run from $100 to a cap that
+  grows with the location (1,000 at the Harbour, 5,000 at the Autodrome) and
+  never exceed your cash. Duels keep a win/loss record per racer and do not
+  count for sponsors, unlocks or prize money.
+- In races each racer has ten lines of their own, said when you pass them,
+  when they pass you and on contact. They are predefined, in
+  `src/data/rivals.ts`; the simulation reports the events.
 
 ## Tone
 
